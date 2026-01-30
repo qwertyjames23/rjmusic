@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RJ MUSIC - Pro Audio Equipment</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "primary-dark": "#0f5bb8",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                        "surface-dark": "#1a2430",
+                        "text-secondary": "#9da8b9",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111418; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #282f39; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b4554; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white overflow-x-hidden min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#282f39] bg-[#111418]/95 backdrop-blur-sm px-10 py-3">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-white">
+<div class="size-8 text-primary">
+<span class="material-symbols-outlined !text-4xl">equalizer</span>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">RJ MUSIC</h2>
+</div>
+<label class="flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-[#9da8b9] flex border-none bg-[#282f39] items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined text-[24px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-white focus:outline-0 focus:ring-0 border-none bg-[#282f39] focus:border-none h-full placeholder:text-[#9da8b9] px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" placeholder="Search instruments..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="flex items-center gap-9 hidden md:flex">
+<a class="text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Shop</a>
+<a class="text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Deals</a>
+<a class="text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Support</a>
+</div>
+<div class="flex gap-2">
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-[#282f39] hover:bg-[#3b4554] text-white gap-2 min-w-10 px-2.5 transition-colors">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-[#282f39] hover:bg-[#3b4554] text-white gap-2 min-w-10 px-2.5 transition-colors">
+<span class="material-symbols-outlined text-[20px]">account_circle</span>
+</button>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-[#282f39]" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD6zrb_OLpKmO2ISMsvXgMLbJtUHC5jm_HCpM7uoA1MjBgOVzjm23HXuIel_y3JvohxSd_oNo-pfX1a7priocV15XSsW4_DyA27jFn5pyLNyXyBCz_JjbnIasY-PfikpqwaA4l6nfL_C4fDzKe1LRLmKN8yWfV0-Z2l9J74UVyyq31Kl7SWTzsvaHVnlMz2A6kbtBttRYc9IYTWqqlgvDSlHn8_XrHhU4TGfqvBMaXNVldQ3yzAAdeWq505rIEz3FyIcMiVPv2vHPU");'></div>
+</div>
+</header>
+<main class="flex-1 flex flex-col md:flex-row max-w-[1440px] mx-auto w-full pt-6 px-6 gap-8">
+<aside class="w-full md:w-[280px] flex-shrink-0 flex flex-col gap-6 sticky top-24 h-fit">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-bold">Filters</h2>
+<button class="text-xs text-text-secondary hover:text-primary transition-colors uppercase tracking-wider font-bold">Clear All</button>
+</div>
+<div class="flex flex-col gap-3 pb-6 border-b border-[#282f39]">
+<h3 class="text-sm font-bold text-text-secondary uppercase tracking-wider mb-2">Category</h3>
+<label class="flex gap-x-3 items-center group cursor-pointer">
+<input checked="" class="h-5 w-5 rounded border-[#3b4554] border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0 focus:border-[#3b4554] focus:outline-none transition-all" type="checkbox"/>
+<span class="text-white text-base font-medium group-hover:text-primary transition-colors">Synthesizers</span>
+<span class="ml-auto text-text-secondary text-sm">42</span>
+</label>
+<label class="flex gap-x-3 items-center group cursor-pointer">
+<input class="h-5 w-5 rounded border-[#3b4554] border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0 focus:border-[#3b4554] focus:outline-none transition-all" type="checkbox"/>
+<span class="text-white text-base font-medium group-hover:text-primary transition-colors">Studio Monitors</span>
+<span class="ml-auto text-text-secondary text-sm">18</span>
+</label>
+<label class="flex gap-x-3 items-center group cursor-pointer">
+<input class="h-5 w-5 rounded border-[#3b4554] border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0 focus:border-[#3b4554] focus:outline-none transition-all" type="checkbox"/>
+<span class="text-white text-base font-medium group-hover:text-primary transition-colors">Electric Guitars</span>
+<span class="ml-auto text-text-secondary text-sm">64</span>
+</label>
+<label class="flex gap-x-3 items-center group cursor-pointer">
+<input class="h-5 w-5 rounded border-[#3b4554] border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0 focus:border-[#3b4554] focus:outline-none transition-all" type="checkbox"/>
+<span class="text-white text-base font-medium group-hover:text-primary transition-colors">Drum Machines</span>
+<span class="ml-auto text-text-secondary text-sm">12</span>
+</label>
+</div>
+<div class="flex flex-col gap-4 pb-6 border-b border-[#282f39]">
+<h3 class="text-sm font-bold text-text-secondary uppercase tracking-wider">Price Range</h3>
+<div class="relative h-1 w-full bg-[#282f39] rounded-full">
+<div class="absolute left-[10%] right-[30%] h-full bg-primary rounded-full"></div>
+<div class="absolute left-[10%] top-1/2 -translate-y-1/2 size-4 bg-white border-2 border-primary rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform"></div>
+<div class="absolute right-[30%] top-1/2 -translate-y-1/2 size-4 bg-white border-2 border-primary rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform"></div>
+</div>
+<div class="flex items-center justify-between text-sm font-medium">
+<span class="text-white">₱450</span>
+<span class="text-white">₱3,200</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<h3 class="text-sm font-bold text-text-secondary uppercase tracking-wider mb-2">Brands</h3>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 rounded-full bg-primary text-white text-sm font-bold border border-primary transition-colors">Roland</button>
+<button class="px-3 py-1.5 rounded-full bg-[#282f39] hover:bg-[#3b4554] text-text-secondary hover:text-white text-sm font-medium border border-transparent transition-colors">Moog</button>
+<button class="px-3 py-1.5 rounded-full bg-[#282f39] hover:bg-[#3b4554] text-text-secondary hover:text-white text-sm font-medium border border-transparent transition-colors">Korg</button>
+<button class="px-3 py-1.5 rounded-full bg-[#282f39] hover:bg-[#3b4554] text-text-secondary hover:text-white text-sm font-medium border border-transparent transition-colors">Yamaha</button>
+<button class="px-3 py-1.5 rounded-full bg-[#282f39] hover:bg-[#3b4554] text-text-secondary hover:text-white text-sm font-medium border border-transparent transition-colors">Arturia</button>
+</div>
+</div>
+<div class="mt-4 p-5 rounded-xl bg-gradient-to-br from-[#136dec] to-[#0a3a7a] relative overflow-hidden group">
+<div class="relative z-10 flex flex-col gap-2">
+<h3 class="text-white text-lg font-bold leading-tight">Join RJ Plus</h3>
+<p class="text-white/80 text-sm">Get free overnight shipping on all gear.</p>
+<button class="mt-2 w-full bg-white text-primary text-sm font-bold py-2 rounded-lg hover:bg-gray-100 transition-colors">Upgrade Now</button>
+</div>
+<span class="material-symbols-outlined absolute -bottom-4 -right-4 text-[100px] text-white/10 rotate-12 group-hover:rotate-0 transition-transform duration-500">rocket_launch</span>
+</div>
+</aside>
+<div class="flex-1 flex flex-col gap-6 pb-20">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#282f39] pb-6">
+<div class="flex flex-col gap-2">
+<h1 class="text-white text-4xl md:text-5xl font-bold leading-tight tracking-[-0.02em]">Pro Audio Equipment</h1>
+<p class="text-text-secondary text-base">Premium synthesizers, guitars, and studio gear for professionals.</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-text-secondary text-sm whitespace-nowrap hidden sm:block">Sort by:</span>
+<div class="relative group min-w-[160px]">
+<button class="flex items-center justify-between w-full h-10 px-4 bg-[#282f39] rounded-lg text-sm font-medium text-white hover:bg-[#3b4554] transition-colors">
+                            Featured
+                            <span class="material-symbols-outlined text-base">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<div class="px-3 py-1 rounded bg-[#282f39] flex items-center gap-2 text-sm text-white">
+<span>Synthesizers</span>
+<button class="hover:text-primary"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<div class="px-3 py-1 rounded bg-[#282f39] flex items-center gap-2 text-sm text-white">
+<span>Roland</span>
+<button class="hover:text-primary"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+<div class="px-3 py-1 rounded bg-[#282f39] flex items-center gap-2 text-sm text-white">
+<span>₱450 - ₱3,200</span>
+<button class="hover:text-primary"><span class="material-symbols-outlined text-sm">close</span></button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+<article class="group product-card flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-[#282f39] hover:border-primary/50 transition-colors shadow-lg">
+<div class="relative w-full aspect-[4/3] overflow-hidden bg-white/5">
+<div class="absolute top-3 left-3 z-10">
+<span class="px-2 py-1 rounded bg-black/60 backdrop-blur-md text-xs font-bold text-white uppercase tracking-wider border border-white/10">Synthesizers</span>
+</div>
+<div class="absolute top-3 right-3 z-10">
+<button class="size-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<img alt="Korg Minilogue XD" class="product-image w-full h-full object-cover transition-transform duration-500 ease-out" data-alt="Black synthesizer with colorful knobs" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeEDxCHxZc07JSqzqvllMeIgAkaIt5Hj1pdvs4bUTzIavq1O9uAlJ6LRLMl9lGnLYtahs50YWmAC6U0KWh2ofNZ3e2UVZQca0nvSxDTVGBql8xybAs9WVKC2GGRdAO0YEQ2gUZO1qcpj0_QJjBhmiKTsqz3JV2DvDSq6yWlFgHi-61Ih4uesN48G7tMOT3h_-Y-Bnyj5TAJqjDtZXzr5cor9a3-NZJ__1Zw0VwgIEKL10DG3K_eHs5sthIatS2HtnhNJ2PPROVrfA"/>
+</div>
+<div class="p-4 flex flex-col flex-1 gap-3">
+<div class="flex flex-col gap-1">
+<h3 class="text-white text-lg font-bold leading-tight group-hover:text-primary transition-colors">Korg Minilogue XD</h3>
+<p class="text-text-secondary text-sm line-clamp-2">4-voice polyphonic analog synthesizer with digital multi-engine.</p>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex flex-col">
+<span class="text-primary text-xl font-bold">₱649.99</span>
+<div class="flex items-center gap-1.5 mt-1">
+<div class="size-2 rounded-full bg-emerald-500"></div>
+<span class="text-xs text-emerald-500 font-medium uppercase tracking-wide">In Stock</span>
+</div>
+</div>
+<button class="h-10 w-10 md:w-auto md:px-4 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold flex items-center justify-center gap-2 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
+<span class="hidden md:inline text-sm">Add</span>
+</button>
+</div>
+</div>
+</article>
+<article class="group product-card flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-[#282f39] hover:border-primary/50 transition-colors shadow-lg">
+<div class="relative w-full aspect-[4/3] overflow-hidden bg-white/5">
+<div class="absolute top-3 left-3 z-10">
+<span class="px-2 py-1 rounded bg-black/60 backdrop-blur-md text-xs font-bold text-white uppercase tracking-wider border border-white/10">Keyboards</span>
+</div>
+<div class="absolute top-3 right-3 z-10">
+<button class="size-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<img alt="Moog Grandmother" class="product-image w-full h-full object-cover transition-transform duration-500 ease-out" data-alt="Retro colorful Moog synthesizer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXykK81o1NC-Unhs2jEmWq4-gqQpnzoXkvXmZLXN00O_Mr88ZX1tmcUqDOU749f9YuItKwKqrD55lAN7Di8naBsCgec0zW4_Cker9G-y1UcfnT6EHf-Xni2pWHZJwDXjiy8sY58u6F1cyicmKBiJzRtEY1QMe75Se3bvzCkxE63k7iQQZRYRKHJ1KCINue8DaqREYRthtnHn9qdAShI2s8-1UYcSccxKkfKXi2BiC9oYUGdwkWf62cFQK4fzqQpoO0dANsm2G4ZmE"/>
+</div>
+<div class="p-4 flex flex-col flex-1 gap-3">
+<div class="flex flex-col gap-1">
+<h3 class="text-white text-lg font-bold leading-tight group-hover:text-primary transition-colors">Moog Grandmother</h3>
+<p class="text-text-secondary text-sm line-clamp-2">Semi-modular analog synthesizer with built-in spring reverb.</p>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex flex-col">
+<span class="text-primary text-xl font-bold">₱999.00</span>
+<div class="flex items-center gap-1.5 mt-1">
+<div class="size-2 rounded-full bg-orange-500"></div>
+<span class="text-xs text-orange-500 font-medium uppercase tracking-wide">Low Stock</span>
+</div>
+</div>
+<button class="h-10 w-10 md:w-auto md:px-4 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold flex items-center justify-center gap-2 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
+<span class="hidden md:inline text-sm">Add</span>
+</button>
+</div>
+</div>
+</article>
+<article class="group product-card flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-[#282f39] hover:border-primary/50 transition-colors shadow-lg">
+<div class="relative w-full aspect-[4/3] overflow-hidden bg-white/5">
+<div class="absolute top-3 left-3 z-10">
+<span class="px-2 py-1 rounded bg-black/60 backdrop-blur-md text-xs font-bold text-white uppercase tracking-wider border border-white/10">Guitars</span>
+</div>
+<div class="absolute top-3 right-3 z-10">
+<button class="size-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<img alt="Fender Stratocaster" class="product-image w-full h-full object-cover transition-transform duration-500 ease-out" data-alt="Electric guitar body close up" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaI6h1h2ibfCn_DiBd-KlMl8_ocqDbgWCeyDGDaaVuCFnriJKWVsImgBLGzKjCkDLblnLgl06OdD6nUhqidIEbmQ1PP3dOndstk0Lyt-_oXs1b89BjIudOByMeJcY1s5MK2xeWEdduvZIlTIqF4f1HGT3TCjZiXI76jpNflPrndKJDEAztnlB3A1c52_CDh1L7E5GRpshndAQT8GXanf5VK0f-d6IvGgiVUlVtMoZbglP8kH1nDFJO3Y2pZiMCNCRXKP32de3rLoA"/>
+</div>
+<div class="p-4 flex flex-col flex-1 gap-3">
+<div class="flex flex-col gap-1">
+<h3 class="text-white text-lg font-bold leading-tight group-hover:text-primary transition-colors">Fender Stratocaster Pro II</h3>
+<p class="text-text-secondary text-sm line-clamp-2">American Professional II Stratocaster with V-Mod II pickups.</p>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex flex-col">
+<span class="text-primary text-xl font-bold">₱1,200.00</span>
+<div class="flex items-center gap-1.5 mt-1">
+<div class="size-2 rounded-full bg-blue-400 animate-pulse"></div>
+<span class="text-xs text-blue-400 font-medium uppercase tracking-wide">Pre-order</span>
+</div>
+</div>
+<button class="h-10 w-10 md:w-auto md:px-4 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold flex items-center justify-center gap-2 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-[20px]">calendar_add_on</span>
+<span class="hidden md:inline text-sm">Reserve</span>
+</button>
+</div>
+</div>
+</article>
+<article class="group product-card flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-[#282f39] hover:border-primary/50 transition-colors shadow-lg">
+<div class="relative w-full aspect-[4/3] overflow-hidden bg-white/5">
+<div class="absolute top-3 left-3 z-10">
+<span class="px-2 py-1 rounded bg-black/60 backdrop-blur-md text-xs font-bold text-white uppercase tracking-wider border border-white/10">Audio</span>
+</div>
+<div class="absolute top-3 right-3 z-10">
+<button class="size-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">favorite</span>
+</button>
+</div>
+<img alt="SSL SiX Desktop Mixer" class="product-image w-full h-full object-cover transition-transform duration-500 ease-out" data-alt="Studio mixing console faders" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKk7xvlkTzVpw4FTmWaa3PRSO51gmp7DH6YpW6qUzCyGJL7CGGgcc3YguT2nOQytDbnKOrUQEGF6PqBrJnINdkbiLKy8P8iDWyHl9eZTQ7brZHNCvRdPvH-FAEZdRJlMrOuNd3hfjyjbZl1u864zZkXXPOR5qi6G0dTMX2WKvRQOHN_Ds0IL8bpwmFLTTwsNK8MnpNf5CRk3jzwIJa7lI06OHex_TOUjv34ajEMyz3i67--n4LyA-JNqdTKvzIT9ww-qzEf6QgmzE"/>
+</div>
+<div class="p-4 flex flex-col flex-1 gap-3">
+<div class="flex flex-col gap-1">
+<h3 class="text-white text-lg font-bold leading-tight group-hover:text-primary transition-colors">SSL SiX Desktop Mixer</h3>
+<p class="text-text-secondary text-sm line-clamp-2">The ultimate desktop mixer. Professional console grade audio.</p>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex flex-col">
+<span class="text-primary text-xl font-bold">₱1,499.00</span>
+<div class="flex items-center gap-1.5 mt-1">
+<div class="size-2 rounded-full bg-emerald-500"></div>
+<span class="text-xs text-emerald-500 font-medium uppercase tracking-wide">In Stock</span>
+</div>
+</div>
+<button class="h-10 w-10 md:w-auto md:px-4 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold flex items-center justify-center gap-2 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
+<span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
+<span class="hidden md:inline text-sm">Add</span>
+</button>
+</div>
+</div>
+</article>
+<article class="flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-[#282f39] shadow-lg animate-pulse">
+<div class="w-full aspect-[4/3] bg-[#282f39]"></div>
+<div class="p-4 flex flex-col flex-1 gap-4">
+<div class="flex flex-col gap-2">
+<div class="h-6 w-3/4 bg-[#282f39] rounded"></div>
+<div class="h-4 w-full bg-[#282f39] rounded"></div>
+<div class="h-4 w-2/3 bg-[#282f39] rounded"></div>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex flex-col gap-2">
+<div class="h-6 w-20 bg-[#282f39] rounded"></div>
+<div class="h-3 w-16 bg-[#282f39] rounded"></div>
+</div>
+<div class="h-10 w-10 md:w-24 bg-[#282f39] rounded-lg"></div>
+</div>
+</div>
+</article>
+<article class="flex flex-col bg-surface-dark rounded-xl overflow-hidden border border-[#282f39] shadow-lg animate-pulse">
+<div class="w-full aspect-[4/3] bg-[#282f39]"></div>
+<div class="p-4 flex flex-col flex-1 gap-4">
+<div class="flex flex-col gap-2">
+<div class="h-6 w-3/4 bg-[#282f39] rounded"></div>
+<div class="h-4 w-full bg-[#282f39] rounded"></div>
+</div>
+<div class="mt-auto flex items-center justify-between pt-2">
+<div class="flex flex-col gap-2">
+<div class="h-6 w-20 bg-[#282f39] rounded"></div>
+<div class="h-3 w-16 bg-[#282f39] rounded"></div>
+</div>
+<div class="h-10 w-10 md:w-24 bg-[#282f39] rounded-lg"></div>
+</div>
+</div>
+</article>
+</div>
+<div class="flex justify-center mt-12 mb-8">
+<button class="flex items-center gap-2 px-8 py-3 rounded-lg bg-[#282f39] hover:bg-primary text-white font-bold transition-all group">
+<span class="material-symbols-outlined group-hover:animate-spin">autorenew</span>
+                    Load More Products
+                </button>
+</div>
+</div>
+</main>
+<footer class="mt-auto border-t border-[#282f39] bg-[#111418] py-8 px-10">
+<div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-text-secondary text-sm">© 2024 RJ MUSIC. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="text-text-secondary hover:text-white text-sm transition-colors" href="#">Privacy Policy</a>
+<a class="text-text-secondary hover:text-white text-sm transition-colors" href="#">Terms of Service</a>
+<a class="text-text-secondary hover:text-white text-sm transition-colors" href="#">Contact</a>
+</div>
+</div>
+</footer>
+</body></html>

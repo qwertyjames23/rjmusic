@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Product - RJ MUSIC</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d6cf2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                        "surface-dark": "#1b2027",
+                        "border-dark": "#3b4554",
+                        "text-secondary": "#9ca8ba"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111418;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b4554;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white h-screen overflow-hidden">
+<!-- Dashboard Background Simulation (blurred content behind modal) -->
+<div aria-hidden="true" class="fixed inset-0 z-0 flex w-full h-full flex-col bg-[#111418] dark overflow-hidden opacity-40 pointer-events-none">
+<div class="flex h-16 items-center border-b border-border-dark px-10">
+<div class="w-8 h-8 rounded-full bg-primary/20"></div>
+</div>
+<div class="p-10 grid grid-cols-4 gap-6">
+<div class="h-40 rounded-xl bg-surface-dark border border-border-dark"></div>
+<div class="h-40 rounded-xl bg-surface-dark border border-border-dark"></div>
+<div class="h-40 rounded-xl bg-surface-dark border border-border-dark"></div>
+<div class="h-40 rounded-xl bg-surface-dark border border-border-dark"></div>
+</div>
+</div>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+<!-- Modal Container -->
+<div class="relative flex flex-col w-full max-w-5xl max-h-[90vh] bg-background-light dark:bg-background-dark rounded-xl border border-border-dark shadow-2xl overflow-hidden">
+<!-- Modal Header -->
+<div class="flex items-center justify-between px-6 py-4 border-b border-border-dark bg-surface-dark">
+<h2 class="text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white">
+                    Edit Product - Midnight Blue Vinyl LP
+                </h2>
+<button class="text-text-secondary hover:text-white transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Body (Scrollable) -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8">
+<!-- Section 1: Core Info -->
+<div class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Product Name -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium leading-normal text-slate-900 dark:text-white">Product Name</label>
+<input class="form-input flex w-full rounded-lg border border-gray-300 dark:border-border-dark bg-white dark:bg-surface-dark text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 px-4 placeholder:text-text-secondary text-base transition-all" type="text" value="Midnight Blue Vinyl LP"/>
+</div>
+<!-- Category (Added for completeness) -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium leading-normal text-slate-900 dark:text-white">Category</label>
+<div class="relative">
+<select class="form-select flex w-full rounded-lg border border-gray-300 dark:border-border-dark bg-white dark:bg-surface-dark text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary h-12 px-4 pr-10 text-base appearance-none cursor-pointer">
+<option>Vinyl Records</option>
+<option>Merchandise</option>
+<option>Digital Downloads</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Description -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium leading-normal text-slate-900 dark:text-white">Description</label>
+<textarea class="form-textarea flex w-full resize-y rounded-lg border border-gray-300 dark:border-border-dark bg-white dark:bg-surface-dark text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary min-h-[120px] p-4 placeholder:text-text-secondary text-base font-normal leading-normal transition-all">Limited edition midnight blue colored vinyl. Includes digital download card and exclusive poster art by RJ.</textarea>
+</div>
+</div>
+<!-- Section 2: Variations Manager -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-bold leading-tight text-slate-900 dark:text-white">Variations</h3>
+<button class="flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                            Add Variation
+                        </button>
+</div>
+<!-- Variations Table -->
+<div class="w-full overflow-hidden rounded-lg border border-gray-300 dark:border-border-dark bg-white dark:bg-surface-dark">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-gray-50 dark:bg-[#1b2027] border-b border-gray-200 dark:border-border-dark">
+<th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary w-16">Image</th>
+<th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary min-w-[160px]">Variation Type</th>
+<th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary w-40">Price ($)</th>
+<th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary w-32">Stock</th>
+<th class="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-text-secondary w-20 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200 dark:divide-border-dark">
+<!-- Row 1 -->
+<tr class="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<td class="px-4 py-3">
+<div class="relative w-10 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 group/image cursor-pointer">
+<div class="bg-center bg-no-repeat bg-cover w-full h-full" data-alt="Blue vinyl record detail" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDjnZHSHq-RMeQWYJ57WeyzYYYv5dTvsfekvhPoYWFTuj4oP0KX1lcN83DBD86dZHynlB3ArGUZNNl4sWizmBvX3_d6NauSvKpn_ksaOCOuLDPEQEpHzPkzOQLfjyJwcz72wU5o7lCsnejtUs2UGKS8GCgJv2Ckyp68-5uOCgebMW1TNV1DA71VqYbfskGikzmC6SC6uhI4lAw9ChbS6lAdwseCDD7DV6NluUdu8dWygTf8OCuV3wgwQeBoY_1RLhs1TMC3BvGral8");'></div>
+<div class="absolute inset-0 bg-black/40 hidden group-hover/image:flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[16px]">edit</span>
+</div>
+</div>
+</td>
+<td class="px-4 py-3">
+<div class="flex flex-col gap-1">
+<input class="bg-transparent border-none p-0 text-sm text-slate-900 dark:text-white focus:ring-0 w-full font-medium" type="text" value="Color: Midnight Blue"/>
+<span class="text-xs text-text-secondary">SKU: VIN-BLU-001</span>
+</div>
+</td>
+<td class="px-4 py-3">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-sm">$</span>
+<input class="w-full bg-gray-50 dark:bg-[#111418] border border-gray-300 dark:border-border-dark rounded px-3 py-1.5 pl-6 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none text-right" type="number" value="29.99"/>
+</div>
+</td>
+<td class="px-4 py-3">
+<input class="w-full bg-gray-50 dark:bg-[#111418] border border-gray-300 dark:border-border-dark rounded px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none text-right" type="number" value="50"/>
+</td>
+<td class="px-4 py-3 text-right">
+<button class="p-1.5 text-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors" title="Delete Variation">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<td class="px-4 py-3">
+<div class="relative w-10 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 group/image cursor-pointer">
+<div class="bg-center bg-no-repeat bg-cover w-full h-full" data-alt="Red vinyl record detail" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCvQDWc4xuGOXLSbXZRsB5sSRz2lljRwyPkz9TOEZ5FMoxs9OgnlT3oADHOENWUqsI2hnMO1QzL1f6Tmb6UnR95-UyksiAgjkfTXaW2rMzGYNs5O7XIkL6lWRrhxtcUYY-RezpzkLo4PVapCk0Lj_vqdfok88t400xxgrvfkZTAqNsW87ZAMUMLs26vpLibE1lVc_gTfn9_UMAqR0-m5TNhdGtemGupQFZt6vG8f4qiPZFva0N9SJajKK9_Qpezmq3R_0i2PsQvAP8");'></div>
+<div class="absolute inset-0 bg-black/40 hidden group-hover/image:flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[16px]">edit</span>
+</div>
+</div>
+</td>
+<td class="px-4 py-3">
+<div class="flex flex-col gap-1">
+<input class="bg-transparent border-none p-0 text-sm text-slate-900 dark:text-white focus:ring-0 w-full font-medium" type="text" value="Color: Crimson Red"/>
+<span class="text-xs text-text-secondary">SKU: VIN-RED-002</span>
+</div>
+</td>
+<td class="px-4 py-3">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-sm">$</span>
+<input class="w-full bg-gray-50 dark:bg-[#111418] border border-gray-300 dark:border-border-dark rounded px-3 py-1.5 pl-6 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none text-right" type="number" value="29.99"/>
+</div>
+</td>
+<td class="px-4 py-3">
+<input class="w-full bg-gray-50 dark:bg-[#111418] border border-gray-300 dark:border-border-dark rounded px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none text-right" type="number" value="30"/>
+</td>
+<td class="px-4 py-3 text-right">
+<button class="p-1.5 text-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors" title="Delete Variation">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="group hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<td class="px-4 py-3">
+<div class="relative w-10 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 group/image cursor-pointer border border-dashed border-gray-400 dark:border-gray-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">add_photo_alternate</span>
+</div>
+</td>
+<td class="px-4 py-3">
+<div class="flex flex-col gap-1">
+<input class="bg-transparent border-b border-dashed border-gray-300 dark:border-gray-600 p-0 pb-1 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-0 w-full" placeholder="e.g. Color: Black" type="text"/>
+</div>
+</td>
+<td class="px-4 py-3">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-sm">$</span>
+<input class="w-full bg-gray-50 dark:bg-[#111418] border border-gray-300 dark:border-border-dark rounded px-3 py-1.5 pl-6 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none text-right" placeholder="0.00" type="number"/>
+</div>
+</td>
+<td class="px-4 py-3">
+<input class="w-full bg-gray-50 dark:bg-[#111418] border border-gray-300 dark:border-border-dark rounded px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none text-right" placeholder="0" type="number"/>
+</td>
+<td class="px-4 py-3 text-right">
+<button class="p-1.5 text-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors" title="Delete Variation">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="flex items-center justify-between px-6 py-4 border-t border-border-dark bg-background-light dark:bg-background-dark">
+<!-- Stock Summary -->
+<div class="flex flex-col">
+<span class="text-xs text-text-secondary uppercase tracking-wide font-semibold">Total Stock</span>
+<span class="text-lg font-bold text-slate-900 dark:text-white">80 units</span>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-3">
+<button class="px-5 py-2.5 rounded-lg border border-gray-300 dark:border-border-dark text-slate-700 dark:text-white font-medium hover:bg-gray-100 dark:hover:bg-surface-dark transition-colors">
+                        Cancel
+                    </button>
+<button class="px-6 py-2.5 rounded-lg bg-primary hover:bg-blue-600 text-white font-semibold shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                        Save Product
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

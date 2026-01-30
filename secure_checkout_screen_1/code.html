@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Confirmed - RJ MUSIC</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                        "surface-dark": "#151a21",
+                        "border-dark": "#282f39",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1c2027;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b4554;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+<header class="flex items-center justify-between border-b border-gray-200 dark:border-border-dark px-6 py-4 lg:px-10 bg-white/90 dark:bg-[#101822]/90 backdrop-blur-md z-40 sticky top-0">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-6 text-primary">
+<svg fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"></path>
+</svg>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">RJ MUSIC</h2>
+</div>
+<div class="hidden sm:flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-[#9da8b9]">
+<span class="material-symbols-outlined text-lg">verified</span>
+            Order Confirmation
+        </div>
+</header>
+<main class="flex-grow w-full mx-auto p-4 lg:p-8 flex items-center justify-center relative">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>
+<div class="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="max-w-3xl w-full relative z-10">
+<div class="bg-white/80 dark:bg-surface-dark/60 backdrop-blur-xl border border-gray-200 dark:border-border-dark rounded-2xl p-6 md:p-12 shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] text-center">
+<div class="mb-8 flex justify-center">
+<div class="relative group">
+<div class="absolute inset-0 bg-green-500 blur-2xl opacity-20 dark:opacity-30 rounded-full group-hover:opacity-40 transition-opacity duration-700"></div>
+<div class="relative bg-white dark:bg-surface-dark rounded-full p-2">
+<span class="material-symbols-outlined text-[80px] text-green-500 fill-current" style="font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 48;">check_circle</span>
+</div>
+</div>
+</div>
+<h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">Thank You for Your Purchase!</h1>
+<p class="text-slate-500 dark:text-[#9da8b9] text-lg mb-10">
+                    Your order <span class="font-mono text-slate-900 dark:text-white font-bold bg-gray-100 dark:bg-[#1c222b] px-2 py-0.5 rounded border border-gray-200 dark:border-border-dark">#RJ-88291</span> has been placed successfully.
+                </p>
+<div class="mb-12 relative">
+<div class="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 dark:bg-border-dark -translate-y-1/2 z-0 hidden sm:block"></div>
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-6 sm:gap-0 relative z-10">
+<div class="flex sm:flex-col items-center gap-4 sm:gap-2">
+<div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white shadow-[0_0_10px_rgba(34,197,94,0.4)] flex-shrink-0">
+<span class="material-symbols-outlined text-lg">check</span>
+</div>
+<div class="text-left sm:text-center">
+<p class="text-sm font-bold text-slate-900 dark:text-white">Order Placed</p>
+<p class="text-xs text-slate-500 dark:text-[#9da8b9]">Oct 24, 2:30 PM</p>
+</div>
+</div>
+<div class="flex sm:flex-col items-center gap-4 sm:gap-2">
+<div class="relative flex items-center justify-center w-8 h-8 flex-shrink-0">
+<span class="absolute w-full h-full rounded-full bg-primary/30 animate-ping"></span>
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white shadow-[0_0_15px_rgba(19,109,236,0.5)] relative z-10">
+<span class="material-symbols-outlined text-sm animate-pulse">inventory_2</span>
+</div>
+</div>
+<div class="text-left sm:text-center">
+<p class="text-sm font-bold text-primary">Processing</p>
+<p class="text-xs text-slate-500 dark:text-[#9da8b9]">In Progress</p>
+</div>
+</div>
+<div class="flex sm:flex-col items-center gap-4 sm:gap-2 opacity-50">
+<div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#2a3441] border-2 border-gray-300 dark:border-border-dark flex items-center justify-center text-gray-400 dark:text-gray-500 flex-shrink-0">
+<span class="text-xs font-bold">3</span>
+</div>
+<div class="text-left sm:text-center">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Shipping</p>
+<p class="text-xs text-slate-500 dark:text-[#9da8b9]">Pending</p>
+</div>
+</div>
+<div class="flex sm:flex-col items-center gap-4 sm:gap-2 opacity-50">
+<div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#2a3441] border-2 border-gray-300 dark:border-border-dark flex items-center justify-center text-gray-400 dark:text-gray-500 flex-shrink-0">
+<span class="text-xs font-bold">4</span>
+</div>
+<div class="text-left sm:text-center">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Delivery</p>
+<p class="text-xs text-slate-500 dark:text-[#9da8b9]">Pending</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-gray-50 dark:bg-[#1c222b]/50 border border-gray-100 dark:border-border-dark rounded-xl p-6 mb-8 text-left grid md:grid-cols-2 gap-8 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/5 to-transparent rounded-bl-full pointer-events-none"></div>
+<div>
+<h3 class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">local_shipping</span> Delivery Address
+                        </h3>
+<p class="text-slate-900 dark:text-white font-medium">Alex Producer</p>
+<p class="text-slate-500 dark:text-[#9da8b9] text-sm mt-1 leading-relaxed">
+                            128 Synth Avenue, Studio B<br/>
+                            Makati City, Metro Manila 1200<br/>
+                            Philippines
+                        </p>
+</div>
+<div>
+<h3 class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">schedule</span> Estimated Delivery
+                        </h3>
+<p class="text-slate-900 dark:text-white font-medium text-lg">Oct 26 - Oct 28</p>
+<p class="text-slate-500 dark:text-[#9da8b9] text-sm mt-1">
+                            Standard Shipping (LBC Express)
+                        </p>
+<div class="mt-4 pt-4 border-t border-gray-200 dark:border-border-dark flex items-center justify-between">
+<span class="text-xs text-slate-500 dark:text-[#9da8b9]">Payment Method</span>
+<span class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">credit_card</span> Visa ending in 4242
+                            </span>
+</div>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+<button class="w-full sm:w-auto bg-primary hover:bg-blue-600 text-white font-bold py-3.5 px-8 rounded-lg shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+<span>Track My Order</span>
+<span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+<button class="w-full sm:w-auto bg-transparent hover:bg-gray-100 dark:hover:bg-[#1c222b] text-slate-700 dark:text-white font-medium py-3.5 px-8 rounded-lg border border-gray-300 dark:border-border-dark transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">shopping_bag</span>
+<span>Continue Shopping</span>
+</button>
+</div>
+<div class="flex items-center justify-center gap-2 text-sm text-slate-400 dark:text-gray-500">
+<span class="material-symbols-outlined text-base">mail</span>
+<span>Check your email for the official receipt.</span>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

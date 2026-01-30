@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>RJ MUSIC - Product Detail</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                        "secondary-dark": "#1A2633", // Slightly lighter dark for cards
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-900 dark:text-white antialiased selection:bg-primary selection:text-white">
+<div class="relative min-h-screen w-full flex flex-col">
+<header class="sticky top-0 z-40 w-full border-b border-gray-200 dark:border-gray-800 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md">
+<div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex h-16 items-center justify-between gap-8">
+<div class="flex items-center gap-2">
+<div class="size-8 text-primary flex items-center justify-center">
+<svg class="w-full h-full" fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold tracking-tight">RJ MUSIC</h2>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Shop</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Brands</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Deals</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Support</a>
+</nav>
+<div class="flex flex-1 justify-end gap-4 items-center">
+<div class="hidden sm:flex relative w-full max-w-xs">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="block w-full rounded-lg border-0 py-2 pl-10 pr-3 text-sm bg-gray-100 dark:bg-secondary-dark placeholder:text-gray-500 focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-black transition-all" placeholder="Search gear..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-200 dark:hover:bg-secondary-dark transition-colors relative">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-200 dark:hover:bg-secondary-dark transition-colors">
+<span class="material-symbols-outlined">person</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<nav aria-label="Breadcrumb" class="flex mb-8">
+<ol class="inline-flex items-center space-x-1 md:space-x-2">
+<li class="inline-flex items-center">
+<a class="text-sm font-medium text-gray-500 hover:text-primary dark:text-gray-400" href="#">Home</a>
+</li>
+<li>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-600 text-sm mx-1">chevron_right</span>
+<a class="text-sm font-medium text-gray-500 hover:text-primary dark:text-gray-400" href="#">Keyboards</a>
+</div>
+</li>
+<li>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-600 text-sm mx-1">chevron_right</span>
+<a class="text-sm font-medium text-gray-500 hover:text-primary dark:text-gray-400" href="#">Synthesizers</a>
+</div>
+</li>
+<li aria-current="page">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-600 text-sm mx-1">chevron_right</span>
+<span class="text-sm font-medium text-gray-900 dark:text-white">RJ-X1 Analog Poly</span>
+</div>
+</li>
+</ol>
+</nav>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+<div class="lg:col-span-7 flex flex-col gap-6">
+<div class="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-secondary-dark group">
+<div class="absolute inset-0 bg-center bg-cover bg-no-repeat transition-transform duration-500 group-hover:scale-105" data-alt="Close up of black analog synthesizer knobs and keys with dramatic blue lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCUBolwT7jbOkvCZt-_N-F58EUu7jstQjiP_beu_KclLB8FzqxquFZpMPwv05g0lxUiQzt9WAWVEBkn2Ci_NcbKLhmIbfpTSHgM3xpkUzbSn0hvZQrYdnDlfA3nRXASSwgHfj7I85vXDbeSH9snbQiTmsgOLh5DZlLsTrpju_Af8W01ldHEBLeu8MGrxz5uc_nwQWuKC4WIxMdB6xtkJU2O-I75399gUCNhZNYG7laiDsL1fYbzSsGD287Ozq0_iWkgEzccQ1cKc3c');">
+</div>
+<div class="absolute top-4 left-4">
+<span class="inline-flex items-center rounded-md bg-primary/90 px-2 py-1 text-xs font-medium text-white ring-1 ring-inset ring-primary/20 backdrop-blur-sm">New Arrival</span>
+</div>
+<div class="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-lg">zoom_in</span>
+</div>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+<button class="relative flex-none w-24 aspect-square rounded-lg overflow-hidden ring-2 ring-primary ring-offset-2 ring-offset-background-dark">
+<div class="w-full h-full bg-center bg-cover" data-alt="Thumbnail of synthesizer front panel" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAn-V-p0oYHJFeobM8Ftkt2VE9CONuMrQhrZGZDZdjs6vDqI3o8eGYWAMtztyM-pWIaBQ_Mgli1SnkPmbJyLhM0ya0lrfmnH9K6WEyDFMSb_fHnywhC9gwyJAPNDcSIirdq8hbiy48lwWm1CQDymk-DPmc7yJmnGJP76sT5xZ5lxaNVnS2Vb55UFHKx8W8tT-Syc14v1C7GF2KvZiwzySMCqn-sASkRuXw0r-iqaz_KDYIFcj5Ol8MfxtGaXvRhAgzwdHrgmmX7rSQ');">
+</div>
+</button>
+<button class="relative flex-none w-24 aspect-square rounded-lg overflow-hidden opacity-60 hover:opacity-100 transition-opacity">
+<div class="w-full h-full bg-center bg-cover" data-alt="Thumbnail of synthesizer back ports" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDLe0UdZRNrxA8Lmk3xOjPNyHTMzG0GDkhH0ex0UlsYcoAIQ7ZLgsigkEHBpmgaWgY31JunXGvAcbMEXNOSuPpSDiHy3Nhz9oOLNPgrAnysXB6nyO2IovjcYuOsEL4BU9iY9GOXhnx4TbGWFmyCs3A4GDLf50YwW7AxT7v8EVU3eyDKjCqRW33seNOQQmerq86Q8W9ycoVWBhBFy7PQdymBLj_48OYznW5Vwroz-0iCVJvNMq8cjGkuLF2rYQW8_nComwNiIXB4EX4');">
+</div>
+</button>
+<button class="relative flex-none w-24 aspect-square rounded-lg overflow-hidden opacity-60 hover:opacity-100 transition-opacity">
+<div class="w-full h-full bg-center bg-cover" data-alt="Thumbnail of synthesizer keys close up" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD1EYSshhKACdbNBIK-Kf-TtOgF91BVaG1Ngw8Ld_shUtk1PcFw_RUh-VXqScfFDYXTZaL515E2JhgE7ix31XwSs1t7qHrG7cyU5yWVpxDiQYZ2M7wAuULg_hkvOE7xOzUWbNkLy6aLDCsYN7j__-ubLun7EfjQZIu9KZlEU8PAh8jitbyELwHkAa-pOmSB2upOA9Vrn4HBwe8r4u4HWq_iyzQ0hYEYmgZWQwlH4bi6c7_t55bh95EP9B0hjhPnl_L_qN7SP2O6Vwk');">
+</div>
+</button>
+<button class="relative flex-none w-24 aspect-square rounded-lg overflow-hidden opacity-60 hover:opacity-100 transition-opacity">
+<div class="w-full h-full bg-center bg-cover" data-alt="Thumbnail of synthesizer in studio setup" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDanV6iJWsmXp5Orm0nJuLATkMxyRa3_V2r1WsXCLOw5UAg4tqavHg2_fbChAqIDTOeBsQZM85Z8e5uEkOUJ7p0P9zK-zBFyOybKtIUGdpSd0ndVDYWij61DvLtL1UCraN-8OoRXGvJ3SdDvQBP9VRkF1SZ3NODXuDR1U3RwDHnd2imzyS584MsFoUTbKCnk41gNpkV88xtdFTUwIAPweAwixqj086megCKd2x4miQ1-R5dhQm8Cer7K0xyAk1aBRPoPSfgLxTdFsM');">
+</div>
+</button>
+</div>
+<div class="hidden lg:block mt-8">
+<div class="border-b border-gray-200 dark:border-gray-800">
+<nav aria-label="Tabs" class="-mb-px flex gap-8">
+<a class="border-b-2 border-primary text-primary whitespace-nowrap py-4 px-1 text-sm font-medium" href="#">Description</a>
+<a class="border-b-2 border-transparent text-gray-500 hover:text-gray-300 whitespace-nowrap py-4 px-1 text-sm font-medium" href="#">Tech Specs</a>
+<a class="border-b-2 border-transparent text-gray-500 hover:text-gray-300 whitespace-nowrap py-4 px-1 text-sm font-medium" href="#">Reviews</a>
+</nav>
+</div>
+<div class="py-6 text-gray-600 dark:text-gray-300 space-y-4 leading-relaxed font-body">
+<p>
+                                The RJ-X1 Analog Poly Synth redefines modern sound design with its dual-VCO architecture and lush, warm analog filters. Built for both the studio visionary and the live performer, the X1 features a robust 61-key semi-weighted keybed with aftertouch.
+                            </p>
+<p>
+                                Dive deep into modulation with the extensive matrix, or instantly recall your favorite patches with 500 user preset slots. The built-in effects engine includes vintage chorus, delay, and a hall reverb that adds cavernous depth to your pads and leads.
+                            </p>
+<ul class="list-disc pl-5 space-y-1 mt-4 marker:text-primary">
+<li>16-voice polyphony with true analog signal path</li>
+<li>Three envelope generators per voice</li>
+<li>High-resolution OLED display for parameter feedback</li>
+<li>USB-C MIDI and Audio connectivity</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 relative">
+<div class="sticky top-24 space-y-8">
+<div class="space-y-4">
+<div class="flex items-center gap-2">
+<div class="flex text-yellow-500 text-[18px]">
+<span class="material-symbols-outlined fill-current">star</span>
+<span class="material-symbols-outlined fill-current">star</span>
+<span class="material-symbols-outlined fill-current">star</span>
+<span class="material-symbols-outlined fill-current">star</span>
+<span class="material-symbols-outlined fill-current">star_half</span>
+</div>
+<span class="text-sm text-gray-500 dark:text-gray-400">4.8 (124 reviews)</span>
+</div>
+<h1 class="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white">
+                                RJ-X1 Analog Poly Synth
+                            </h1>
+<div class="flex items-baseline gap-4">
+<span class="text-3xl font-bold text-primary">₱74,999.00</span>
+<span class="text-lg text-gray-500 line-through decoration-gray-500">₱84,999.00</span>
+</div>
+<p class="text-base text-gray-600 dark:text-gray-300 font-body">
+                                Experience the warmth of true analog synthesis. The RJ-X1 combines vintage character with modern connectivity, making it the centerpiece of any professional studio.
+                            </p>
+</div>
+<div class="bg-white dark:bg-secondary-dark/50 backdrop-blur-md rounded-xl p-6 border border-gray-100 dark:border-gray-800 shadow-xl">
+<div class="flex items-center justify-between mb-6">
+<span class="text-sm font-medium text-green-500 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                                    In Stock
+                                </span>
+<span class="text-xs text-gray-500">Free shipping worldwide</span>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Finish</label>
+<div class="flex gap-3">
+<button aria-label="Black" class="w-8 h-8 rounded-full bg-black ring-2 ring-primary ring-offset-2 ring-offset-white dark:ring-offset-secondary-dark"></button>
+<button aria-label="Silver" class="w-8 h-8 rounded-full bg-gray-400 hover:ring-2 hover:ring-gray-400 ring-offset-2 ring-offset-white dark:ring-offset-secondary-dark transition-all"></button>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-background-dark">
+<button class="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<input class="w-12 text-center bg-transparent border-none p-0 text-gray-900 dark:text-white focus:ring-0 font-medium" type="text" value="1"/>
+<button class="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<button class="flex-1 bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group">
+<span>Add to Cart</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+<button class="w-full text-center text-sm text-gray-500 hover:text-primary underline mt-2">
+                                    Add to Wishlist
+                                </button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 text-sm">
+<div class="flex flex-col p-3 rounded-lg bg-gray-100 dark:bg-secondary-dark">
+<span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">Keys</span>
+<span class="font-bold text-gray-900 dark:text-white">61 Semi-Weighted</span>
+</div>
+<div class="flex flex-col p-3 rounded-lg bg-gray-100 dark:bg-secondary-dark">
+<span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">Polyphony</span>
+<span class="font-bold text-gray-900 dark:text-white">16 Voices</span>
+</div>
+<div class="flex flex-col p-3 rounded-lg bg-gray-100 dark:bg-secondary-dark">
+<span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">Effects</span>
+<span class="font-bold text-gray-900 dark:text-white">3 Engines</span>
+</div>
+<div class="flex flex-col p-3 rounded-lg bg-gray-100 dark:bg-secondary-dark">
+<span class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider mb-1">Warranty</span>
+<span class="font-bold text-gray-900 dark:text-white">3 Years</span>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:hidden col-span-1 border-t border-gray-200 dark:border-gray-800 pt-8">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Description</h3>
+<p class="text-gray-600 dark:text-gray-300 leading-relaxed font-body">
+                        The RJ-X1 Analog Poly Synth redefines modern sound design with its dual-VCO architecture and lush, warm analog filters. Built for both the studio visionary and the live performer, the X1 features a robust 61-key semi-weighted keybed with aftertouch.
+                    </p>
+</div>
+</div>
+<section class="mt-24 border-t border-gray-200 dark:border-gray-800 pt-16">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-2xl font-bold text-gray-900 dark:text-white">You might also like</h2>
+<a class="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1" href="#">
+                        View all <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="group relative bg-white dark:bg-secondary-dark rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-800/50">
+<div class="aspect-square bg-gray-200 dark:bg-black/50 overflow-hidden relative">
+<div class="absolute inset-0 bg-center bg-cover bg-no-repeat group-hover:scale-110 transition-transform duration-500" data-alt="Drum machine with colorful pads lighting up" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCvOv8wv9GNxhceBXmvO0Z-FozS3FAsg5wMUbVGvM6YFNUoiwKstHibKyk6wN938MK47Dywshqa3irBA65BX86LNIIR8AR3BgJPT6JTK3CuoGTDmKif4TjuEeTBa8RfnEkLY3fT8vVlI1FgH0jvo0-JJ8LW10Vw6DHdK9uwiT12IIkJbdB_AKX4RpcoOpvYBjv15WzvsMWdJ7ZhRcr7HGH5AB1HBiEI1EQZg_lUrZMrYzC_2p1nz2jCI56Hy33cxaZ0V9F6faQkuSw');">
+</div>
+<div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-white text-black rounded-full p-2 shadow-lg hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] block">shopping_bag</span>
+</button>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">RJ-Drum MKII</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Analog Drum Machine</p>
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary">₱29,999.00</span>
+<div class="flex text-yellow-500 text-[12px]">
+<span class="material-symbols-outlined fill-current text-[14px]">star</span>
+<span class="text-gray-400 ml-1">4.9</span>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative bg-white dark:bg-secondary-dark rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-800/50">
+<div class="aspect-square bg-gray-200 dark:bg-black/50 overflow-hidden relative">
+<div class="absolute inset-0 bg-center bg-cover bg-no-repeat group-hover:scale-110 transition-transform duration-500" data-alt="Studio monitor speaker on stand" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAgINg_kgh1SaY69yywfFoJIOvOdFstP2dsh_3gSRHDDSe2zR7Ysm2KXz0TSs-Ks9P-PKNz3ini0WPO_rP4DsXNJIGftXjmf1xF5bniyi2JDkScmlK_d3uN1Nt6eRfP5S4N60Vcn2BJQkGBpeOO7IE90bAQHmcAc8Eft2mQA5kqnxZaOFKDnBPO1Ku6reZVltnMzmAWuZc2ZV68nrg6YTMJ7HPUkFUxqoaq1j_8hAca-zYRsbqhmKSmadXnmILY2y2hYUL3CvZvWn0');">
+</div>
+<div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-white text-black rounded-full p-2 shadow-lg hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] block">shopping_bag</span>
+</button>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Pro Monitor 5</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Active Studio Monitor</p>
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary">₱15,999.00</span>
+<div class="flex text-yellow-500 text-[12px]">
+<span class="material-symbols-outlined fill-current text-[14px]">star</span>
+<span class="text-gray-400 ml-1">4.7</span>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative bg-white dark:bg-secondary-dark rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-800/50">
+<div class="aspect-square bg-gray-200 dark:bg-black/50 overflow-hidden relative">
+<div class="absolute inset-0 bg-center bg-cover bg-no-repeat group-hover:scale-110 transition-transform duration-500" data-alt="Professional headphones on a table" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDyKtDkivzsKMm42HBzOJ0YnH8_OyjeGrGrAzcf8O3sEsc_uRVaPgjXcx_LWGj2bnAM2F9ClvcxK7mUaNRe9lCwvlyl33M-9_inb7e6vmnECqsh75dbeJBlwvcSS4xyLcc5wVlm61eJKYT6lxaWXORKoe-_miTE-BEK7d9qsPwWQZY2qzeZ_25aD-IC9f2F7zSYMGBPXAU5jvkWMiLZ9nd_wGZ7hOW8e_g2hwyyzSCvdlRLXhILeG6_p4RGSxDkNa5em7hDckq1fYQ');">
+</div>
+<div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-white text-black rounded-full p-2 shadow-lg hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] block">shopping_bag</span>
+</button>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">Studio One HP</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Closed-back Headphones</p>
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary">₱9,999.00</span>
+<div class="flex text-yellow-500 text-[12px]">
+<span class="material-symbols-outlined fill-current text-[14px]">star</span>
+<span class="text-gray-400 ml-1">4.5</span>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative bg-white dark:bg-secondary-dark rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-800/50">
+<div class="aspect-square bg-gray-200 dark:bg-black/50 overflow-hidden relative">
+<div class="absolute inset-0 bg-center bg-cover bg-no-repeat group-hover:scale-110 transition-transform duration-500" data-alt="Audio interface with glowing led indicators" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDepygm_jsEKXgpa-6QTxpTguMPOJeAVX-8Ud6hxdKcMAo5vir7rTsIAhzEiviQQFaRbiqm7glgP2IY42sJFSdHdUmGqfkVZskjx9KSZVWX5evOulXFqqb3dH3h1n83Stt1QYqliyn8HZNsOUICyMfmi7NB-vcC1xZKy3l-6aRN7ZdK342KIwOLAQ4rpVCG8H0_7odQxAdqoRq0AfHkDYvfIOoGL8ZaYOwnW_oVf5lWpKT9axGHa2Mzv4Rf0tHk0zmzynPAia-3pro');">
+</div>
+<div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="bg-white text-black rounded-full p-2 shadow-lg hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px] block">shopping_bag</span>
+</button>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">AudioBox 4x4</h3>
+<p class="text-sm text-gray-500 dark:text-gray-400 mb-3">USB-C Interface</p>
+<div class="flex items-center justify-between">
+<span class="font-bold text-primary">₱19,999.00</span>
+<div class="flex text-yellow-500 text-[12px]">
+<span class="material-symbols-outlined fill-current text-[14px]">star</span>
+<span class="text-gray-400 ml-1">4.8</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-6 right-6 z-50 transform transition-all duration-500 ease-in-out">
+<div class="bg-secondary-dark/90 backdrop-blur-md border border-gray-700 text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-4 min-w-[300px]">
+<div class="bg-primary/20 p-2 rounded-full text-primary">
+<span class="material-symbols-outlined text-lg">shopping_cart</span>
+</div>
+<div>
+<h4 class="text-sm font-bold">Item added to cart</h4>
+<p class="text-xs text-gray-400">RJ-X1 Analog Poly Synth</p>
+</div>
+<button class="ml-auto text-gray-400 hover:text-white">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

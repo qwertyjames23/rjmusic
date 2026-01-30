@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Purchase | RJ MUSIC</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(28, 32, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-white min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col font-display overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full border-b border-white/10 bg-background-dark/80 backdrop-blur-md px-6 md:px-20 lg:px-40 py-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-12">
+<div class="flex items-center gap-3 text-white">
+<div class="size-6 text-primary">
+<svg fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z"></path>
+</svg>
+</div>
+<h2 class="text-white text-xl font-bold leading-tight tracking-tight uppercase">RJ MUSIC</h2>
+</div>
+<nav class="hidden lg:flex items-center gap-8">
+<a class="text-white/70 hover:text-white text-sm font-medium transition-colors" href="#">Home</a>
+<a class="text-white/70 hover:text-white text-sm font-medium transition-colors" href="#">Instruments</a>
+<a class="text-white/70 hover:text-white text-sm font-medium transition-colors" href="#">Accessories</a>
+<a class="text-white/70 hover:text-white text-sm font-medium transition-colors" href="#">Brands</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center bg-[#1c222b] rounded-lg px-3 py-1.5 border border-white/5 focus-within:border-primary/50 transition-all">
+<span class="material-symbols-outlined text-[#9da8b9] text-xl">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 placeholder:text-[#9da8b9]" placeholder="Search gear..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-[#9da8b9] hover:text-white transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute top-1 right-1 size-2 bg-primary rounded-full"></span>
+</button>
+<button class="p-2 text-[#9da8b9] hover:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="size-9 rounded-full bg-center bg-cover border border-white/10" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAVWNulXXozE75d3H5i_LunlsujMk76oti0cmXXoxRIKlmKznZZgzt9Socwl1_FBCcjexUWeuIjXFU3tmmRk7LJkcByNmE_IQbMuX3e2YmiVORWm9CHwCIXWajR5Q2KV6TWh-nQUKS4_6BTI5Mznla8w_t-Y0D1aXjVne32X19oLi35kG6hXzDLP-o9C6nO6Dt7-LIjdI5Y9equ4khVik1JzLfvS8ufGgdibF5xJocC-zmhSn_i-FTIecaG7ftLixc0gdTy2rJU35I");'></div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex flex-1 justify-center py-8 px-4 md:px-20 lg:px-40">
+<div class="flex w-full max-w-[1200px] gap-8">
+<!-- Left Sidebar Navigation -->
+<aside class="hidden md:flex flex-col w-64 gap-6 shrink-0">
+<div class="flex items-center gap-3 px-2">
+<div class="size-12 rounded-full bg-center bg-cover border-2 border-primary/30" data-alt="Profile picture zoomed" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCpPXIlNoEHM90vAMHYR5uidIRlTVfgYRLRYffyKkRXe1VAC4HFr5z3FS4_AXrB8vAIaFxd1SoCo3jU_6PMb-g_8dWwMbLeIzFiAsmezmsBxa0aD-qoosrZPTXc2wHosl6fEvQI2h30CLjuI34H8MKLMAjoYNO3ZwOAiwUA_0HNthpVXvwopEvppJDlXRj7PIdYKoC73low6BgsNhaHGuk5HGlisWJrhYRWQninI8EsCyPjW-1bWgEhUjkknmwJeUGqsS9ayk1FwnY");'></div>
+<div>
+<p class="font-bold text-sm">Alex Rivera</p>
+<p class="text-xs text-[#9da8b9] flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">edit</span> Edit Profile</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined text-primary">person</span>
+<span class="text-sm font-medium">My Account</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 text-primary border border-primary/20 transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-sm font-bold">My Purchase</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">notifications_active</span>
+<span class="text-sm font-medium">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined">confirmation_number</span>
+<span class="text-sm font-medium">Vouchers</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col gap-6">
+<!-- Tabs -->
+<div class="glass-panel rounded-xl overflow-hidden shadow-xl sticky top-[73px] z-40">
+<div class="flex border-b border-white/5 px-2 overflow-x-auto no-scrollbar">
+<a class="flex-1 min-w-[80px] flex flex-col items-center justify-center border-b-2 border-primary text-primary pb-3 pt-4 px-4" href="#">
+<p class="text-xs md:text-sm font-bold tracking-wide">All</p>
+</a>
+<a class="flex-1 min-w-[80px] flex flex-col items-center justify-center border-b-2 border-transparent text-[#9da8b9] hover:text-white pb-3 pt-4 px-4 transition-colors" href="#">
+<p class="text-xs md:text-sm font-medium">To Pay</p>
+</a>
+<a class="flex-1 min-w-[80px] flex flex-col items-center justify-center border-b-2 border-transparent text-[#9da8b9] hover:text-white pb-3 pt-4 px-4 transition-colors" href="#">
+<p class="text-xs md:text-sm font-medium">To Ship</p>
+</a>
+<a class="flex-1 min-w-[80px] flex flex-col items-center justify-center border-b-2 border-transparent text-[#9da8b9] hover:text-white pb-3 pt-4 px-4 transition-colors" href="#">
+<p class="text-xs md:text-sm font-medium">To Receive</p>
+</a>
+<a class="flex-1 min-w-[80px] flex flex-col items-center justify-center border-b-2 border-transparent text-[#9da8b9] hover:text-white pb-3 pt-4 px-4 transition-colors" href="#">
+<p class="text-xs md:text-sm font-medium">Completed</p>
+</a>
+<a class="flex-1 min-w-[80px] flex flex-col items-center justify-center border-b-2 border-transparent text-[#9da8b9] hover:text-white pb-3 pt-4 px-4 transition-colors" href="#">
+<p class="text-xs md:text-sm font-medium">Cancelled</p>
+</a>
+</div>
+<!-- Search Orders -->
+<div class="p-4 bg-white/[0.02]">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+<span class="material-symbols-outlined text-[#9da8b9] group-focus-within:text-primary transition-colors">search</span>
+</div>
+<input class="block w-full pl-11 pr-4 py-3 bg-[#111418] border border-white/10 rounded-lg text-white text-sm focus:ring-primary focus:border-primary placeholder:text-[#5a6575]" placeholder="Search by Order ID, Shop or Product Name" type="text"/>
+</div>
+</div>
+</div>
+<!-- Order Card 1 (In Transit) -->
+<div class="glass-panel rounded-xl shadow-lg flex flex-col overflow-hidden transition-transform hover:translate-y-[-2px]">
+<div class="px-6 py-4 flex justify-between items-center border-b border-white/5">
+<div class="flex items-center gap-3">
+<span class="text-sm font-bold text-white">RJ MUSIC</span>
+<button class="px-2 py-0.5 bg-primary/20 text-primary text-[10px] font-bold rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">store</span> VISIT SHOP
+                                </button>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">local_shipping</span>
+<span class="text-primary text-xs font-bold uppercase tracking-wider">In Transit</span>
+</div>
+</div>
+<div class="p-6 flex flex-col @container">
+<div class="flex flex-col @xl:flex-row gap-6">
+<div class="w-32 h-32 md:w-40 md:h-40 shrink-0 bg-[#111418] rounded-lg border border-white/10 overflow-hidden relative group">
+<div class="absolute inset-0 bg-center bg-cover group-hover:scale-110 transition-transform duration-500" data-alt="Black Gibson Les Paul Guitar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBuYjPU0TZHHvLVmblSnM1WNQM7f1ln4qwPFXrM94SsvDSFJV_SCBPcHzYA3alDdM4B1phrjFTR53IFPmvUBlBmy6NyFm-43fpMRKcu4jZrVrIOXGfIoioMPDXobrneSZzGZDETeiuPkgFEyMg-3nGZDF4ZAaOH3H3BYPlwLIjWEQfXmNgaDaBCOTC5GOuicZIkBo12CFieHBbXHRd09sqxKKR8f8f_15T9_7aD7pOirmL8MyKAArUTuZxMpcUtbgVl-pcdvQKC0Ag");'></div>
+</div>
+<div class="flex-1 flex flex-col justify-between py-1">
+<div class="space-y-1">
+<p class="text-[#9da8b9] text-[10px] tracking-widest font-medium">ORDER ID: 8274192BH</p>
+<h3 class="text-lg font-bold text-white group-hover:text-primary transition-colors">Gibson Les Paul Standard '60s Electric Guitar</h3>
+<p class="text-[#9da8b9] text-sm">Variation: Iced Tea | Qty: 1</p>
+</div>
+<div class="flex items-end justify-between mt-4 @xl:mt-0">
+<div class="text-xs text-[#5a6575] italic">Expected arrival: Nov 24, 2023</div>
+<div class="text-primary text-xl font-bold">₱145,000.00</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-6 py-4 bg-white/[0.02] flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5">
+<p class="text-xs text-[#9da8b9]">Refund within 7 days of receipt for manufacturing defects.</p>
+<div class="flex gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-6 py-2 bg-[#282f39] text-white hover:bg-[#343c49] text-sm font-semibold rounded-lg transition-all">
+                                    Contact Seller
+                                </button>
+<button class="flex-1 md:flex-none px-6 py-2 bg-primary text-white hover:bg-primary/90 text-sm font-semibold rounded-lg transition-all shadow-[0_0_15px_rgba(19,109,236,0.3)]">
+                                    Track Order
+                                </button>
+</div>
+</div>
+</div>
+<!-- Order Card 2 (Completed) -->
+<div class="glass-panel rounded-xl shadow-lg flex flex-col overflow-hidden opacity-90 transition-all hover:opacity-100">
+<div class="px-6 py-4 flex justify-between items-center border-b border-white/5">
+<div class="flex items-center gap-3">
+<span class="text-sm font-bold text-white">RJ MUSIC</span>
+<span class="px-2 py-0.5 bg-white/5 text-[#9da8b9] text-[10px] font-bold rounded uppercase tracking-tighter">Official Store</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+<span class="text-green-500 text-xs font-bold uppercase tracking-wider">Completed</span>
+</div>
+</div>
+<div class="p-6 flex flex-col @container">
+<div class="flex flex-col @xl:flex-row gap-6">
+<div class="w-32 h-32 md:w-40 md:h-40 shrink-0 bg-[#111418] rounded-lg border border-white/10 overflow-hidden relative">
+<div class="absolute inset-0 bg-center bg-cover" data-alt="Yamaha Digital Piano white" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBnYS9N2m8N-dK_Jmoy4bFpmYk3bm_kwRH3sjxbQnBtQ7dRzPS0P9IRJh8-yEUkePkn6nTheRHRTxvcQEGICBCG1jH51YgRhttHFa0i1iyWZyOyU2g58tUd_eLkGRo1jljVOVkYDRVg6yhNqLap4Iji_rMgpNq4PfEcNU5ZiuChKqlgxVk1ZqE5OpxQfmr5dg6iSkNkaRJe6b_PBBtaKeYK-wIyYmxpSLn8o567aAiqBttA9AgSoqI0iZdvEVKxe8I2jS0WtE6R0GE");'></div>
+</div>
+<div class="flex-1 flex flex-col justify-between py-1">
+<div class="space-y-1">
+<p class="text-[#9da8b9] text-[10px] tracking-widest font-medium">ORDER ID: 9912034XY</p>
+<h3 class="text-lg font-bold text-white">Yamaha P-125 Digital Piano</h3>
+<p class="text-[#9da8b9] text-sm">Variation: White | Qty: 1</p>
+</div>
+<div class="flex items-end justify-between mt-4 @xl:mt-0">
+<div class="text-xs text-green-500/70">Delivered on Oct 12, 2023</div>
+<div class="text-primary text-xl font-bold">₱42,500.00</div>
+</div>
+</div>
+</div>
+</div>
+<div class="px-6 py-4 bg-white/[0.02] flex flex-col md:flex-row items-center justify-between gap-4 border-t border-white/5">
+<p class="text-xs text-green-500/70">Thank you for shopping! Rate the product to earn points.</p>
+<div class="flex gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-6 py-2 bg-[#282f39] text-white hover:bg-[#343c49] text-sm font-semibold rounded-lg transition-all">
+                                    Buy Again
+                                </button>
+<button class="flex-1 md:flex-none px-6 py-2 border border-primary text-primary hover:bg-primary/5 text-sm font-semibold rounded-lg transition-all">
+                                    Rate Product
+                                </button>
+</div>
+</div>
+</div>
+<!-- Footer Info (Description List Style) -->
+<div class="mt-4 p-6 glass-panel rounded-xl border border-white/5">
+<h4 class="text-sm font-bold text-white mb-4 uppercase tracking-wider border-b border-white/5 pb-2">Purchase History Summary</h4>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="flex flex-col gap-1">
+<p class="text-[#9da8b9] text-xs uppercase font-medium">Total Orders</p>
+<p class="text-xl font-bold text-white">12</p>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-[#9da8b9] text-xs uppercase font-medium">Total Spent</p>
+<p class="text-xl font-bold text-primary">₱287,500.00</p>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-[#9da8b9] text-xs uppercase font-medium">Loyalty Status</p>
+<p class="text-xl font-bold text-amber-400 flex items-center gap-2">
+<span class="material-symbols-outlined">stars</span> Platinum
+                                </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Minimal Footer -->
+<footer class="w-full py-10 px-6 md:px-40 border-t border-white/5 mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2 text-white/40">
+<span class="text-xs">© 2023 RJ MUSIC. Premium Instruments.</span>
+</div>
+<div class="flex gap-8 text-white/40">
+<a class="text-xs hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="text-xs hover:text-white transition-colors" href="#">Terms of Service</a>
+<a class="text-xs hover:text-white transition-colors" href="#">Contact Support</a>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

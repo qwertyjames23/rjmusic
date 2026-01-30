@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Profile | RJ MUSIC</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#0a0c10",
+                        "surface-dark": "#161b22",
+                        "border-dark": "#30363d",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full border-b border-solid border-slate-200 dark:border-border-dark bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-4 md:px-10 py-3">
+<div class="max-w-[1440px] mx-auto flex items-center justify-between whitespace-nowrap">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] uppercase">RJ MUSIC</h2>
+</div>
+<label class="hidden lg:flex flex-col min-w-40 h-10 w-96">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full overflow-hidden border border-slate-200 dark:border-border-dark">
+<div class="text-slate-400 flex bg-slate-50 dark:bg-surface-dark items-center justify-center pl-4">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border-none bg-slate-50 dark:bg-surface-dark text-slate-900 dark:text-white focus:ring-0 h-full placeholder:text-slate-500 px-3 text-sm" placeholder="Search for instruments, gear, or artists..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-4 lg:gap-8">
+<nav class="hidden xl:flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Shop</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Instruments</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Studio Gear</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary transition-colors text-sm font-medium" href="#">Lessons</a>
+</nav>
+<div class="flex gap-2">
+<button class="relative flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-surface-dark text-slate-700 dark:text-white hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-primary text-[10px] text-white font-bold px-1.5 py-0.5 rounded-full">3</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-surface-dark text-slate-700 dark:text-white hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-10 w-[1px] bg-slate-200 dark:bg-border-dark mx-2"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border border-primary/50" data-alt="User profile avatar smiling musician" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCeP_sdYvf_HJLpuXOij73re05P5rSgHQu_2O5lvHifJz0im0OO9glBHPSG0fY-QDdCy3rnh4-crFFHPYlVxVOB9QZpqcvMVb8mj_7l_q0VtSHpj1Sy1LBIRlUgHjmucem102ilaZXHxqwkdH5YHLzLQVQdh0RJ89a1_1iiihppiGY59GsOunIhgvVIim7Ws5gatJsnfkCpbFxlJ8Ikn5ZOp-WRv1HTdgLazHPYNmYDy6LCQc5LK0KfGJoMKBbik-amyPfpC_J5frg");'></div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="max-w-[1200px] mx-auto py-8 px-4 flex flex-col md:flex-row gap-8">
+<!-- Sidebar Navigation -->
+<aside class="w-full md:w-64 flex-shrink-0">
+<div class="flex items-center gap-4 mb-8 px-2">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-12 border-2 border-primary" data-alt="User avatar close up" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCqCJI2Nfwq8CTOyOzf6VvZvtn_2YfplxpUNn7Pj3-76jCInu9TMQBhni2Uk2rWxf8pfdACs1eAWC_SX4jwY6heJjWxEUNGosyja8X61OWN1XibvkccLjPJ1SrFnsEvMFzqO2_OQT55Q7juD_FhfZJ53oDB90mnlTW7PgdG2oMBppyF07AnJVvi3sEoysRI09O3NjSurlN8BdYSh434hdHNMfYbTJZWnLyEWNcxIlAfZZxB2v3ugK8lFRP6kWR_mVnHRAlT2GWkqCs");'></div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-base font-bold leading-none">alex_music_gear</h1>
+<button class="text-slate-500 hover:text-primary text-xs font-medium flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[14px]">edit</span> Edit Profile
+                    </button>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<!-- My Account Group -->
+<div class="mb-4">
+<button class="flex items-center gap-3 px-3 py-2 w-full text-left text-slate-900 dark:text-white font-semibold text-sm">
+<span class="material-symbols-outlined text-primary">person</span>
+                        My Account
+                    </button>
+<div class="pl-9 flex flex-col gap-2 mt-2">
+<a class="text-primary text-sm font-medium" href="#">Profile</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary text-sm transition-colors" href="#">Addresses</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary text-sm transition-colors" href="#">Change Password</a>
+</div>
+</div>
+<!-- My Purchase Group -->
+<div class="mb-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary">receipt_long</span>
+<span class="text-slate-700 dark:text-slate-300 text-sm font-medium">My Purchase</span>
+</a>
+</div>
+<!-- Notifications Group -->
+<div class="mb-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary">notifications</span>
+<span class="text-slate-700 dark:text-slate-300 text-sm font-medium">Notifications</span>
+</a>
+</div>
+<!-- Vouchers Group -->
+<div class="mb-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-surface-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-primary">confirmation_number</span>
+<span class="text-slate-700 dark:text-slate-300 text-sm font-medium">My Vouchers</span>
+</a>
+</div>
+<div class="border-t border-slate-200 dark:border-border-dark my-4 pt-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-500/10 group transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-500 group-hover:text-red-500">logout</span>
+<span class="text-slate-700 dark:text-slate-300 group-hover:text-red-500 text-sm font-medium">Logout</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1">
+<div class="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-border-dark overflow-hidden">
+<!-- Page Heading -->
+<div class="p-6 border-b border-slate-200 dark:border-border-dark">
+<h2 class="text-slate-900 dark:text-white text-2xl font-bold">My Profile</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage and protect your account</p>
+</div>
+<div class="p-6 lg:p-10 flex flex-col lg:flex-row gap-12">
+<!-- Profile Form -->
+<div class="flex-1 max-w-2xl">
+<form class="space-y-6">
+<!-- Username (Read-only styled) -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+<label class="sm:w-32 text-slate-500 dark:text-slate-400 text-sm sm:text-right">Username</label>
+<div class="flex-1 text-slate-900 dark:text-white text-sm font-medium">alex_music_gear</div>
+</div>
+<!-- Name Field -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+<label class="sm:w-32 text-slate-500 dark:text-slate-400 text-sm sm:text-right">Name</label>
+<div class="flex-1">
+<input class="w-full bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg py-2.5 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm" type="text" value="Alexander Rivers"/>
+</div>
+</div>
+<!-- Email Field -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+<label class="sm:w-32 text-slate-500 dark:text-slate-400 text-sm sm:text-right">Email</label>
+<div class="flex-1 flex items-center gap-2">
+<span class="text-slate-900 dark:text-white text-sm">al********@gmail.com</span>
+<button class="text-primary hover:underline text-xs font-medium" type="button">Change</button>
+</div>
+</div>
+<!-- Phone Number -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+<label class="sm:w-32 text-slate-500 dark:text-slate-400 text-sm sm:text-right">Phone Number</label>
+<div class="flex-1 flex items-center gap-2">
+<span class="text-slate-900 dark:text-white text-sm">********56</span>
+<button class="text-primary hover:underline text-xs font-medium" type="button">Change</button>
+</div>
+</div>
+<!-- Gender -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+<label class="sm:w-32 text-slate-500 dark:text-slate-400 text-sm sm:text-right">Gender</label>
+<div class="flex-1 flex items-center gap-6">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="text-primary focus:ring-primary/20 border-slate-300 dark:border-border-dark bg-transparent" name="gender" type="radio"/>
+<span class="text-sm text-slate-700 dark:text-slate-300">Male</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="text-primary focus:ring-primary/20 border-slate-300 dark:border-border-dark bg-transparent" name="gender" type="radio"/>
+<span class="text-sm text-slate-700 dark:text-slate-300">Female</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="text-primary focus:ring-primary/20 border-slate-300 dark:border-border-dark bg-transparent" name="gender" type="radio"/>
+<span class="text-sm text-slate-700 dark:text-slate-300">Other</span>
+</label>
+</div>
+</div>
+<!-- Date of Birth -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+<label class="sm:w-32 text-slate-500 dark:text-slate-400 text-sm sm:text-right">Date of Birth</label>
+<div class="flex-1 flex gap-3">
+<select class="flex-1 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
+<option>01</option><option selected="">15</option><option>31</option>
+</select>
+<select class="flex-1 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
+<option>January</option><option selected="">June</option><option>December</option>
+</select>
+<select class="flex-1 bg-white dark:bg-background-dark border border-slate-200 dark:border-border-dark rounded-lg py-2 px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
+<option>1990</option><option selected="">1995</option><option>2005</option>
+</select>
+</div>
+</div>
+<!-- Save Button -->
+<div class="flex flex-col sm:flex-row sm:items-center gap-4 pt-4">
+<div class="sm:w-32"></div>
+<div class="flex-1">
+<button class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-10 rounded-lg transition-all shadow-lg shadow-primary/20 active:scale-[0.98]" type="submit">
+                                        Save Changes
+                                    </button>
+</div>
+</div>
+</form>
+</div>
+<!-- Avatar Upload -->
+<div class="w-full lg:w-64 flex flex-col items-center gap-6 lg:border-l border-slate-200 dark:border-border-dark">
+<div class="relative group">
+<div class="size-32 rounded-full overflow-hidden border-4 border-slate-100 dark:border-background-dark shadow-xl" data-alt="User profile photo placeholder">
+<img alt="Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDaiUcchYnDw_rY_pOfhGIEWHwlUwYqVcA_JpSOGf47k8bnLwvEDvlU9vqC2tmbcKSv2PCIsaqiV12f-nkFShlRG9ftMkljG2Q8iAlLwf2vQSLtqYCDZBvlWsOor0m08IernYW5BD9e6NVvdG0xwf9CQHr285OgWaimg4RccW8_tN7uKJNi1oV7uydSu_CW4610781d4jIR7YjoiUggY_RmkZYMTyCCPrIBWP1stylPqjjgyExHXuQHGyDr83Mo8lIGHmZcE2JKGw"/>
+</div>
+<div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+<span class="material-symbols-outlined text-white text-3xl">photo_camera</span>
+</div>
+</div>
+<div class="text-center flex flex-col gap-2">
+<button class="bg-slate-100 dark:bg-background-dark border border-slate-200 dark:border-border-dark text-slate-700 dark:text-slate-300 px-6 py-2 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-border-dark transition-colors">
+                                Select Image
+                            </button>
+<p class="text-slate-500 text-xs mt-2 leading-relaxed">
+                                File size: maximum 1 MB<br/>
+                                Extension: .JPEG, .PNG
+                            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- My Purchase Quick Section -->
+<div class="mt-8 bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-border-dark overflow-hidden">
+<div class="flex border-b border-slate-200 dark:border-border-dark overflow-x-auto custom-scrollbar">
+<button class="flex-1 min-w-[100px] py-4 text-primary border-b-2 border-primary font-bold text-sm whitespace-nowrap">All</button>
+<button class="flex-1 min-w-[100px] py-4 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap">To Pay</button>
+<button class="flex-1 min-w-[100px] py-4 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap">To Ship</button>
+<button class="flex-1 min-w-[100px] py-4 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap">To Receive</button>
+<button class="flex-1 min-w-[100px] py-4 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap">Completed</button>
+<button class="flex-1 min-w-[100px] py-4 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors font-medium text-sm whitespace-nowrap">Cancelled</button>
+</div>
+<div class="p-12 flex flex-col items-center justify-center text-center opacity-50">
+<span class="material-symbols-outlined text-[64px] mb-4 text-slate-300 dark:text-slate-700">inventory_2</span>
+<p class="text-slate-500 dark:text-slate-400">No orders found</p>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-12 border-t border-slate-200 dark:border-border-dark py-12 px-4">
+<div class="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center gap-3 text-primary mb-6">
+<div class="size-6">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold uppercase">RJ MUSIC</h2>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                    Premium instruments and gear for the modern musician. Elevate your sound with RJ MUSIC.
+                </p>
+</div>
+<div>
+<h4 class="text-slate-900 dark:text-white font-bold mb-6 text-sm uppercase">Customer Service</h4>
+<ul class="flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">Help Centre</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Payment Methods</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Order Tracking</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Return &amp; Refund</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-slate-900 dark:text-white font-bold mb-6 text-sm uppercase">About RJ MUSIC</h4>
+<ul class="flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">About Us</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Careers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Terms of Service</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-slate-900 dark:text-white font-bold mb-6 text-sm uppercase">Newsletter</h4>
+<div class="flex flex-col gap-4">
+<div class="flex overflow-hidden rounded-lg border border-slate-200 dark:border-border-dark">
+<input class="bg-white dark:bg-background-dark border-none focus:ring-0 text-sm px-3 flex-1" placeholder="Email address" type="email"/>
+<button class="bg-primary text-white px-4 py-2 font-bold text-xs uppercase">Join</button>
+</div>
+<div class="flex gap-4">
+<a class="size-8 rounded-full bg-slate-100 dark:bg-surface-dark flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">public</span>
+</a>
+<a class="size-8 rounded-full bg-slate-100 dark:bg-surface-dark flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">share</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<div class="max-w-[1200px] mx-auto mt-12 pt-8 border-t border-slate-100 dark:border-border-dark flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-slate-400 text-xs">© 2024 RJ MUSIC. All Rights Reserved.</p>
+<div class="flex items-center gap-6 opacity-30 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
+<div class="h-6 w-10 bg-slate-400 rounded-sm"></div>
+<div class="h-6 w-10 bg-slate-400 rounded-sm"></div>
+<div class="h-6 w-10 bg-slate-400 rounded-sm"></div>
+</div>
+</div>
+</footer>
+</body></html>
