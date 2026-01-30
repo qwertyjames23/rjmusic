@@ -34,94 +34,128 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  
+  --font-display: var(--font-space-grotesk);
+  --font-body: var(--font-noto-sans);
+
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
+
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
   }
 }
 
 /*
-  The modern color palette (Zinc-based) for a premium feel.
-  Using HSL for easy dynamic theming.
+  Legacy Design Matched Colors
+  Primary: #136dec
+  Background Dark: #050505
+  Surface Dark: #101822
+  Surface Card: #1a1a1a
+  Border: #282f39
 */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  /* Default to dark mode equivalent as primary look */
+  --background: #050505;
+  --foreground: #ffffff;
 
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
+  --popover: #101822;
+  --popover-foreground: #ffffff;
 
-  /* Primary: Deep Blue-Black or specific brand color. Let's go with a classic Zinc-900 */
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
+  /* #136dec in HSL is approx 215 85% 50% */
+  --primary: #136dec;
+  --primary-foreground: #ffffff;
 
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
+  --secondary: #101822;
+  --secondary-foreground: #ffffff;
 
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
+  --muted: #1c222b;
+  --muted-foreground: #9da8b9;
 
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
+  --accent: #1c222b;
+  --accent-foreground: #ffffff;
 
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 10% 3.9%;
+  --border: #282f39;
+  --input: #1c222b;
+  --ring: #136dec;
 
   --radius: 0.5rem;
 }
 
+/* 
+   We enforce dark mode look by default since the legacy design is dark.
+   If we want light mode support later, we can map it, but for now matching legacy.
+*/
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
-
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-
+  --background: #050505;
+  --foreground: #ffffff;
+  --card: #1a1a1a;
+  --card-foreground: #ffffff;
+  --primary: #136dec;
+  --primary-foreground: #ffffff;
+  --secondary: #101822;
+  --secondary-foreground: #ffffff;
+  --muted: #1c222b;
+  --muted-foreground: #9da8b9;
+  --accent: #1c222b;
+  --accent-foreground: #ffffff;
   --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  --destructive-foreground: #ffffff;
+  --border: #282f39;
+  --input: #1c222b;
+  --ring: #136dec;
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased font-body;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .glow-text {
+    text-shadow: 0 0 20px rgba(19, 109, 236, 0.5);
+  }
+
+  .glow-box {
+    box-shadow: 0 0 20px rgba(19, 109, 236, 0.3);
+  }
+
+  .glow-box:hover {
+    box-shadow: 0 0 30px rgba(19, 109, 236, 0.5);
   }
 }
