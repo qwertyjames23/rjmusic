@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { products } from "@/lib/data";
-import { Check, Shield, Truck, Star, Heart, Share2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Star } from "lucide-react";
+import { BuyBox } from "@/components/features/BuyBox";
+import { ProductTabs } from "@/components/features/ProductTabs";
+import { ProductCard } from "@/components/features/ProductCard";
+// import { RelatedProducts } from "@/components/features/RelatedProducts"; // Future Step
 
 export async function generateStaticParams() {
     return products.map((product) => ({
@@ -24,130 +27,117 @@ export default async function ProductDetailPage({
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
+
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
                 <Link href="/" className="hover:text-primary transition-colors">Home</Link>
                 <span>/</span>
-                <Link href="/products" className="hover:text-primary transition-colors">Products</Link>
+                <span className="capitalize">{product.category}</span>
                 <span>/</span>
                 <span className="text-foreground font-medium truncate max-w-[200px]">{product.name}</span>
             </nav>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-                {/* Gallery Section */}
-                <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-left-4 duration-700">
-                    <div className="relative aspect-square w-full overflow-hidden rounded-xl border border-border bg-secondary/20">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+                {/* Left Column: Images (7 cols) */}
+                <div className="lg:col-span-7 flex flex-col gap-4">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#282f39] bg-[#1a1f26]">
                         <img
                             src={product.images[0]}
                             alt={product.name}
-                            className="h-full w-full object-cover object-center"
+                            className="h-full w-full object-cover object-center hover:scale-105 transition-transform duration-700"
                         />
                         {product.tags?.[0] && (
-                            <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full z-10">
+                            <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full z-10 shadow-lg shadow-black/20">
                                 {product.tags[0]}
                             </span>
                         )}
                     </div>
-                    {/* Thumbnails would go here if we had more images */}
+
+                    {/* Thumbnail Mockup */}
+                    <div className="grid grid-cols-4 gap-4">
+                        {[0, 1, 2, 3].map((i) => (
+                            <div key={i} className="aspect-square rounded-lg border border-[#282f39] bg-[#1a1f26] overflow-hidden cursor-pointer hover:border-primary transition-colors">
+                                <img src={product.images[0]} alt="" className="h-full w-full object-cover opacity-70 hover:opacity-100 transition-opacity" />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Tabs Section (Desktop placement basically, but flows naturally here) */}
+                    <div className="mt-8 hidden lg:block">
+                        <ProductTabs description={product.description} />
+                    </div>
                 </div>
 
-                {/* Product Info Section */}
-                <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-right-4 duration-700 px-2">
+                {/* Right Column: Info & Buy Box (5 cols) */}
+                <div className="lg:col-span-5 flex flex-col gap-8">
 
-                    {/* Header */}
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-primary tracking-widest uppercase">
-                                {product.brand}
-                            </span>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Star className="size-4 fill-amber-400 text-amber-400" />
-                                <span className="font-medium text-foreground">{product.rating}</span>
-                                <span>({product.reviews} reviews)</span>
+                    {/* Header Info */}
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="flex text-amber-500">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className="size-4 fill-current" />
+                                ))}
                             </div>
+                            <span className="text-sm text-muted-foreground hover:text-white cursor-pointer transition-colors">
+                                4.8 (124 reviews)
+                            </span>
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight">
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-4">
                             {product.name}
                         </h1>
-                    </div>
-
-                    {/* Price */}
-                    <div className="flex items-end gap-3 pb-4 border-b border-border">
-                        <h2 className="text-3xl font-bold">
-                            {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.price)}
-                        </h2>
-                        {product.originalPrice && (
-                            <span className="text-lg text-muted-foreground line-through mb-1">
-                                {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.originalPrice)}
+                        <div className="flex items-baseline gap-4">
+                            <span className="text-3xl font-bold text-primary">
+                                {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.price)}
                             </span>
-                        )}
-                        {product.originalPrice && (
-                            <span className="text-sm text-destructive font-bold mb-1.5 ml-auto">
-                                Save {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-muted-foreground leading-relaxed">
-                        {product.description}
-                    </p>
-
-                    {/* Features List */}
-                    {product.features && (
-                        <div className="flex flex-col gap-2">
-                            <h3 className="font-bold text-sm">Key Features</h3>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {product.features.map((feature, i) => (
-                                    <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Check className="size-4 text-primary shrink-0" />
-                                        {feature}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                        <button className={cn(
-                            "flex-1 h-12 rounded-lg font-bold text-base transition-all flex items-center justify-center gap-2",
-                            product.inStock
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30"
-                                : "bg-muted text-muted-foreground cursor-not-allowed"
-                        )}
-                            disabled={!product.inStock}
-                        >
-                            {product.inStock ? "ADD TO CART" : "OUT OF STOCK"}
-                        </button>
-                        <div className="flex gap-2">
-                            <button className="h-12 w-12 rounded-lg border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Add to Wishlist">
-                                <Heart className="size-5" />
-                            </button>
-                            <button className="h-12 w-12 rounded-lg border border-input flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Share Product">
-                                <Share2 className="size-5" />
-                            </button>
+                            {product.originalPrice && (
+                                <span className="text-lg text-muted-foreground line-through decoration-red-500/50">
+                                    {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.originalPrice)}
+                                </span>
+                            )}
                         </div>
                     </div>
 
-                    {/* Trust Badges */}
-                    <div className="grid grid-cols-2 gap-4 pt-6 mt-auto">
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30">
-                            <Truck className="size-6 text-primary" />
-                            <div className="flex flex-col">
-                                <span className="text-xs font-bold font-sans">Free Shipping</span>
-                                <span className="text-[10px] text-muted-foreground">On all orders over ₱5,000</span>
-                            </div>
+                    {/* Short Description */}
+                    <div className="text-gray-400 leading-relaxed text-sm border-t border-b border-[#282f39] py-6">
+                        <p>
+                            Experience the warmth of true analog synthesis. The RJ-X1 combines vintage character with modern connectivity, making it the centerpiece of any professional studio.
+                        </p>
+                    </div>
+
+                    {/* Buy Box Component */}
+                    <BuyBox product={product} />
+
+                    {/* Key Specs Grid (Small Preview) */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-[#1c222b] border border-[#282f39] p-3 rounded-lg">
+                            <span className="text-[10px] uppercase text-gray-500 font-bold block mb-1">Warranty</span>
+                            <span className="font-bold text-sm">3 Years</span>
                         </div>
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30">
-                            <Shield className="size-6 text-primary" />
-                            <div className="flex flex-col">
-                                <span className="text-xs font-bold font-sans">2 Year Warranty</span>
-                                <span className="text-[10px] text-muted-foreground">Professional protection</span>
-                            </div>
+                        <div className="bg-[#1c222b] border border-[#282f39] p-3 rounded-lg">
+                            <span className="text-[10px] uppercase text-gray-500 font-bold block mb-1">Return Policy</span>
+                            <span className="font-bold text-sm">30 Days</span>
                         </div>
                     </div>
 
+                    {/* Mobile Tabs */}
+                    <div className="lg:hidden mt-8">
+                        <ProductTabs description={product.description} />
+                    </div>
+                </div>
+            </div>
+
+            {/* Recommendations Row (Mock) */}
+            <div className="mt-20 pt-10 border-t border-[#282f39]">
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-2xl font-bold">You might also like</h2>
+                    <Link href="/" className="text-primary text-sm font-bold hover:underline">View all</Link>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    {products.filter(p => p.id !== product.id).slice(0, 4).map((relatedProduct) => (
+                        <ProductCard key={relatedProduct.id} product={relatedProduct} />
+                    ))}
                 </div>
             </div>
         </div>

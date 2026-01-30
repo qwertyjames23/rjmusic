@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Search, ShoppingCart, User, AudioWaveform } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 export function Navbar() {
+    const { cartCount } = useCart();
+
     return (
         <header className="sticky top-0 z-50 border-b border-[#282f39] bg-[#050505]/80 backdrop-blur-md transition-all duration-300">
             <div className="container mx-auto h-16 md:h-auto md:py-3 px-4 md:px-10">
@@ -20,13 +25,13 @@ export function Navbar() {
 
                         {/* Desktop Nav */}
                         <nav className="hidden md:flex items-center gap-6">
-                            <Link href="/products?sort=new" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
+                            <Link href="/?sort=new" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
                                 New Arrivals
                             </Link>
                             <Link href="/brands" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
                                 Brands
                             </Link>
-                            <Link href="/products?sale=true" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
+                            <Link href="/?sale=true" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
                                 Sale
                             </Link>
                         </nav>
@@ -58,7 +63,11 @@ export function Navbar() {
                                 aria-label="Shopping Cart"
                             >
                                 <ShoppingCart className="size-5" />
-                                <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />
+                                {cartCount > 0 && (
+                                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                                        {cartCount}
+                                    </span>
+                                )}
                             </Link>
 
                             <Link

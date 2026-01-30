@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Product } from "@/types";
 import { ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/context/CartContext";
 
 interface ProductCardProps {
     product: Product;
@@ -11,12 +12,21 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
+    const { addToCart } = useCart();
+
     // Format currency
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('en-PH', {
             style: 'currency',
             currency: 'PHP',
         }).format(price);
+    };
+
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation(); // Prevent navigation
+        addToCart(product);
+        // Optional: add toast notification here
     };
 
     return (
@@ -88,11 +98,8 @@ export function ProductCard({ product, className }: ProductCardProps) {
 
                     <button
                         className="size-10 rounded-full bg-[#282f39] text-white flex items-center justify-center hover:bg-primary hover:text-white transition-colors"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            // TODO: Add to cart logic
-                            console.log("Add to cart:", product.id);
-                        }}
+                        onClick={handleAddToCart}
+                        disabled={!product.inStock}
                         aria-label="Add to cart"
                     >
                         <ShoppingCart className="size-5" />
