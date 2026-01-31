@@ -5,6 +5,7 @@ import { Product } from "@/types";
 import { ProductCard } from "@/components/features/ProductCard";
 import { SlidersHorizontal, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
 
 interface ProductGridProps {
     initialProducts: Product[];
@@ -17,6 +18,10 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
     const [sortBy, setSortBy] = useState<SortOption>("featured");
     const [showFilters, setShowFilters] = useState(false);
 
+    // Search Params
+    const searchParams = useSearchParams();
+    const searchTerm = searchParams.get("search")?.toLowerCase() || "";
+
     // Extract unique categories
     const categories = useMemo(() => {
         const cats = new Set(initialProducts.map(p => p.category));
@@ -26,6 +31,16 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
     // Filter and Sort
     const filteredProducts = useMemo(() => {
         let result = [...initialProducts];
+
+        // Filter by Search Term
+        if (searchTerm) {
+            result = result.filter(p =>
+                p.name.toLowerCase().includes(searchTerm) ||
+                p.brand.toLowerCase().includes(searchTerm) ||
+                p.category.toLowerCase().includes(searchTerm) ||
+                p.description.toLowerCase().includes(searchTerm)
+            );
+        }
 
         // Filter by Category
         if (selectedCategory !== "All") {
@@ -50,7 +65,7 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
         }
 
         return result;
-    }, [initialProducts, selectedCategory, sortBy]);
+    }, [initialProducts, selectedCategory, sortBy, searchTerm]);
 
     return (
         <div className="flex flex-col gap-8">
@@ -133,7 +148,10 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
                 {/* Grid */}
                 <main className="flex-1">
                     {filteredProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div
+                            key={selectedCategory + sortBy + searchTerm}
+                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in zoom-in-95 duration-500 slide-in-from-bottom-2"
+                        >
                             {filteredProducts.map(product => (
                                 <ProductCard key={product.id} product={product} />
                             ))}

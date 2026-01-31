@@ -1,28 +1,23 @@
-# Phase 2 Complete: Product Catalog & Browsing
+# Phase 3 Complete: Core Checkout & Profile
 
-I have built the core shopping experience for the application:
+I have completed the crucial user journey from Profile to Checkout:
 
-1. **Product Logic**:
-    * Defined a robust `Product` interface.
-    * Created local mock data with 6 premium products (Guitars, Synths, Mics).
+1. **Profile Section**:
+    * Implemented `My Account`, `My Purchases`, `Notifications`, `Vouchers`, `Addresses`, and `Change Password` pages.
+    * Styled to match legacy designs with full responsiveness.
 
-2. **Listing Page (`/products`)**:
-    * Implemented a filterable grid system.
-    * Added sorting (Price Low/High, Newest) and Category filtering.
-    * Responsive sidebar for filters.
+2. **Checkout Logic**:
+    * Implemented **Address Selection** modal with state management.
+    * Implemented **Payment Selection** modal (COD, GCash, Card).
+    * Connected `Track My Order` on success page.
+    * Cleaned up linting issues (Image optimization, accessibility).
 
-3. **Detail Page (`/product/[id]`)**:
-    * Built a comprehensive product view with Image, Price, Description, Features, and Stock status.
-    * Implemented `generateStaticParams` for blazing fast static page generation (SSG).
+3. **Global UI Updates**:
+    * Updated Navbar logo.
+    * Refactored `ProductCard` images.
 
-4. **Refactoring**:
-    * Updated the Homepage `TrendingGrid` to use the new shared `ProductCard` component.
+## Suggested Next Steps (Phase 4)
 
-You can now browse the catalog, filter items, and view full product details.
-Run `npm run dev` to test interactions.
-
-## Suggested Next Steps (Phase 3)
-
-* **Cart Implementation**: Create a global Cart context to make the "Add to Cart" buttons functional.
-* **Checkout**: Build the checkout form logic.
-* **Authentication**: Add user login/profile.
+* **Global Search**: Implement search functionality in the Navbar.
+* **Brands Page**: Create the `/brands` page or redirect.
+* **Backend Integration**: Connect mock data to a real database (Supabase/Firebase etc).
