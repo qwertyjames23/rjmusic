@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { ProductGrid } from "@/components/features/ProductGrid";
 import { products } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8">
