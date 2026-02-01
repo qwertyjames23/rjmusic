@@ -1,15 +1,88 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { products } from "@/lib/data";
 import { Star } from "lucide-react";
 import { BuyBox } from "@/components/features/BuyBox";
 import { ProductTabs } from "@/components/features/ProductTabs";
 import { ProductCard } from "@/components/features/ProductCard";
-// import { RelatedProducts } from "@/components/features/RelatedProducts"; // Future Step
+import { supabase } from "@/lib/supabase"; // Import Supabase
+import { Product } from "@/types";
 
-export async function generateStaticParams() {
-    return products.map((product) => ({
-        id: product.id,
+export const dynamic = "force-dynamic";
+
+// Helper to fetch single product
+async function getProduct(id: string): Promise<Product | null> {
+    const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error || !data) {
+        console.error("Error fetching product:", error);
+        return null; // Return null if not found
+    }
+
+    // Map to Product Type
+    return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        price: Number(data.price),
+        originalPrice: data.original_price ? Number(data.original_price) : undefined,
+        category: data.category,
+        brand: data.brand,
+        images: data.images || [],
+        inStock: data.in_stock,
+        rating: Number(data.rating),
+        reviews: Number(data.reviews),
+        tags: data.tags || [],
+        features: data.features || [],
+    };
+}
+
+// Helper to fetch recommendations
+async function getRecommendations(currentId: string, category: string): Promise<Product[]> {
+    const { data } = await supabase
+        .from('products')
+        .select('*')
+        .neq('id', currentId) // Exclude current
+        .eq('category', category) // Attempt to match category
+        .limit(4);
+
+    // Fallback if no category matches, just get any others
+    if (!data || data.length === 0) {
+        const { data: fallbackData } = await supabase.from('products').select('*').neq('id', currentId).limit(4);
+        if (!fallbackData) return [];
+        return fallbackData.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            price: Number(p.price),
+            category: p.category,
+            brand: p.brand,
+            images: p.images || [],
+            inStock: p.in_stock,
+            rating: Number(p.rating),
+            reviews: Number(p.reviews),
+            tags: p.tags || [],
+            features: p.features || []
+        }));
+    }
+
+    return data.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        price: Number(p.price),
+        originalPrice: p.original_price ? Number(p.original_price) : undefined,
+        category: p.category,
+        brand: p.brand,
+        images: p.images || [],
+        inStock: p.in_stock,
+        rating: Number(p.rating),
+        reviews: Number(p.reviews),
+        tags: p.tags || [],
+        features: p.features || []
     }));
 }
 
@@ -19,11 +92,13 @@ export default async function ProductDetailPage({
     params: Promise<{ id: string }>
 }) {
     const { id } = await params;
-    const product = products.find((p) => p.id === id);
+    const product = await getProduct(id);
 
     if (!product) {
         notFound();
     }
+
+    const recommendations = await getRecommendations(product.id, product.category);
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
@@ -54,7 +129,7 @@ export default async function ProductDetailPage({
                         )}
                     </div>
 
-                    {/* Thumbnail Mockup */}
+                    {/* Thumbnail Mockup - using same image for now due to data limits */}
                     <div className="grid grid-cols-4 gap-4">
                         {[0, 1, 2, 3].map((i) => (
                             <div key={i} className="aspect-square rounded-lg border border-[#282f39] bg-[#1a1f26] overflow-hidden cursor-pointer hover:border-primary transition-colors">
@@ -81,7 +156,7 @@ export default async function ProductDetailPage({
                                 ))}
                             </div>
                             <span className="text-sm text-muted-foreground hover:text-white cursor-pointer transition-colors">
-                                4.8 (124 reviews)
+                                {product.rating} (124 reviews)
                             </span>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-4">
@@ -99,10 +174,10 @@ export default async function ProductDetailPage({
                         </div>
                     </div>
 
-                    {/* Short Description */}
+                    {/* Short Description (Using full description or substring if needed) */}
                     <div className="text-gray-400 leading-relaxed text-sm border-t border-b border-[#282f39] py-6">
                         <p>
-                            Experience the warmth of true analog synthesis. The RJ-X1 combines vintage character with modern connectivity, making it the centerpiece of any professional studio.
+                            {product.description.substring(0, 150)}{product.description.length > 150 ? "..." : ""}
                         </p>
                     </div>
 
@@ -128,14 +203,14 @@ export default async function ProductDetailPage({
                 </div>
             </div>
 
-            {/* Recommendations Row (Mock) */}
+            {/* Recommendations Row */}
             <div className="mt-20 pt-10 border-t border-[#282f39]">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-2xl font-bold">You might also like</h2>
                     <Link href="/" className="text-primary text-sm font-bold hover:underline">View all</Link>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                    {products.filter(p => p.id !== product.id).slice(0, 4).map((relatedProduct) => (
+                    {recommendations.map((relatedProduct) => (
                         <ProductCard key={relatedProduct.id} product={relatedProduct} />
                     ))}
                 </div>

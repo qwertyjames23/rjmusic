@@ -28,7 +28,11 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
         return ["All", ...Array.from(cats)];
     }, [initialProducts]);
 
-    // Filter and Sort
+    // Price Range State
+    const maxProductPrice = Math.max(...initialProducts.map(p => p.price));
+    const [priceRange, setPriceRange] = useState<[number, number]>([0, maxProductPrice]);
+
+    // Update filter logic to include price range
     const filteredProducts = useMemo(() => {
         let result = [...initialProducts];
 
@@ -47,6 +51,9 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
             result = result.filter(p => p.category === selectedCategory);
         }
 
+        // Filter by Price Range
+        result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+
         // Sort
         switch (sortBy) {
             case "price-asc":
@@ -56,21 +63,39 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
                 result.sort((a, b) => b.price - a.price);
                 break;
             case "newest":
-                // Mock sorting by ID as proxy for date since we don't have dates
                 result.sort((a, b) => Number(b.id) - Number(a.id));
                 break;
             default:
-                // Featured - keep original order or check for tags
                 break;
         }
 
         return result;
-    }, [initialProducts, selectedCategory, sortBy, searchTerm]);
+    }, [initialProducts, selectedCategory, sortBy, searchTerm, priceRange]);
+
+    const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = Math.min(Number(e.target.value), priceRange[1] - 500); // Prevent overlapping
+        setPriceRange([val, priceRange[1]]);
+    };
+
+    const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = Math.max(Number(e.target.value), priceRange[0] + 500); // Prevent overlapping
+        setPriceRange([priceRange[0], val]);
+    };
+
+    // Format currency
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            maximumFractionDigits: 0,
+            notation: "compact"
+        }).format(price);
+    };
 
     return (
         <div className="flex flex-col gap-8">
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-b border-border">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4">
 
                 {/* Mobile Filter Toggle */}
                 <button
@@ -80,10 +105,6 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
                     <SlidersHorizontal className="size-4" />
                     Filters
                 </button>
-
-                <p className="hidden sm:block text-muted-foreground text-sm">
-                    Showing <span className="text-foreground font-bold">{filteredProducts.length}</span> products
-                </p>
 
                 {/* Sort Dropdown */}
                 <div className="flex items-center gap-2 self-end sm:self-auto">
@@ -132,15 +153,44 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
                         </div>
                     </div>
 
-                    {/* Price Range (Mock) */}
+                    {/* Price Range */}
                     <div className="pt-6 border-t border-border">
                         <h3 className="font-bold mb-4">Price Range</h3>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">₱0</span>
-                                <span className="text-muted-foreground">₱200k+</span>
+                        <div className="space-y-6">
+
+
+                            {/* Re-implementing with standard robust CSS dual slider technique */}
+                            <div className="relative h-2 w-full">
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={maxProductPrice}
+                                    value={priceRange[0]}
+                                    onChange={handleMinChange}
+                                    className="absolute w-full h-2 bg-transparent appearance-none pointer-events-none z-[11] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
+                                />
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={maxProductPrice}
+                                    value={priceRange[1]}
+                                    onChange={handleMaxChange}
+                                    className="absolute w-full h-2 bg-transparent appearance-none pointer-events-none z-[12] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
+                                />
+                                <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full bg-secondary h-2 z-[10]"></div>
+                                <div
+                                    className="absolute top-0 h-2 bg-primary rounded-full z-[10]"
+                                    style={{
+                                        left: `${(priceRange[0] / maxProductPrice) * 100}%`,
+                                        right: `${100 - (priceRange[1] / maxProductPrice) * 100}%`
+                                    }}
+                                ></div>
                             </div>
-                            <input type="range" className="w-full accent-primary" />
+
+                            <div className="flex items-center justify-between font-mono text-xs font-bold text-muted-foreground">
+                                <span>{formatPrice(priceRange[0])}</span>
+                                <span>{formatPrice(priceRange[1])}</span>
+                            </div>
                         </div>
                     </div>
                 </aside>

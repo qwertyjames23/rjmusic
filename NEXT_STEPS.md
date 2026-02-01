@@ -18,6 +18,19 @@ I have completed the crucial user journey from Profile to Checkout:
 
 ## Suggested Next Steps (Phase 4)
 
-* **Global Search**: Implement search functionality in the Navbar.
-* **Brands Page**: Create the `/brands` page or redirect.
-* **Backend Integration**: Connect mock data to a real database (Supabase/Firebase etc).
+## In Progress
+
+* **Backend Integration**:
+  * [x] Install Supabase Client.
+  * [x] Create `.env.local` placeholders.
+  * [ ] User to fill in API Keys.
+    * [x] Create Database Tables (Products, Users).
+    * [x] Migrate mock data to Database.
+
+## Postponed / Hidden
+
+* **Brands Page**: Create the `/brands` page or redirect. (Currently link hidden in Navbar).
+
+## Completed
+
+* **Global Search**: Implemented real-time search dropdown in Navbar with product previews.

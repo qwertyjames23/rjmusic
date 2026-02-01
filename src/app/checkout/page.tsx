@@ -7,11 +7,13 @@ import { Check, CreditCard, Loader2, MapPin, Truck, ShoppingBag, ArrowRight, Plu
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/utils/supabase/client";
 
 export default function CheckoutPage() {
     const { items, cartTotal, clearCart } = useCart();
     const router = useRouter();
     const [isProcessing, setIsProcessing] = useState(false);
+    const supabase = createClient();
 
     // Address State
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -28,10 +30,52 @@ export default function CheckoutPage() {
 
     const handleSubmit = async () => {
         setIsProcessing(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        clearCart();
-        router.push("/checkout/success");
+        try {
+            // 1. Create Order Record
+            const { data: orderData, error: orderError } = await supabase
+                .from('orders')
+                .insert({
+                    customer_name: selectedAddress.name,
+                    customer_email: "guest@example.com", // You might want to grab this from auth if logged in, or add an email input
+                    customer_phone: selectedAddress.phone,
+                    address: selectedAddress.address,
+                    city: selectedAddress.city,
+                    region: selectedAddress.region,
+                    postal_code: selectedAddress.postal,
+                    total_amount: total,
+                    status: 'Pending',
+                    payment_method: selectedPayment.name
+                })
+                .select()
+                .single();
+
+            if (orderError) throw orderError;
+
+            // 2. Create Order Items
+            const orderItems = items.map(item => ({
+                order_id: orderData.id,
+                product_id: item.id,
+                product_name: item.name,
+                quantity: item.quantity,
+                price: item.price
+            }));
+
+            const { error: itemsError } = await supabase
+                .from('order_items')
+                .insert(orderItems);
+
+            if (itemsError) throw itemsError;
+
+            // 3. Success
+            clearCart();
+            router.push("/checkout/success");
+
+        } catch (error: any) {
+            console.error("Checkout Error:", error);
+            alert("Failed to place order: " + error.message);
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     if (items.length === 0) {

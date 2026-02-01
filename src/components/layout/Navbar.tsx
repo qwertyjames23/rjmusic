@@ -1,28 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, ShoppingCart, User, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { products } from "@/lib/data";
+import { Product } from "@/types";
 
 export function Navbar() {
     const { cartCount } = useCart();
     const router = useRouter();
-    const pathname = usePathname();
     const [searchQuery, setSearchQuery] = useState("");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const handleSearch = (e?: React.FormEvent) => {
-        e?.preventDefault();
-        const term = searchQuery.trim();
-        setIsMobileMenuOpen(false); // Close menu on search
-        if (!term) {
-            router.push("/products");
-            return;
+    // Search State
+    const [searchResults, setSearchResults] = useState<Product[]>([]);
+    const [showResults, setShowResults] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
+
+    // Click outside to close search
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setShowResults(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (query.trim().length > 0) {
+            // Simulate slight delay for realism or just filter
+            const filtered = products.filter(p =>
+                p.name.toLowerCase().includes(query.toLowerCase()) ||
+                p.brand.toLowerCase().includes(query.toLowerCase()) ||
+                p.category.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 5);
+            setSearchResults(filtered);
+            setShowResults(true);
+        } else {
+            setSearchResults([]);
+            setShowResults(false);
         }
+    };
+
+    const handleSearchSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        setShowResults(false);
+        const term = searchQuery.trim();
+        setIsMobileMenuOpen(false);
+        if (!term) return;
         router.push(`/products?search=${encodeURIComponent(term)}`);
+    };
+
+    const clearSearch = () => {
+        setSearchQuery("");
+        setShowResults(false);
+        setSearchResults([]);
     };
 
     return (
@@ -43,7 +83,7 @@ export function Navbar() {
                                 />
                             </div>
                             <h2 className="text-xl font-bold leading-tight tracking-wider text-white font-display">
-                                MUSIC
+                                RJ MUSIC
                             </h2>
                         </Link>
 
@@ -52,10 +92,10 @@ export function Navbar() {
                             <Link href="/?sort=new" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
                                 New Arrivals
                             </Link>
-                            <Link href="/brands" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
+                            {/* <Link href="/brands" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
                                 Brands
-                            </Link>
-                            <Link href="/?sale=true" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
+                            </Link> */}
+                            <Link href="/products?tags=SALE" className="text-gray-300 hover:text-white text-sm font-medium transition-colors">
                                 Sale
                             </Link>
                         </nav>
@@ -63,31 +103,93 @@ export function Navbar() {
 
                     {/* Right Actions */}
                     <div className="flex flex-1 items-center justify-end gap-4 md:gap-8">
+
                         {/* Search Bar (Desktop) */}
-                        <form
-                            onSubmit={handleSearch}
-                            className="hidden md:flex w-full max-w-[250px] lg:max-w-xs items-center rounded-lg bg-[#1c222b] px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-primary/50 transition-all group"
-                        >
-                            <button
-                                type="submit"
-                                className="text-[#9da8b9] flex items-center justify-center pr-2 border-r border-[#282f39] h-4 cursor-pointer hover:text-white transition-colors bg-transparent border-none p-0"
+                        <div className="hidden md:block relative w-full max-w-[300px]" ref={searchRef}>
+                            <form
+                                onSubmit={handleSearchSubmit}
+                                className="flex w-full items-center rounded-lg bg-[#1c222b] border border-transparent focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20 transition-all text-sm"
                             >
-                                <Search className="size-4" />
-                            </button>
-                            <input
-                                type="text"
-                                placeholder="Search gear..."
-                                className="flex-1 bg-transparent text-white placeholder-[#5f6b7c] outline-none pl-3 h-full font-normal"
-                                value={searchQuery}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    setSearchQuery(val);
-                                    if (val === "" && pathname === "/products") {
-                                        router.push("/products");
-                                    }
-                                }}
-                            />
-                        </form>
+                                <button
+                                    type="submit"
+                                    className="text-[#9da8b9] flex items-center justify-center pl-3 h-10 cursor-pointer hover:text-white transition-colors bg-transparent border-none"
+                                >
+                                    <Search className="size-4" />
+                                </button>
+                                <input
+                                    type="text"
+                                    placeholder="Search gear..."
+                                    className="flex-1 bg-transparent text-white placeholder-[#5f6b7c] outline-none px-3 h-10 font-normal w-full"
+                                    value={searchQuery}
+                                    onChange={handleSearchChange}
+                                    onFocus={() => searchQuery.trim().length > 0 && setShowResults(true)}
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={clearSearch}
+                                        className="pr-3 text-[#9da8b9] hover:text-white"
+                                        aria-label="Clear search"
+                                    >
+                                        <X className="size-3.5" />
+                                    </button>
+                                )}
+                            </form>
+
+                            {/* Dropdown Results */}
+                            {showResults && (
+                                <div className="absolute top-full left-0 w-full mt-2 bg-card border border-border rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                    {searchResults.length > 0 ? (
+                                        <div className="py-2">
+                                            <div className="px-3 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                                Products
+                                            </div>
+                                            {searchResults.map(product => (
+                                                <Link
+                                                    key={product.id}
+                                                    href={`/product/${product.id}`}
+                                                    onClick={() => setShowResults(false)}
+                                                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-secondary/50 transition-colors group"
+                                                >
+                                                    <div className="relative size-10 rounded bg-secondary/30 overflow-hidden shrink-0">
+                                                        <Image
+                                                            src={product.images[0]}
+                                                            alt={product.name}
+                                                            fill
+                                                            className="object-cover"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate text-foreground group-hover:text-primary transition-colors">
+                                                            {product.name}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground truncate">
+                                                            {product.brand}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-xs font-bold text-foreground">
+                                                        {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(product.price)}
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                            <div className="border-t border-border mt-1 pt-1">
+                                                <button
+                                                    onClick={handleSearchSubmit}
+                                                    className="w-full text-left px-3 py-2 text-xs font-bold text-primary hover:bg-secondary/30 flex items-center justify-between"
+                                                >
+                                                    See all results for &quot;{searchQuery}&quot;
+                                                    <ChevronRight className="size-3" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="p-8 text-center text-muted-foreground">
+                                            <p className="text-sm">No products found for &quot;{searchQuery}&quot;</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
                         {/* Icons */}
                         <div className="flex items-center gap-2">
@@ -130,7 +232,7 @@ export function Navbar() {
                 <div className="md:hidden absolute top-full left-0 w-full bg-[#050505] border-b border-[#282f39] p-4 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-top-2 fade-in duration-200">
                     {/* Mobile Search */}
                     <form
-                        onSubmit={handleSearch}
+                        onSubmit={handleSearchSubmit}
                         className="flex w-full items-center rounded-lg bg-[#1c222b] px-3 py-3 text-sm focus-within:ring-2 focus-within:ring-primary/50 transition-all"
                     >
                         <button type="submit" className="text-[#9da8b9] pr-3">
@@ -141,13 +243,7 @@ export function Navbar() {
                             placeholder="Search gear..."
                             className="flex-1 bg-transparent text-white placeholder-[#5f6b7c] outline-none font-normal"
                             value={searchQuery}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                setSearchQuery(val);
-                                if (val === "" && pathname === "/products") {
-                                    router.push("/products");
-                                }
-                            }}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </form>
 
@@ -160,13 +256,13 @@ export function Navbar() {
                         >
                             New Arrivals
                         </Link>
-                        <Link
+                        {/* <Link
                             href="/brands"
                             onClick={() => setIsMobileMenuOpen(false)}
                             className="text-gray-300 hover:text-white hover:bg-[#1c222b] px-4 py-3 rounded-lg text-sm font-medium transition-colors"
                         >
                             Brands
-                        </Link>
+                        </Link> */}
                         <Link
                             href="/?sale=true"
                             onClick={() => setIsMobileMenuOpen(false)}
