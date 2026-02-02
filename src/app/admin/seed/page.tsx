@@ -25,29 +25,27 @@ export default function SeedPage() {
             addLog("Connected to Supabase. Uploading products...");
 
             // 2. Insert Products
-            for (const p of products) {
-                const dbProduct = {
-                    name: p.name,
-                    description: p.description,
-                    price: p.price,
-                    original_price: p.originalPrice || null,
-                    category: p.category,
-                    brand: p.brand,
-                    images: p.images,
-                    in_stock: p.inStock,
-                    rating: p.rating,
-                    reviews: p.reviews,
-                    tags: p.tags || [],
-                    features: p.features || []
-                };
+            const dbProducts = products.map((p) => ({
+                name: p.name,
+                description: p.description,
+                price: p.price,
+                original_price: p.originalPrice || null,
+                category: p.category,
+                brand: p.brand,
+                images: p.images,
+                in_stock: p.inStock,
+                rating: p.rating,
+                reviews: p.reviews,
+                tags: p.tags || [],
+                features: p.features || []
+            }));
 
-                const { error } = await supabase.from('products').insert(dbProduct);
+            const { error } = await supabase.from('products').insert(dbProducts);
 
-                if (error) {
-                    addLog(`❌ Failed to insert ${p.name}: ${error.message}`);
-                } else {
-                    addLog(`✅ Inserted: ${p.name}`);
-                }
+            if (error) {
+                addLog(`❌ Failed to insert products: ${error.message}`);
+            } else {
+                addLog(`✅ Inserted ${products.length} products successfully.`);
             }
 
             addLog("Done!");
