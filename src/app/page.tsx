@@ -11,7 +11,12 @@ import { Mail } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 async function getProducts(): Promise<Product[]> {
-  const { data, error } = await supabase.from('products').select('*');
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(4);
+
   if (error) {
     console.error("Supabase error:", error);
     return [];
@@ -35,10 +40,7 @@ async function getProducts(): Promise<Product[]> {
 }
 
 export default async function Home() {
-  const allProducts = await getProducts();
-
-  // Filter for Trending (e.g., items with NEW or BESTSELLER tag, or just first 4)
-  const trendingProducts = allProducts.slice(0, 4);
+  const trendingProducts = await getProducts();
 
   return (
     <div className="flex flex-col min-h-screen">
