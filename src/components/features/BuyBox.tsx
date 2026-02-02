@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRouter, usePathname } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 interface BuyBoxProps {
     product: Product;
@@ -12,10 +15,22 @@ interface BuyBoxProps {
 
 export function BuyBox({ product }: BuyBoxProps) {
     const { addToCart } = useCart();
+    const router = useRouter();
+    const pathname = usePathname();
     const [quantity, setQuantity] = useState(1);
     const [selectedFinish, setSelectedFinish] = useState<string>("default");
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    }, []);
 
     const handleAddToCart = () => {
+        if (!user) {
+            router.push(`/login?next=${pathname}`);
+            return;
+        }
         addToCart(product, quantity);
         // Optional toast
     };

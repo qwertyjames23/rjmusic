@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { products } from "@/lib/data";
+import { mockProducts } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
 
 export default function SeedPage() {
@@ -25,7 +25,7 @@ export default function SeedPage() {
             addLog("Connected to Supabase. Uploading products...");
 
             // 2. Insert Products
-            const dbProducts = products.map((p) => ({
+            const dbProducts = mockProducts.map((p) => ({
                 name: p.name,
                 description: p.description,
                 price: p.price,
@@ -45,7 +45,7 @@ export default function SeedPage() {
             if (error) {
                 addLog(`❌ Failed to insert products: ${error.message}`);
             } else {
-                addLog(`✅ Inserted ${products.length} products successfully.`);
+                addLog(`✅ Inserted ${mockProducts.length} products successfully.`);
             }
 
             addLog("Done!");

@@ -5,13 +5,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, ShoppingCart, User, Menu, X, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { useRouter } from "next/navigation";
-import { products } from "@/lib/data";
+import { useRouter, usePathname } from "next/navigation";
+import { mockProducts } from "@/lib/data";
 import { Product } from "@/types";
+import { createClient } from "@/utils/supabase/client";
+import type { User as AuthUser } from "@supabase/supabase-js";
 
 export function Navbar() {
     const { cartCount } = useCart();
     const router = useRouter();
+    const pathname = usePathname();
+    const [user, setUser] = useState<AuthUser | null>(null);
+    const [isAuthLoading, setIsAuthLoading] = useState(true); // Add loading state
     const [searchQuery, setSearchQuery] = useState("");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -31,13 +36,30 @@ export function Navbar() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Check Auth State for Badge & Cart Access
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            setUser(user);
+            setIsAuthLoading(false); // Auth check complete
+        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            setIsAuthLoading(false); // Auth check complete
+        });
+        return () => subscription.unsubscribe();
+    }, []);
+
+    // Hide Navbar on Admin pages
+    if (pathname && pathname.startsWith('/admin')) return null;
+
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const query = e.target.value;
         setSearchQuery(query);
 
         if (query.trim().length > 0) {
             // Simulate slight delay for realism or just filter
-            const filtered = products.filter(p =>
+            const filtered = mockProducts.filter((p: Product) =>
                 p.name.toLowerCase().includes(query.toLowerCase()) ||
                 p.brand.toLowerCase().includes(query.toLowerCase()) ||
                 p.category.toLowerCase().includes(query.toLowerCase())
@@ -47,6 +69,15 @@ export function Navbar() {
         } else {
             setSearchResults([]);
             setShowResults(false);
+        }
+    };
+
+
+    const handleCartClick = () => {
+        if (user) {
+            router.push('/cart');
+        } else {
+            router.push('/login?next=/cart');
         }
     };
 
@@ -63,6 +94,13 @@ export function Navbar() {
         setSearchQuery("");
         setShowResults(false);
         setSearchResults([]);
+    };
+
+    const handleLogout = async () => {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        router.push('/');
+        router.refresh();
     };
 
     return (
@@ -193,26 +231,49 @@ export function Navbar() {
 
                         {/* Icons */}
                         <div className="flex items-center gap-2">
-                            <Link
-                                href="/cart"
+                            <button
+                                onClick={handleCartClick}
                                 className="relative flex size-10 items-center justify-center rounded-full text-white hover:bg-[#282f39] transition-colors"
                                 aria-label="Shopping Cart"
                             >
                                 <ShoppingCart className="size-5" />
-                                {cartCount > 0 && (
+                                {cartCount > 0 && user && (
                                     <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
                                         {cartCount}
                                     </span>
                                 )}
-                            </Link>
+                            </button>
 
-                            <Link
-                                href="/profile"
-                                className="flex size-10 items-center justify-center rounded-full text-white hover:bg-[#282f39] transition-colors"
-                                aria-label="User Profile"
-                            >
-                                <User className="size-5" />
-                            </Link>
+                            {/* Show Profile Icon if logged in, otherwise show Login/Register */}
+                            {isAuthLoading ? (
+                                // Loading skeleton - prevents flash of unauthenticated content
+                                <div className="hidden md:flex items-center gap-2">
+                                    <div className="size-10 rounded-full bg-[#282f39] animate-pulse" />
+                                </div>
+                            ) : user ? (
+                                <Link
+                                    href="/profile"
+                                    className="flex size-10 items-center justify-center rounded-full text-white hover:bg-[#282f39] transition-colors"
+                                    aria-label="User Profile"
+                                >
+                                    <User className="size-5" />
+                                </Link>
+                            ) : (
+                                <div className="hidden md:flex items-center gap-2">
+                                    <Link
+                                        href="/login"
+                                        className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+                                    >
+                                        Login
+                                    </Link>
+                                    <Link
+                                        href="/register"
+                                        className="px-4 py-2 text-sm font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                                    >
+                                        Sign Up
+                                    </Link>
+                                </div>
+                            )}
 
                             {/* Mobile Menu Toggle */}
                             <button
@@ -270,6 +331,53 @@ export function Navbar() {
                         >
                             Sale
                         </Link>
+
+                        {/* Mobile Auth Links */}
+                        <div className="border-t border-[#282f39] pt-2 mt-2">
+                            {isAuthLoading ? (
+                                // Loading skeleton
+                                <div className="px-4 py-3">
+                                    <div className="h-10 rounded-lg bg-[#282f39] animate-pulse" />
+                                </div>
+                            ) : user ? (
+                                <div className="flex flex-col gap-2">
+                                    <Link
+                                        href="/profile"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 text-gray-300 hover:text-white hover:bg-[#1c222b] px-4 py-3 rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        <User className="size-4" />
+                                        My Profile
+                                    </Link>
+                                    <button
+                                        onClick={() => {
+                                            setIsMobileMenuOpen(false);
+                                            handleLogout();
+                                        }}
+                                        className="text-center text-red-400 hover:text-red-300 hover:bg-red-500/10 px-4 py-3 rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    <Link
+                                        href="/login"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="text-center text-gray-300 hover:text-white hover:bg-[#1c222b] px-4 py-3 rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        Login
+                                    </Link>
+                                    <Link
+                                        href="/register"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="text-center bg-primary text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors"
+                                    >
+                                        Sign Up
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
                     </nav>
                 </div>
             )}

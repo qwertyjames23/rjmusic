@@ -11,6 +11,7 @@ export async function login(formData: FormData) {
     // in a real app, use Zod for validation
     const email = formData.get('email') as string
     const password = formData.get('password') as string
+    const next = formData.get('next') as string || '/'
 
     const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -18,11 +19,17 @@ export async function login(formData: FormData) {
     })
 
     if (error) {
-        redirect('/login?error=Invalid credentials')
+        redirect(`/login?error=Invalid credentials&next=${next}`)
     }
 
     revalidatePath('/', 'layout')
-    redirect('/admin/dashboard')
+
+    // Check if admin
+    if (email === 'raffyjames65@gmail.com') {
+        redirect('/admin/dashboard')
+    } else {
+        redirect(next)
+    }
 }
 
 export async function signup(formData: FormData) {
