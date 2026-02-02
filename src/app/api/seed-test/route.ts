@@ -1,7 +1,20 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+        return NextResponse.json({
+            message: 'Build time check or missing credentials: skipping seed.'
+        }, { status: 200 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const { error } = await supabase.from('products').insert({
         name: 'Test DB Guitar',
         description: 'Test Description',
