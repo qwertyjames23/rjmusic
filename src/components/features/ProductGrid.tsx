@@ -29,7 +29,7 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
     }, [initialProducts]);
 
     // Price Range State
-    const maxProductPrice = Math.max(...initialProducts.map(p => p.price));
+    const maxProductPrice = initialProducts.length > 0 ? Math.max(...initialProducts.map(p => p.price)) : 10000;
     const [priceRange, setPriceRange] = useState<[number, number]>([0, maxProductPrice]);
 
     // Update filter logic to include price range

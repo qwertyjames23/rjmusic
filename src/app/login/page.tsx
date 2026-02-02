@@ -3,12 +3,15 @@
 import { login, signup } from './actions'
 import { createClient } from '@/utils/supabase/client'
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Chrome } from 'lucide-react';
+import { Suspense } from 'react';
 
-export default function LoginPage() {
+function LoginForm() {
     const supabase = createClient();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const next = searchParams.get('next') || '/';
     const [loading, setLoading] = useState(false);
 
     const handleGoogleLogin = async () => {
@@ -16,7 +19,7 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${location.origin}/auth/callback`,
+                redirectTo: `${location.origin}/auth/callback?next=${next}`,
             },
         });
 
@@ -38,6 +41,7 @@ export default function LoginPage() {
                     </div>
 
                     <form className="flex flex-col gap-4">
+                        <input type="hidden" name="next" value={next} />
                         <div className="flex flex-col gap-2">
                             <label className="text-sm font-medium" htmlFor="email">Email</label>
                             <input
@@ -111,11 +115,19 @@ export default function LoginPage() {
                     </div>
                     <h2 className="text-4xl font-bold mb-4">RJ MUSIC</h2>
                     <p className="text-gray-400 max-w-md text-lg">
-                        Manage your products, track orders, and analyze your sales with our powerful admin dashboard.
+                        Join the RJ Music community. Shop exclusive gear, track your orders, and get early access to new drops.
                     </p>
                 </div>
             </div>
 
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <LoginForm />
+        </Suspense>
     );
 }

@@ -37,6 +37,14 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    // 0. Protect Checkout
+    if (!user && request.nextUrl.pathname.startsWith('/checkout')) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        url.searchParams.set('next', request.nextUrl.pathname)
+        return NextResponse.redirect(url)
+    }
+
     // 1. If NO USER -> Redirect to Login
     if (!user && request.nextUrl.pathname.startsWith('/admin')) {
         const url = request.nextUrl.clone()

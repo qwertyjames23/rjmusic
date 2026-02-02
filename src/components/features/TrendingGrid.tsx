@@ -1,9 +1,9 @@
 import { ProductCard } from "@/components/features/ProductCard";
-import { products } from "@/lib/data";
+import { mockProducts } from "@/lib/data";
 
 export function TrendingGrid() {
     // Select first 4 products as trending
-    const trendingProducts = products.slice(0, 4);
+    const trendingProducts = mockProducts.slice(0, 4);
 
     return (
         <section className="py-12 bg-card/50">
