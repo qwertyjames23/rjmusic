@@ -4,26 +4,58 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types";
 import Link from "next/link";
-import { Plus, Search, Pencil, Trash2, MoreVertical, Filter } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+
+const ITEMS_PER_PAGE = 20;
 
 export default function AdminProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
 
+    // Debounce search term
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        const timeoutId = setTimeout(() => {
+            fetchProducts(currentPage, searchTerm);
+        }, 500);
 
-    const fetchProducts = async () => {
+        return () => clearTimeout(timeoutId);
+    }, [searchTerm, currentPage]);
+
+
+    const fetchProducts = async (page: number, search: string) => {
         try {
             setLoading(true);
-            const { data, error } = await supabase
+
+            // Calculate range
+            const from = (page - 1) * ITEMS_PER_PAGE;
+            const to = from + ITEMS_PER_PAGE - 1;
+
+            let query = supabase
                 .from('products')
-                .select('*')
-                .order('created_at', { ascending: false });
+                .select('*', { count: 'exact' });
+
+            if (search) {
+                // Search across multiple columns
+                // Sanitize search input to prevent injection
+                const safeSearch = search.replace(/[(),.]/g, '');
+                if (safeSearch) {
+                   query = query.or(`name.ilike.%${safeSearch}%,category.ilike.%${safeSearch}%,brand.ilike.%${safeSearch}%`);
+                }
+            }
+
+            // Apply sorting and pagination after filtering
+            const { data, error, count } = await query
+                .order('created_at', { ascending: false })
+                .range(from, to);
 
             if (error) throw error;
+
+            if (count !== null) {
+                setTotalCount(count);
+            }
 
             // Map to our type (simplified for list view)
             const mappedProducts: Product[] = (data || []).map(p => ({
@@ -49,6 +81,17 @@ export default function AdminProductsPage() {
         }
     };
 
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1); // Reset to first page on search change
+    };
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this product?")) return;
 
@@ -56,19 +99,17 @@ export default function AdminProductsPage() {
             const { error } = await supabase.from('products').delete().eq('id', id);
             if (error) throw error;
 
-            // Remove from state
+            // Remove from state (optimistic update)
             setProducts(products.filter(p => p.id !== id));
+            // Also decrement total count slightly incorrectly in UI until refresh, but acceptable for UX
+            setTotalCount(prev => Math.max(0, prev - 1));
         } catch (error) {
             console.error("Error deleting product:", error);
             alert("Failed to delete product");
         }
     };
 
-    const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.brand.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
     return (
         <div className="flex flex-col gap-6">
@@ -95,7 +136,7 @@ export default function AdminProductsPage() {
                         className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-lg leading-5 bg-[#111827] text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm transition-all"
                         placeholder="Search products..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={handleSearchChange}
                     />
                 </div>
                 <button className="flex items-center gap-2 px-4 py-2 bg-[#111827] border border-gray-700 text-gray-300 rounded-lg hover:text-white hover:border-gray-600 transition-colors">
@@ -123,12 +164,12 @@ export default function AdminProductsPage() {
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-400">Loading products...</td>
                                 </tr>
-                            ) : filteredProducts.length === 0 ? (
+                            ) : products.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-400">No products found.</td>
                                 </tr>
                             ) : (
-                                filteredProducts.map((product) => (
+                                products.map((product) => (
                                     <tr key={product.id} className="group hover:bg-[#374151]/30 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -148,7 +189,6 @@ export default function AdminProductsPage() {
                                             {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.price)}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-300">
-                                            {/* Mock Stock Number since we usually just have boolean in_stock */}
                                             {product.inStock ? "In Stock" : "Out of Stock"}
                                         </td>
                                         <td className="px-6 py-4">
@@ -166,7 +206,6 @@ export default function AdminProductsPage() {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                {/* Edit (Just a placeholder link for now or we can reuse new) */}
                                                 <Link href={`/admin/product/edit/${product.id}`} className="p-2 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 transition-colors">
                                                     <Pencil className="w-4 h-4" />
                                                 </Link>
@@ -183,6 +222,32 @@ export default function AdminProductsPage() {
                             )}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between bg-[#1f2937] border border-gray-800 rounded-xl p-4">
+                 <span className="text-sm text-gray-400">
+                    Showing <span className="text-white font-medium">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, totalCount)}</span> to <span className="text-white font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, totalCount)}</span> of <span className="text-white font-medium">{totalCount}</span> results
+                </span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1 || loading}
+                        className="p-2 rounded-lg text-gray-400 border border-gray-700 hover:text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <span className="text-sm text-gray-400 px-2">
+                        Page <span className="text-white font-medium">{currentPage}</span> of <span className="text-white font-medium">{Math.max(1, totalPages)}</span>
+                    </span>
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= totalPages || loading}
+                        className="p-2 rounded-lg text-gray-400 border border-gray-700 hover:text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
         </div>
