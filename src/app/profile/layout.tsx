@@ -4,12 +4,27 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { User, FileText, Bell, Ticket, Edit, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const [user, setUser] = useState<SupabaseUser | null>(null);
+
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            setUser(user);
+        });
+    }, []);
 
     const isActive = (path: string) => pathname === path;
     const isAccountActive = pathname.startsWith("/profile") && !pathname.startsWith("/profile/purchases") && !pathname.startsWith("/profile/notifications") && !pathname.startsWith("/profile/vouchers");
+
+    // Get display name from user metadata or email
+    const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+    const avatarUrl = user?.user_metadata?.avatar_url;
 
     return (
         <div className="container mx-auto px-4 py-8 lg:px-20 lg:py-12 flex flex-col md:flex-row gap-8">
@@ -18,9 +33,18 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
                 {/* Profile Card */}
                 <div className="flex items-center gap-3 px-2">
-                    <div className="size-12 rounded-full bg-secondary bg-center bg-cover border-2 border-primary/30 shrink-0" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80")' }}></div>
+                    <div className="size-12 rounded-full bg-secondary bg-center bg-cover border-2 border-primary/30 shrink-0 overflow-hidden">
+                        {avatarUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-sm font-bold text-muted-foreground uppercase bg-gradient-to-br from-primary/20 to-blue-500/20">
+                                {user?.email?.slice(0, 2) || 'U'}
+                            </div>
+                        )}
+                    </div>
                     <div className="overflow-hidden">
-                        <p className="font-bold text-sm truncate text-foreground">Alex Rivera</p>
+                        <p className="font-bold text-sm truncate text-foreground">{displayName}</p>
                         <button className="text-xs text-muted-foreground flex items-center gap-1 hover:text-primary transition-colors">
                             <Edit className="size-3" /> Edit Profile
                         </button>
@@ -114,13 +138,17 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                     </Link>
 
                     <div className="border-t border-border my-2 pt-2">
-                        <Link
-                            href="#"
-                            className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+                        <button
+                            onClick={async () => {
+                                const supabase = createClient();
+                                await supabase.auth.signOut();
+                                window.location.href = '/login';
+                            }}
+                            className="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors group text-muted-foreground hover:bg-red-500/10 hover:text-red-500 w-full"
                         >
                             <LogOut className="size-5" />
                             <span className="text-sm font-medium">Logout</span>
-                        </Link>
+                        </button>
                     </div>
                 </nav>
             </aside>

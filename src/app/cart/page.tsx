@@ -1,11 +1,40 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 export default function CartPage() {
     const { items, updateQuantity, removeFromCart, cartTotal, cartCount } = useCart();
+    const router = useRouter();
+    const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                router.replace('/login?next=/cart');
+            } else {
+                setIsAuthLoading(false);
+            }
+        };
+        checkAuth();
+    }, [router]);
+
+    if (isAuthLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#050505]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="size-10 border-4 border-[#282f39] border-t-primary rounded-full animate-spin" />
+                    <p className="text-muted-foreground animate-pulse">Loading cart...</p>
+                </div>
+            </div>
+        );
+    }
 
     // Format currency
     const formatPrice = (price: number) => {

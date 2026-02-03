@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { LayoutDashboard, ShoppingBag, List, ShoppingCart, Users, BarChart3, Settings, LogOut, Bell, Search, Plus } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, List, ShoppingCart, Users, BarChart3, Settings, Bell, Search, Plus } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
+import { LogoutButton } from "@/components/admin/LogoutButton";
 
 export default async function AdminLayout({
     children,
@@ -69,10 +70,7 @@ export default async function AdminLayout({
 
                     {/* Logout */}
                     <div className="mt-auto pt-4">
-                        <button className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
-                            <LogOut className="w-5 h-5" />
-                            <span className="text-sm font-bold">Logout</span>
-                        </button>
+                        <LogoutButton />
                     </div>
                 </div>
             </aside>

@@ -41,16 +41,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, [items, isLoaded]);
 
     const addToCart = (product: Product, quantity: number = 1) => {
+        console.log('🛒 Adding to cart:', product.name, 'Quantity:', quantity);
         setItems(prev => {
             const existing = prev.find(item => item.id === product.id);
             if (existing) {
-                return prev.map(item =>
+                const updated = prev.map(item =>
                     item.id === product.id
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
+                console.log('🛒 Updated cart (existing item):', updated);
+                return updated;
             }
-            return [...prev, { ...product, quantity }];
+            const newCart = [...prev, { ...product, quantity }];
+            console.log('🛒 Updated cart (new item):', newCart);
+            return newCart;
         });
     };
 
@@ -75,6 +80,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
+    console.log('🛒 Cart Count:', cartCount, 'Items:', items.length);
 
     const cartTotal = items.reduce((acc, item) => {
         // Use declared price or fallback to 0 if something is wrong

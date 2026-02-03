@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Search, ShoppingCart, User, Menu, X, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useRouter, usePathname } from "next/navigation";
-import { mockProducts } from "@/lib/data";
+import { getProducts } from "@/lib/data";
 import { Product } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import type { User as AuthUser } from "@supabase/supabase-js";
@@ -16,14 +16,19 @@ export function Navbar() {
     const router = useRouter();
     const pathname = usePathname();
     const [user, setUser] = useState<AuthUser | null>(null);
-    const [isAuthLoading, setIsAuthLoading] = useState(true); // Add loading state
+    const [isAuthLoading, setIsAuthLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [allProducts, setAllProducts] = useState<Product[]>([]);
 
     // Search State
     const [searchResults, setSearchResults] = useState<Product[]>([]);
     const [showResults, setShowResults] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
+
+    // Profile Dropdown State
+    const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const profileRef = useRef<HTMLDivElement>(null);
 
     // Click outside to close search
     useEffect(() => {
@@ -31,9 +36,21 @@ export function Navbar() {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setShowResults(false);
             }
+            if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+                setShowProfileMenu(false);
+            }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Load products on mount
+    useEffect(() => {
+        const loadProducts = async () => {
+            const products = await getProducts();
+            setAllProducts(products);
+        };
+        loadProducts();
     }, []);
 
     // Check Auth State for Badge & Cart Access
@@ -41,11 +58,11 @@ export function Navbar() {
         const supabase = createClient();
         supabase.auth.getUser().then(({ data: { user } }) => {
             setUser(user);
-            setIsAuthLoading(false); // Auth check complete
+            setIsAuthLoading(false);
         });
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null);
-            setIsAuthLoading(false); // Auth check complete
+            setIsAuthLoading(false);
         });
         return () => subscription.unsubscribe();
     }, []);
@@ -58,8 +75,7 @@ export function Navbar() {
         setSearchQuery(query);
 
         if (query.trim().length > 0) {
-            // Simulate slight delay for realism or just filter
-            const filtered = mockProducts.filter((p: Product) =>
+            const filtered = allProducts.filter((p: Product) =>
                 p.name.toLowerCase().includes(query.toLowerCase()) ||
                 p.brand.toLowerCase().includes(query.toLowerCase()) ||
                 p.category.toLowerCase().includes(query.toLowerCase())
@@ -233,11 +249,12 @@ export function Navbar() {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handleCartClick}
-                                className="relative flex size-10 items-center justify-center rounded-full text-white hover:bg-[#282f39] transition-colors"
+                                className="relative flex size-10 items-center justify-center rounded-full text-white hover:text-primary hover:bg-[#282f39] transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-primary/20"
                                 aria-label="Shopping Cart"
                             >
                                 <ShoppingCart className="size-5" />
-                                {cartCount > 0 && user && (
+                                {/* Show cart count for all users */}
+                                {cartCount > 0 && (
                                     <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
                                         {cartCount}
                                     </span>
@@ -251,13 +268,44 @@ export function Navbar() {
                                     <div className="size-10 rounded-full bg-[#282f39] animate-pulse" />
                                 </div>
                             ) : user ? (
-                                <Link
-                                    href="/profile"
-                                    className="flex size-10 items-center justify-center rounded-full text-white hover:bg-[#282f39] transition-colors"
-                                    aria-label="User Profile"
-                                >
-                                    <User className="size-5" />
-                                </Link>
+                                <div className="relative" ref={profileRef}>
+                                    <button
+                                        onClick={() => setShowProfileMenu(!showProfileMenu)}
+                                        className="flex size-10 items-center justify-center rounded-full text-white hover:bg-[#282f39] transition-colors"
+                                        aria-label="User Profile Menu"
+                                    >
+                                        <User className="size-5" />
+                                    </button>
+
+                                    {/* Profile Dropdown */}
+                                    {showProfileMenu && (
+                                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#1c222b] border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                            <div className="py-2">
+                                                <Link
+                                                    href="/profile"
+                                                    onClick={() => setShowProfileMenu(false)}
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors"
+                                                >
+                                                    <User className="size-4" />
+                                                    My Profile
+                                                </Link>
+                                                <div className="border-t border-white/5 my-1" />
+                                                <button
+                                                    onClick={() => {
+                                                        setShowProfileMenu(false);
+                                                        handleLogout();
+                                                    }}
+                                                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                                                >
+                                                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                    </svg>
+                                                    Logout
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             ) : (
                                 <div className="hidden md:flex items-center gap-2">
                                     <Link
