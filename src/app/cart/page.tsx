@@ -8,9 +8,10 @@ import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 export default function CartPage() {
-    const { items, updateQuantity, removeFromCart, cartTotal, cartCount } = useCart();
+    const { items, updateQuantity, removeFromCart } = useCart();
     const router = useRouter();
     const [isAuthLoading, setIsAuthLoading] = useState(true);
+    const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -24,6 +25,43 @@ export default function CartPage() {
         };
         checkAuth();
     }, [router]);
+
+    // Select all items by default when cart loads
+    useEffect(() => {
+        if (items.length > 0 && selectedItems.length === 0) {
+            setSelectedItems(items.map(item => item.id));
+        }
+    }, [items, selectedItems.length]);
+
+    // Checkbox handlers
+    const toggleSelectAll = () => {
+        if (selectedItems.length === items.length) {
+            setSelectedItems([]);
+        } else {
+            setSelectedItems(items.map(item => item.id));
+        }
+    };
+
+    const toggleSelectItem = (itemId: string) => {
+        setSelectedItems(prev =>
+            prev.includes(itemId)
+                ? prev.filter(id => id !== itemId)
+                : [...prev, itemId]
+        );
+    };
+
+    const handleBulkDelete = () => {
+        if (selectedItems.length === 0) return;
+        if (confirm(`Remove ${selectedItems.length} item(s) from cart?`)) {
+            selectedItems.forEach(id => removeFromCart(id));
+            setSelectedItems([]);
+        }
+    };
+
+    // Calculate selected items total
+    const selectedTotal = items
+        .filter(item => selectedItems.includes(item.id))
+        .reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     if (isAuthLoading) {
         return (
@@ -70,14 +108,23 @@ export default function CartPage() {
             <h1 className="text-3xl font-bold mb-8 flex items-center gap-3">
                 Your Cart
                 <span className="text-lg font-normal text-muted-foreground">
-                    ({cartCount} items)
+                    ({items.length} items)
                 </span>
             </h1>
 
             <div className="mb-8">
                 {/* Header (Optional, for table-like feel) */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 mb-4 rounded-lg bg-card border border-border text-sm font-medium text-muted-foreground">
-                    <div className="col-span-6">Product</div>
+                    <div className="col-span-1 flex items-center justify-center">
+                        <input
+                            type="checkbox"
+                            checked={selectedItems.length === items.length && items.length > 0}
+                            onChange={toggleSelectAll}
+                            className="size-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 cursor-pointer"
+                            aria-label="Select all items"
+                        />
+                    </div>
+                    <div className="col-span-5">Product</div>
                     <div className="col-span-2 text-center">Unit Price</div>
                     <div className="col-span-2 text-center">Quantity</div>
                     <div className="col-span-1 text-center">Total Price</div>
@@ -92,8 +139,29 @@ export default function CartPage() {
                             className="bg-card border border-border rounded-xl p-4 md:p-6 shadow-sm hover:border-primary/20 transition-all"
                         >
                             <div className="flex flex-col md:grid md:grid-cols-12 gap-4 items-center">
+                                {/* Checkbox */}
+                                <div className="hidden md:flex col-span-1 items-center justify-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedItems.includes(item.id)}
+                                        onChange={() => toggleSelectItem(item.id)}
+                                        className="size-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 cursor-pointer"
+                                        aria-label={`Select ${item.name}`}
+                                    />
+                                </div>
+
                                 {/* Product Info */}
-                                <div className="col-span-6 w-full flex items-start gap-4">
+                                <div className="col-span-5 w-full flex items-start gap-4">
+                                    {/* Mobile checkbox */}
+                                    <div className="md:hidden flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedItems.includes(item.id)}
+                                            onChange={() => toggleSelectItem(item.id)}
+                                            className="size-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 cursor-pointer"
+                                            aria-label={`Select ${item.name}`}
+                                        />
+                                    </div>
                                     <div className="size-20 md:size-24 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border">
                                         <img
                                             src={item.images[0]}
@@ -175,25 +243,53 @@ export default function CartPage() {
             <div className="fixed bottom-0 left-0 w-full z-40 bg-card border-t border-border shadow-[0_-5px_20px_rgba(0,0,0,0.2)] animate-in slide-in-from-bottom-4 duration-300">
                 <div className="container mx-auto px-4 py-4 md:py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 
-                    {/* Left Side (Optional: Select All, etc) */}
-                    <div className="hidden sm:flex items-center gap-2 text-muted-foreground text-sm">
-                        <ShoppingBag className="size-4" />
-                        <span>{items.length} items selected</span>
+                    {/* Left Side: Select All & Delete */}
+                    <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={selectedItems.length === items.length && items.length > 0}
+                                onChange={toggleSelectAll}
+                                className="size-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 cursor-pointer"
+                            />
+                            <span className="text-sm text-muted-foreground">
+                                Select All ({selectedItems.length}/{items.length})
+                            </span>
+                        </label>
+
+                        {selectedItems.length > 0 && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            >
+                                <Trash2 className="size-4" />
+                                <span className="hidden sm:inline">Delete ({selectedItems.length})</span>
+                                <span className="sm:hidden">Delete</span>
+                            </button>
+                        )}
                     </div>
 
                     {/* Right Side: Total & Checkout */}
                     <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
                         <div className="flex flex-col items-end">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span>Total ({cartCount} items):</span>
-                                <span className="font-bold text-2xl text-primary">{formatPrice(cartTotal)}</span>
+                                <span>Total ({selectedItems.length} items):</span>
+                                <span className="font-bold text-2xl text-primary">{formatPrice(selectedTotal)}</span>
                             </div>
                             <span className="text-xs text-muted-foreground">Taxes included</span>
                         </div>
 
                         <Link
                             href="/checkout"
-                            className="h-12 px-8 md:px-12 rounded-lg bg-primary text-primary-foreground font-bold text-lg flex items-center justify-center gap-2 hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                            className={`h-12 px-8 md:px-12 rounded-lg font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] ${selectedItems.length === 0
+                                ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20'
+                                }`}
+                            onClick={(e) => {
+                                if (selectedItems.length === 0) {
+                                    e.preventDefault();
+                                }
+                            }}
                         >
                             Check Out
                         </Link>

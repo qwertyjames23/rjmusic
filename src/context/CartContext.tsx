@@ -34,6 +34,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             const newUserId = session?.user?.id || 'guest';
 
+            // If user logged IN, merge guest cart with user cart
+            if (event === 'SIGNED_IN' && session?.user?.id) {
+                try {
+                    // Get guest cart
+                    const guestCart = localStorage.getItem('rjmusic-cart-guest');
+                    const guestItems = guestCart ? JSON.parse(guestCart) : [];
+
+                    // Get user cart
+                    const userCartKey = `rjmusic-cart-${session.user.id}`;
+                    const userCart = localStorage.getItem(userCartKey);
+                    const userItems = userCart ? JSON.parse(userCart) : [];
+
+                    // Merge carts (combine items, update quantities if duplicate)
+                    const mergedItems = [...userItems];
+                    guestItems.forEach((guestItem: CartItem) => {
+                        const existingIndex = mergedItems.findIndex(item => item.id === guestItem.id);
+                        if (existingIndex >= 0) {
+                            // Item exists, add quantities
+                            mergedItems[existingIndex].quantity += guestItem.quantity;
+                        } else {
+                            // New item, add to cart
+                            mergedItems.push(guestItem);
+                        }
+                    });
+
+                    // Save merged cart to user's localStorage
+                    localStorage.setItem(userCartKey, JSON.stringify(mergedItems));
+
+                    // Clear guest cart
+                    localStorage.removeItem('rjmusic-cart-guest');
+
+                    // Update state
+                    setItems(mergedItems);
+                } catch (error) {
+                    console.error('Failed to merge guest cart:', error);
+                }
+            }
+
             // If user logged out, clear cart display and localStorage
             if (event === 'SIGNED_OUT') {
                 setItems([]);
