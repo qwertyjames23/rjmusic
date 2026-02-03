@@ -34,10 +34,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             const newUserId = session?.user?.id || 'guest';
 
-            // If user logged out or switched accounts, clear cart display
+            // If user logged out, clear cart display and localStorage
             if (event === 'SIGNED_OUT') {
                 setItems([]);
                 setIsLoaded(false);
+                // Clear the guest cart from localStorage
+                localStorage.removeItem('rjmusic-cart-guest');
             }
 
             setUserId(newUserId);
