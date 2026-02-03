@@ -8,10 +8,9 @@ import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 export default function CartPage() {
-    const { items, updateQuantity, removeFromCart } = useCart();
+    const { items, updateQuantity, removeFromCart, selectedItems, setSelectedItems, selectedTotal } = useCart();
     const router = useRouter();
     const [isAuthLoading, setIsAuthLoading] = useState(true);
-    const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -31,7 +30,7 @@ export default function CartPage() {
         if (items.length > 0 && selectedItems.length === 0) {
             setSelectedItems(items.map(item => item.id));
         }
-    }, [items, selectedItems.length]);
+    }, [items, selectedItems.length, setSelectedItems]);
 
     // Checkbox handlers
     const toggleSelectAll = () => {
@@ -43,11 +42,11 @@ export default function CartPage() {
     };
 
     const toggleSelectItem = (itemId: string) => {
-        setSelectedItems(prev =>
-            prev.includes(itemId)
-                ? prev.filter(id => id !== itemId)
-                : [...prev, itemId]
-        );
+        if (selectedItems.includes(itemId)) {
+            setSelectedItems(selectedItems.filter(id => id !== itemId));
+        } else {
+            setSelectedItems([...selectedItems, itemId]);
+        }
     };
 
     const handleBulkDelete = () => {
@@ -57,11 +56,6 @@ export default function CartPage() {
             setSelectedItems([]);
         }
     };
-
-    // Calculate selected items total
-    const selectedTotal = items
-        .filter(item => selectedItems.includes(item.id))
-        .reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     if (isAuthLoading) {
         return (

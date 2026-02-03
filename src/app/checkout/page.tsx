@@ -10,7 +10,7 @@ import Image from "next/image";
 
 export default function CheckoutPage() {
     const router = useRouter();
-    const { items, cartTotal, clearCart } = useCart();
+    const { items, selectedTotal, removeItems, selectedItems, clearCart } = useCart();
 
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -18,49 +18,59 @@ export default function CheckoutPage() {
     const [notes, setNotes] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Filter items to show only selected ones
+    const checkoutItems = items.filter(item => selectedItems.includes(item.id));
+
     const shippingFee = 100; // Fixed shipping fee
-    const tax = cartTotal * 0.12; // 12% tax
-    const total = cartTotal + shippingFee + tax;
+    const tax = selectedTotal * 0.12; // 12% tax
+    const total = selectedTotal + shippingFee + tax;
+
+    // Redirect if no items selected
+    useEffect(() => {
+        if (!isLoading && !isSuccess && !isSubmitting && items.length > 0 && checkoutItems.length === 0) {
+            router.push("/cart");
+        }
+    }, [items, checkoutItems, isLoading, router, isSuccess, isSubmitting]);
 
     useEffect(() => {
+        const fetchAddresses = async () => {
+            try {
+                const supabase = createClient();
+                const { data: { user } } = await supabase.auth.getUser();
+
+                if (!user) {
+                    router.push("/login?next=/checkout");
+                    return;
+                }
+
+                const { data, error } = await supabase
+                    .from("addresses")
+                    .select("*")
+                    .eq("user_id", user.id)
+                    .order("is_default", { ascending: false });
+
+                if (error) throw error;
+
+                setAddresses(data || []);
+
+                // Auto-select default address
+                const defaultAddress = data?.find(addr => addr.is_default);
+                if (defaultAddress) {
+                    setSelectedAddressId(defaultAddress.id);
+                } else if (data && data.length > 0) {
+                    setSelectedAddressId(data[0].id);
+                }
+            } catch (error) {
+                console.error("Error fetching addresses:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
         fetchAddresses();
     }, []);
-
-    const fetchAddresses = async () => {
-        try {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-
-            if (!user) {
-                router.push("/login?next=/checkout");
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from("addresses")
-                .select("*")
-                .eq("user_id", user.id)
-                .order("is_default", { ascending: false });
-
-            if (error) throw error;
-
-            setAddresses(data || []);
-
-            // Auto-select default address
-            const defaultAddress = data?.find(addr => addr.is_default);
-            if (defaultAddress) {
-                setSelectedAddressId(defaultAddress.id);
-            } else if (data && data.length > 0) {
-                setSelectedAddressId(data[0].id);
-            }
-        } catch (error) {
-            console.error("Error fetching addresses:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handlePlaceOrder = async () => {
         if (!selectedAddressId) {
@@ -68,8 +78,8 @@ export default function CheckoutPage() {
             return;
         }
 
-        if (items.length === 0) {
-            setError("Your cart is empty");
+        if (checkoutItems.length === 0) {
+            setError("No items selected for checkout");
             return;
         }
 
@@ -106,7 +116,7 @@ export default function CheckoutPage() {
                         shipping_state: selectedAddress.state,
                         shipping_postal_code: selectedAddress.postal_code,
                         shipping_country: selectedAddress.country,
-                        subtotal: cartTotal,
+                        subtotal: selectedTotal,
                         shipping_fee: shippingFee,
                         tax: tax,
                         total: total,
@@ -122,7 +132,7 @@ export default function CheckoutPage() {
             if (orderError) throw orderError;
 
             // Create order items
-            const orderItems = items.map(item => ({
+            const orderItemsPayload = checkoutItems.map(item => ({
                 order_id: order.id,
                 product_id: item.id,
                 product_name: item.name,
@@ -134,20 +144,22 @@ export default function CheckoutPage() {
 
             const { error: itemsError } = await supabase
                 .from("order_items")
-                .insert(orderItems);
+                .insert(orderItemsPayload);
 
             if (itemsError) throw itemsError;
 
-            // Clear cart
-            clearCart();
+            // Mark as success to prevent redirect loop
+            setIsSuccess(true);
+
+            // Remove PURCHASED items from cart (not clear all)
+            removeItems(selectedItems);
 
             // Redirect to confirmation page
             router.push(`/order-confirmation/${order.id}`);
         } catch (error) {
             console.error("Error placing order:", error);
             setError(error instanceof Error ? error.message : "Failed to place order");
-        } finally {
-            setIsSubmitting(false);
+            setIsSubmitting(false); // Only reset submitting on error
         }
     };
 
@@ -249,6 +261,39 @@ export default function CheckoutPage() {
                             )}
                         </div>
 
+                        {/* Order Items */}
+                        <div className="bg-card border border-border rounded-xl p-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Package className="size-5 text-primary" />
+                                <h2 className="text-xl font-bold text-foreground">Order Items ({checkoutItems.length})</h2>
+                            </div>
+
+                            <div className="space-y-4">
+                                {checkoutItems.map((item) => (
+                                    <div key={item.id} className="flex gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
+                                        <div className="relative size-20 rounded-lg overflow-hidden bg-muted shrink-0">
+                                            <Image
+                                                src={item.images[0] || "/placeholder.png"}
+                                                alt={item.name}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-semibold text-foreground mb-1">{item.name}</h3>
+                                            <p className="text-sm text-muted-foreground mb-1">{item.category}</p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                                                <p className="text-sm font-semibold text-foreground">
+                                                    {formatPrice(item.price * item.quantity)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Payment Method */}
                         <div className="bg-card border border-border rounded-xl p-6">
                             <div className="flex items-center gap-3 mb-4">
@@ -291,6 +336,7 @@ export default function CheckoutPage() {
                         {/* Order Notes */}
                         <div className="bg-card border border-border rounded-xl p-6">
                             <h2 className="text-xl font-bold text-foreground mb-4">Order Notes (Optional)</h2>
+
                             <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
@@ -306,32 +352,11 @@ export default function CheckoutPage() {
                         <div className="bg-card border border-border rounded-xl p-6 sticky top-4">
                             <h2 className="text-xl font-bold text-foreground mb-4">Order Summary</h2>
 
-                            {/* Items */}
-                            <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-                                {items.map((item) => (
-                                    <div key={item.id} className="flex gap-3">
-                                        <div className="relative size-16 rounded-lg overflow-hidden bg-muted shrink-0">
-                                            <Image
-                                                src={item.images[0] || "/placeholder.png"}
-                                                alt={item.name}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-foreground truncate">{item.name}</p>
-                                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                                            <p className="text-sm font-semibold text-foreground">{formatPrice(item.price * item.quantity)}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
                             {/* Totals */}
                             <div className="space-y-2 pt-4 border-t border-border">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Subtotal</span>
-                                    <span className="text-foreground">{formatPrice(cartTotal)}</span>
+                                    <span className="text-foreground">{formatPrice(selectedTotal)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Shipping</span>
@@ -357,7 +382,7 @@ export default function CheckoutPage() {
                             {/* Place Order Button */}
                             <button
                                 onClick={handlePlaceOrder}
-                                disabled={isSubmitting || !selectedAddressId || items.length === 0}
+                                disabled={isSubmitting || !selectedAddressId || checkoutItems.length === 0}
                                 className="w-full mt-6 px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isSubmitting ? (

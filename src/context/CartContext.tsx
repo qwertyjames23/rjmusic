@@ -12,6 +12,10 @@ interface CartContextType {
     clearCart: () => void;
     cartCount: number;
     cartTotal: number;
+    selectedItems: string[];
+    setSelectedItems: (items: string[]) => void;
+    selectedTotal: number;
+    removeItems: (productIds: string[]) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -20,6 +24,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<CartItem[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
+    const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
     // Get user ID on mount and listen for auth changes
     useEffect(() => {
@@ -70,14 +75,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 } catch (error) {
                     console.error('Failed to merge guest cart:', error);
                 }
-            }
-
-            // If user logged out, clear cart display and localStorage
-            if (event === 'SIGNED_OUT') {
+            } else if (event === 'SIGNED_OUT') {
                 setItems([]);
-                setIsLoaded(false);
-                // Clear the guest cart from localStorage
-                localStorage.removeItem('rjmusic-cart-guest');
+                setSelectedItems([]);
+            } else if (event === 'INITIAL_SESSION') {
+                // Load selected items if available
+                const savedSelected = localStorage.getItem('rjmusic-cart-selected');
+                if (savedSelected) {
+                    setSelectedItems(JSON.parse(savedSelected));
+                }
             }
 
             setUserId(newUserId);
@@ -98,6 +104,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
             if (savedCart) {
                 setItems(JSON.parse(savedCart));
             }
+
+            // Load selected items
+            const savedSelected = localStorage.getItem('rjmusic-cart-selected');
+            if (savedSelected) {
+                setSelectedItems(JSON.parse(savedSelected));
+            }
         } catch (error) {
             console.error("Failed to load cart from localStorage", error);
         } finally {
@@ -113,27 +125,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     }, [items, isLoaded, userId]);
 
+    // Save selected items to localStorage
+    useEffect(() => {
+        if (isLoaded) {
+            localStorage.setItem('rjmusic-cart-selected', JSON.stringify(selectedItems));
+        }
+    }, [selectedItems, isLoaded]);
+
     const addToCart = (product: Product, quantity: number = 1) => {
-        console.log('🛒 Adding to cart:', product.name, 'Quantity:', quantity);
+        // ... addToCart logic (kept same, implicit)
         setItems(prev => {
             const existing = prev.find(item => item.id === product.id);
             if (existing) {
-                const updated = prev.map(item =>
+                return prev.map(item =>
                     item.id === product.id
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
-                console.log('🛒 Updated cart (existing item):', updated);
-                return updated;
             }
-            const newCart = [...prev, { ...product, quantity }];
-            console.log('🛒 Updated cart (new item):', newCart);
-            return newCart;
+            // Auto-select new items
+            setSelectedItems(prev => [...prev, product.id]);
+            return [...prev, { ...product, quantity }];
         });
     };
 
     const removeFromCart = (productId: string) => {
         setItems(prev => prev.filter(item => item.id !== productId));
+        setSelectedItems(prev => prev.filter(id => id !== productId));
+    };
+
+    const removeItems = (productIds: string[]) => {
+        setItems(prev => prev.filter(item => !productIds.includes(item.id)));
+        setSelectedItems(prev => prev.filter(id => !productIds.includes(id)));
     };
 
     const updateQuantity = (productId: string, quantity: number) => {
@@ -150,6 +173,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const clearCart = () => {
         setItems([]);
+        setSelectedItems([]);
     };
 
     const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -160,6 +184,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return acc + (item.price * item.quantity);
     }, 0);
 
+    // Calculate total for selected items only
+    const selectedTotal = items
+        .filter(item => selectedItems.includes(item.id))
+        .reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
     return (
         <CartContext.Provider value={{
             items,
@@ -168,7 +197,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
             updateQuantity,
             clearCart,
             cartCount,
-            cartTotal
+            cartTotal,
+            selectedItems,
+            setSelectedItems,
+            selectedTotal,
+            removeItems
         }}>
             {children}
         </CartContext.Provider>
