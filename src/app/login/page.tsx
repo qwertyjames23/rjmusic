@@ -3,16 +3,17 @@
 import { login, signup } from './actions'
 import { createClient } from '@/utils/supabase/client'
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Chrome } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Chrome, Mail, Lock, ArrowRight } from 'lucide-react';
 import { Suspense } from 'react';
+import Link from 'next/link';
 
 function LoginForm() {
     const supabase = createClient();
-    const router = useRouter();
     const searchParams = useSearchParams();
     const next = searchParams.get('next') || '/';
     const [loading, setLoading] = useState(false);
+    const [isSignUp, setIsSignUp] = useState(false);
 
     const handleGoogleLogin = async () => {
         setLoading(true);
@@ -30,103 +31,159 @@ function LoginForm() {
     };
 
     return (
-        <div className="min-h-screen grid lg:grid-cols-2 bg-[#09090b] text-white">
+        <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0a0a0f] to-[#050505] flex items-center justify-center p-4">
+            {/* Background Effects */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 -left-48 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+            </div>
 
-            {/* Left Side - Form */}
-            <div className="flex items-center justify-center p-8">
-                <div className="w-full max-w-[400px] flex flex-col gap-6">
-                    <div className="flex flex-col gap-2 text-center">
-                        <h1 className="text-3xl font-bold tracking-tight">Welcome Back</h1>
-                        <p className="text-gray-400">Enter your credentials to access your account</p>
-                    </div>
+            <div className="relative w-full max-w-md">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                        {isSignUp ? 'Create Account' : 'Welcome Back'}
+                    </h2>
+                    <p className="text-gray-400">
+                        {isSignUp ? 'Sign up to start shopping' : 'Sign in to your account'}
+                    </p>
+                </div>
 
-                    <form className="flex flex-col gap-4">
-                        <input type="hidden" name="next" value={next} />
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium" htmlFor="email">Email</label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                required
-                                className="bg-[#18181b] border border-[#27272a] rounded-md p-3 text-sm focus:border-blue-500 focus:outline-none transition-colors"
-                                placeholder="name@example.com"
-                            />
+                {/* Main Card */}
+                <div className="bg-[#0f141a] rounded-2xl border border-white/10 p-8 shadow-2xl">
+                    {/* Error/Success Messages */}
+                    {searchParams.get('error') && (
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm mb-6 animate-in slide-in-from-top-2">
+                            {searchParams.get('error')}
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-medium" htmlFor="password">Password</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                required
-                                className="bg-[#18181b] border border-[#27272a] rounded-md p-3 text-sm focus:border-blue-500 focus:outline-none transition-colors"
-                                placeholder="••••••••"
-                            />
+                    )}
+
+                    {searchParams.get('message') && (
+                        <div className="bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-xl text-sm mb-6 animate-in slide-in-from-top-2">
+                            {searchParams.get('message')}
                         </div>
+                    )}
 
-                        <button
-                            formAction={login}
-                            className="bg-white text-black font-semibold py-3 rounded-md hover:bg-gray-200 transition-colors mt-2"
-                        >
-                            Sign In with Email
-                        </button>
-
-                        <button
-                            formAction={signup}
-                            className="bg-transparent border border-[#27272a] text-white font-semibold py-3 rounded-md hover:bg-[#27272a] transition-colors"
-                        >
-                            Sign Up
-                        </button>
-                    </form>
-
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-[#27272a]" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-[#09090b] px-2 text-gray-500">Or continue with</span>
-                        </div>
-                    </div>
-
+                    {/* Google Login */}
                     <button
                         onClick={handleGoogleLogin}
                         disabled={loading}
-                        className="flex items-center justify-center gap-2 bg-[#18181b] border border-[#27272a] text-white font-medium py-3 rounded-md hover:bg-[#27272a] transition-colors"
+                        className="w-full flex items-center justify-center gap-3 bg-white text-gray-900 font-semibold py-3.5 rounded-xl hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl mb-6"
                     >
-                        {loading ? "Redirecting..." : (
+                        {loading ? (
+                            <div className="size-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+                        ) : (
                             <>
-                                <Chrome className="w-4 h-4" />
-                                Google
+                                <Chrome className="size-5" />
+                                Continue with Google
                             </>
                         )}
                     </button>
-                </div>
-            </div>
 
-            {/* Right Side - Visual */}
-            <div className="hidden lg:flex relative bg-[#18181b] items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20" />
-                <div className="relative z-10 flex flex-col items-center text-center p-12">
-                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mb-8 shadow-2xl shadow-blue-500/20">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-white">
-                            <path fillRule="evenodd" d="M19.952 1.651a.75.75 0 01.298.599V16.303a3 3 0 01-2.176 2.887l-15.75 4.375a.75.75 0 01-.973-.732v-5.696a3 3 0 012.176-2.887l15.75-4.375a.75.75 0 01.675.078z" clipRule="evenodd" />
-                        </svg>
+                    {/* Divider */}
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-white/10" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-[#0f141a] px-3 text-gray-500 font-medium">Or continue with email</span>
+                        </div>
                     </div>
-                    <h2 className="text-4xl font-bold mb-4">RJ MUSIC</h2>
-                    <p className="text-gray-400 max-w-md text-lg">
-                        Join the RJ Music community. Shop exclusive gear, track your orders, and get early access to new drops.
-                    </p>
+
+                    {/* Email/Password Form */}
+                    <form className="space-y-4">
+                        <input type="hidden" name="next" value={next} />
+
+                        {/* Email Field */}
+                        <div>
+                            <label className="block text-sm font-semibold mb-2 text-gray-300" htmlFor="email">
+                                Email Address
+                            </label>
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    required
+                                    className="w-full bg-[#1c222b] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                    placeholder="name@example.com"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Password Field */}
+                        <div>
+                            <label className="block text-sm font-semibold mb-2 text-gray-300" htmlFor="password">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    required
+                                    className="w-full bg-[#1c222b] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Submit Buttons */}
+                        <div className="space-y-3 pt-2">
+                            <button
+                                formAction={isSignUp ? signup : login}
+                                className="w-full bg-gradient-to-r from-primary to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group"
+                            >
+                                {isSignUp ? 'Create Account' : 'Sign In'}
+                                <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        </div>
+                    </form>
+
+                    {/* Toggle Sign Up/Login */}
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={() => setIsSignUp(!isSignUp)}
+                            className="text-sm text-gray-400 hover:text-white transition-colors"
+                        >
+                            {isSignUp ? (
+                                <>
+                                    Already have an account?{' '}
+                                    <span className="text-primary font-semibold">Sign In</span>
+                                </>
+                            ) : (
+                                <>
+                                    Don&apos;t have an account?{' '}
+                                    <span className="text-primary font-semibold">Sign Up</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="mt-6 text-center">
+                    <Link
+                        href="/"
+                        className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                        ← Back to Home
+                    </Link>
                 </div>
             </div>
-
         </div>
     );
 }
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={
+            <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0a0a0f] to-[#050505] flex items-center justify-center">
+                <div className="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        }>
             <LoginForm />
         </Suspense>
     );

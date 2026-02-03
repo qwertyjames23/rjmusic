@@ -27,7 +27,6 @@ export function ProductCard({ product, className }: ProductCardProps) {
         e.preventDefault();
         e.stopPropagation(); // Prevent navigation
         addToCart(product);
-        // Optional: add toast notification here
     };
 
     return (
@@ -43,7 +42,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             <div className="relative w-full aspect-[4/5] bg-gradient-to-br from-[#1a1f26] to-[#0f1216] p-4 flex items-center justify-center overflow-hidden">
                 <div className="relative w-full h-full rounded-md overflow-hidden">
                     <Image
-                        src={product.images[0]}
+                        src={product.images[0] || 'https://placehold.co/600x800/101822/FFF?text=No+Image'}
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-500"

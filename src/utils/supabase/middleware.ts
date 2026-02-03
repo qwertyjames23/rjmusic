@@ -37,8 +37,14 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // 0. Protect Checkout
-    if (!user && request.nextUrl.pathname.startsWith('/checkout')) {
+    console.log('🔍 Middleware Check:', {
+        path: request.nextUrl.pathname,
+        hasUser: !!user,
+        userEmail: user?.email || 'none'
+    });
+
+    // 0. Protect Checkout and Cart
+    if (!user && (request.nextUrl.pathname.startsWith('/checkout') || request.nextUrl.pathname === '/cart')) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         url.searchParams.set('next', request.nextUrl.pathname)
@@ -47,32 +53,56 @@ export async function updateSession(request: NextRequest) {
 
     // 1. If NO USER -> Redirect to Login
     if (!user && request.nextUrl.pathname.startsWith('/admin')) {
+        console.log('🚫 No user session - Redirecting to login from:', request.nextUrl.pathname)
         const url = request.nextUrl.clone()
         url.pathname = '/login'
+        url.searchParams.set('next', request.nextUrl.pathname)
         return NextResponse.redirect(url)
     }
 
-    // 2. If USER EXISTS but tries to access ADMIN -> Check Email
+    // 2. If USER EXISTS but tries to access ADMIN -> Check Role
     if (user && request.nextUrl.pathname.startsWith('/admin')) {
-        if (user.email !== 'raffyjames65@gmail.com') {
-            // Redirect unauthorized users to home or user dashboard
+        // Fetch user profile to check role
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        console.log('🔐 Admin Access Check:', {
+            userId: user.id,
+            email: user.email,
+            role: profile?.role,
+            path: request.nextUrl.pathname
+        })
+
+        // If not admin role, redirect to home
+        if (!profile || profile.role !== 'admin') {
+            console.log('❌ Access Denied: User is not admin')
             const url = request.nextUrl.clone()
             url.pathname = '/'
             return NextResponse.redirect(url)
         }
+
+        console.log('✅ Access Granted: User is admin')
     }
 
-    // 3. Optional: If Admin tries to access Login, redirect to Dashboard
+    // 3. Optional: If logged in user tries to access Login, redirect appropriately
     if (user && request.nextUrl.pathname.startsWith('/login')) {
-        if (user.email === 'raffyjames65@gmail.com') {
-            const url = request.nextUrl.clone()
+        // Check if admin
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        const url = request.nextUrl.clone()
+        if (profile?.role === 'admin') {
             url.pathname = '/admin/dashboard'
-            return NextResponse.redirect(url)
         } else {
-            const url = request.nextUrl.clone()
             url.pathname = '/'
-            return NextResponse.redirect(url)
         }
+        return NextResponse.redirect(url)
     }
 
     return supabaseResponse

@@ -1,255 +1,370 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types";
 import Link from "next/link";
-import { Plus, Search, Pencil, Trash2, Filter, ChevronLeft, ChevronRight } from "lucide-react";
-
-const ITEMS_PER_PAGE = 20;
+import Image from "next/image";
+import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
 export default function AdminProductsPage() {
+    const router = useRouter();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
+    const [deleting, setDeleting] = useState<string | null>(null);
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; product: Product | null }>({ isOpen: false, product: null });
+    const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+    const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
 
-    // Debounce search term
     useEffect(() => {
-        const timeoutId = setTimeout(() => {
-            fetchProducts(currentPage, searchTerm);
-        }, 500);
+        loadProducts();
+    }, []);
 
-        return () => clearTimeout(timeoutId);
-    }, [searchTerm, currentPage]);
-
-
-    const fetchProducts = async (page: number, search: string) => {
+    const loadProducts = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-
-            // Calculate range
-            const from = (page - 1) * ITEMS_PER_PAGE;
-            const to = from + ITEMS_PER_PAGE - 1;
-
-            let query = supabase
+            const { data, error } = await supabase
                 .from('products')
-                .select('*', { count: 'exact' });
-
-            if (search) {
-                // Search across multiple columns
-                // Sanitize search input to prevent injection
-                const safeSearch = search.replace(/[(),.]/g, '');
-                if (safeSearch) {
-                   query = query.or(`name.ilike.%${safeSearch}%,category.ilike.%${safeSearch}%,brand.ilike.%${safeSearch}%`);
-                }
-            }
-
-            // Apply sorting and pagination after filtering
-            const { data, error, count } = await query
-                .order('created_at', { ascending: false })
-                .range(from, to);
+                .select('*')
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
 
-            if (count !== null) {
-                setTotalCount(count);
-            }
-
-            // Map to our type (simplified for list view)
-            const mappedProducts: Product[] = (data || []).map(p => ({
-                id: p.id,
-                name: p.name,
-                description: p.description,
-                price: p.price,
-                images: p.images || [],
-                category: p.category,
-                brand: p.brand,
-                inStock: p.in_stock,
-                rating: p.rating,
-                reviews: p.reviews,
-                tags: p.tags,
-                features: p.features
+            const mappedProducts: Product[] = data.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                price: item.price,
+                originalPrice: item.original_price ?? undefined,
+                category: item.category,
+                brand: item.brand,
+                images: item.images || [],
+                inStock: item.in_stock,
+                rating: item.rating,
+                reviews: item.reviews,
+                tags: (item.tags as any) || [],
+                features: item.features || []
             }));
 
             setProducts(mappedProducts);
-        } catch (error) {
-            console.error("Error fetching products:", error);
+        } catch (error: any) {
+            console.error("Error loading products:", error);
+            alert("Failed to load products: " + error.message);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1); // Reset to first page on search change
+    const handleDeleteClick = (product: Product) => {
+        setDeleteModal({ isOpen: true, product });
     };
 
-    const handlePageChange = (newPage: number) => {
-        if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
-        }
-    };
+    const handleDeleteConfirm = async () => {
+        if (!deleteModal.product) return;
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this product?")) return;
+        const { id, name } = deleteModal.product;
+        setDeleting(id);
 
         try {
-            const { error } = await supabase.from('products').delete().eq('id', id);
+            const { error } = await supabase
+                .from('products')
+                .delete()
+                .eq('id', id);
+
             if (error) throw error;
 
-            // Remove from state (optimistic update)
-            setProducts(products.filter(p => p.id !== id));
-            // Also decrement total count slightly incorrectly in UI until refresh, but acceptable for UX
-            setTotalCount(prev => Math.max(0, prev - 1));
-        } catch (error) {
+            // Success notification
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
+            successDiv.innerHTML = '✓ Product deleted successfully!';
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+
+            // Close modal and refresh list
+            setDeleteModal({ isOpen: false, product: null });
+            await loadProducts();
+        } catch (error: any) {
             console.error("Error deleting product:", error);
-            alert("Failed to delete product");
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
+            errorDiv.innerHTML = '✗ Failed to delete product: ' + error.message;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 3000);
+        } finally {
+            setDeleting(null);
         }
     };
 
-    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+    const handleSelectAll = () => {
+        if (selectedProducts.size === products.length) {
+            setSelectedProducts(new Set());
+        } else {
+            setSelectedProducts(new Set(products.map(p => p.id)));
+        }
+    };
+
+    const handleSelectProduct = (productId: string) => {
+        const newSelected = new Set(selectedProducts);
+        if (newSelected.has(productId)) {
+            newSelected.delete(productId);
+        } else {
+            newSelected.add(productId);
+        }
+        setSelectedProducts(newSelected);
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedProducts.size === 0) return;
+
+        setDeleting('bulk');
+        try {
+            const { error } = await supabase
+                .from('products')
+                .delete()
+                .in('id', Array.from(selectedProducts));
+
+            if (error) throw error;
+
+            // Success notification
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
+            successDiv.innerHTML = `✓ ${selectedProducts.size} product(s) deleted successfully!`;
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+
+            // Close modal, clear selection, and refresh list
+            setBulkDeleteModal(false);
+            setSelectedProducts(new Set());
+            await loadProducts();
+        } catch (error: unknown) {
+            console.error("Error deleting products:", error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
+            errorDiv.innerHTML = '✗ Failed to delete products';
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 3000);
+        } finally {
+            setDeleting(null);
+        }
+    };
+
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            maximumFractionDigits: 0
+        }).format(price);
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="size-10 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Loading products...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="flex flex-col gap-6">
-
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-white tracking-tight">Products</h1>
-                    <p className="text-gray-400 text-sm mt-1">Manage your product catalog</p>
-                </div>
-                <Link href="/admin/product/new" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-blue-600/20">
-                    <Plus className="w-4 h-4" />
-                    Add New Product
-                </Link>
-            </div>
-
-            {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row gap-4 p-4 bg-[#1f2937] border border-gray-800 rounded-xl">
-                <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="w-4 h-4 text-gray-500" />
+        <div className="p-8">
+            {/* Header with Bulk Actions */}
+            {selectedProducts.size > 0 ? (
+                <div className="mb-8 bg-primary/10 border border-primary/30 rounded-xl p-4 flex items-center justify-between animate-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                            <span className="text-primary font-bold">{selectedProducts.size}</span>
+                        </div>
+                        <div>
+                            <p className="text-white font-semibold">
+                                {selectedProducts.size} product{selectedProducts.size > 1 ? 's' : ''} selected
+                            </p>
+                            <p className="text-sm text-gray-400">Choose an action to perform</p>
+                        </div>
                     </div>
-                    <input
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-700 rounded-lg leading-5 bg-[#111827] text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm transition-all"
-                        placeholder="Search products..."
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                    />
-                </div>
-                <button className="flex items-center gap-2 px-4 py-2 bg-[#111827] border border-gray-700 text-gray-300 rounded-lg hover:text-white hover:border-gray-600 transition-colors">
-                    <Filter className="w-4 h-4" />
-                    <span>Filter</span>
-                </button>
-            </div>
-
-            {/* Table */}
-            <div className="bg-[#1f2937] border border-gray-800 rounded-xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-[#111827]/50 border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 font-bold">
-                                <th className="px-6 py-4">Product</th>
-                                <th className="px-6 py-4">Category</th>
-                                <th className="px-6 py-4">Price</th>
-                                <th className="px-6 py-4">Stock</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-800">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400">Loading products...</td>
-                                </tr>
-                            ) : products.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400">No products found.</td>
-                                </tr>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setSelectedProducts(new Set())}
+                            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                        >
+                            Clear Selection
+                        </button>
+                        <button
+                            onClick={() => setBulkDeleteModal(true)}
+                            disabled={deleting === 'bulk'}
+                            className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {deleting === 'bulk' ? (
+                                <>
+                                    <Loader2 className="size-4 animate-spin" />
+                                    Deleting...
+                                </>
                             ) : (
-                                products.map((product) => (
-                                    <tr key={product.id} className="group hover:bg-[#374151]/30 transition-colors">
+                                <>
+                                    <Trash2 className="size-4" />
+                                    Delete Selected
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold text-white">Products</h1>
+                        <p className="text-gray-400 mt-1">{products.length} total products</p>
+                    </div>
+                    <Link
+                        href="/admin/product/new"
+                        className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-bold hover:bg-primary/90 transition-colors"
+                    >
+                        <Plus className="size-5" />
+                        Add Product
+                    </Link>
+                </div>
+            )}
+
+            {products.length === 0 ? (
+                <div className="text-center py-20 bg-[#0f141a] rounded-xl border border-white/10">
+                    <p className="text-gray-400 mb-4">No products found</p>
+                    <Link
+                        href="/admin/product/new"
+                        className="inline-flex items-center gap-2 text-primary hover:underline"
+                    >
+                        <Plus className="size-4" />
+                        Create your first product
+                    </Link>
+                </div>
+            ) : (
+                <div className="bg-[#0f141a] rounded-xl border border-white/10 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-[#1c222b] border-b border-white/10">
+                                <tr>
+                                    <th className="w-12 px-6 py-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedProducts.size === products.length && products.length > 0}
+                                            onChange={handleSelectAll}
+                                            className="size-4 rounded border-white/20 bg-[#0f141a] text-primary focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                                            title="Select all products"
+                                        />
+                                    </th>
+                                    <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Product</th>
+                                    <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Category</th>
+                                    <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Price</th>
+                                    <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Stock</th>
+                                    <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Rating</th>
+                                    <th className="text-right px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {products.map((product) => (
+                                    <tr key={product.id} className={`hover:bg-white/5 transition-colors ${selectedProducts.has(product.id) ? 'bg-primary/5' : ''}`}>
                                         <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg bg-gray-700 overflow-hidden flex-shrink-0 border border-gray-600">
-                                                    {product.images[0] && (
-                                                        <img src={product.images[0]} alt="" className="h-full w-full object-cover" />
-                                                    )}
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedProducts.has(product.id)}
+                                                onChange={() => handleSelectProduct(product.id)}
+                                                className="size-4 rounded border-white/20 bg-[#0f141a] text-primary focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                aria-label={`Select ${product.name}`}
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="size-16 rounded-lg overflow-hidden bg-white/5 shrink-0 relative">
+                                                    <Image
+                                                        src={product.images[0] || 'https://placehold.co/100x100/101822/FFF?text=No+Image'}
+                                                        alt={product.name}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="64px"
+                                                    />
                                                 </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-bold text-white max-w-[200px] truncate" title={product.name}>{product.name}</span>
-                                                    <span className="text-xs text-gray-500">{product.brand}</span>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-white truncate">{product.name}</p>
+                                                    <p className="text-sm text-gray-400">{product.brand}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-300">{product.category}</td>
-                                        <td className="px-6 py-4 text-sm font-bold text-white">
-                                            {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.price)}
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-300">
-                                            {product.inStock ? "In Stock" : "Out of Stock"}
+                                        <td className="px-6 py-4">
+                                            <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
+                                                {product.category}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {product.inStock ? (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/20">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
-                                                    Active
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-red-400"></div>
-                                                    Inactive
-                                                </span>
+                                            <p className="font-bold text-white">{formatPrice(product.price)}</p>
+                                            {product.originalPrice && (
+                                                <p className="text-sm text-gray-500 line-through">{formatPrice(product.originalPrice)}</p>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <td className="px-6 py-4">
+                                            <span className={`px-3 py-1 text-sm font-medium rounded-full ${product.inStock ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                                {product.inStock ? 'In Stock' : 'Out of Stock'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-yellow-500">★</span>
+                                                <span className="text-white font-medium">{product.rating}</span>
+                                                <span className="text-gray-400 text-sm">({product.reviews})</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Link href={`/admin/product/edit/${product.id}`} className="p-2 rounded-lg text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 transition-colors">
-                                                    <Pencil className="w-4 h-4" />
-                                                </Link>
                                                 <button
-                                                    onClick={() => handleDelete(product.id)}
-                                                    className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                                                    onClick={() => router.push(`/admin/product/${product.id}/edit`)}
+                                                    className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    title="Edit"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Pencil className="size-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteClick(product)}
+                                                    disabled={deleting === product.id}
+                                                    className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                                                    title="Delete"
+                                                >
+                                                    {deleting === product.id ? (
+                                                        <Loader2 className="size-4 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="size-4" />
+                                                    )}
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between bg-[#1f2937] border border-gray-800 rounded-xl p-4">
-                 <span className="text-sm text-gray-400">
-                    Showing <span className="text-white font-medium">{Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, totalCount)}</span> to <span className="text-white font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, totalCount)}</span> of <span className="text-white font-medium">{totalCount}</span> results
-                </span>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1 || loading}
-                        className="p-2 rounded-lg text-gray-400 border border-gray-700 hover:text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <span className="text-sm text-gray-400 px-2">
-                        Page <span className="text-white font-medium">{currentPage}</span> of <span className="text-white font-medium">{Math.max(1, totalPages)}</span>
-                    </span>
-                    <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage >= totalPages || loading}
-                        className="p-2 rounded-lg text-gray-400 border border-gray-700 hover:text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <ChevronRight className="w-4 h-4" />
-                    </button>
-                </div>
-            </div>
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={deleteModal.isOpen}
+                onClose={() => setDeleteModal({ isOpen: false, product: null })}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Product?"
+                message="Are you sure you want to delete this product? This will remove it from your store."
+                itemName={deleteModal.product?.name}
+                isDeleting={deleting !== null}
+            />
+
+            {/* Bulk Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={bulkDeleteModal}
+                onClose={() => setBulkDeleteModal(false)}
+                onConfirm={handleBulkDelete}
+                title="Delete Multiple Products?"
+                message={`Are you sure you want to delete ${selectedProducts.size} product${selectedProducts.size > 1 ? 's' : ''}? This will remove them from your store.`}
+                isDeleting={deleting === 'bulk'}
+            />
         </div>
     );
 }

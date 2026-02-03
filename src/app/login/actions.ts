@@ -13,7 +13,7 @@ export async function login(formData: FormData) {
     const password = formData.get('password') as string
     const next = formData.get('next') as string || '/'
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
     })
@@ -24,9 +24,19 @@ export async function login(formData: FormData) {
 
     revalidatePath('/', 'layout')
 
-    // Check if admin
-    if (email === 'raffyjames65@gmail.com') {
-        redirect('/admin/dashboard')
+    // Check if admin by querying profile role
+    if (data.user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single()
+
+        if (profile?.role === 'admin') {
+            redirect('/admin/dashboard')
+        } else {
+            redirect(next)
+        }
     } else {
         redirect(next)
     }
@@ -44,7 +54,13 @@ export async function signup(formData: FormData) {
     })
 
     if (error) {
-        redirect('/login?error=Could not authenticate user')
+        // Handle specific error cases
+        if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+            redirect('/login?error=This email is already registered. Please login instead.')
+        }
+
+        // Generic error
+        redirect(`/login?error=${encodeURIComponent(error.message)}`)
     }
 
     revalidatePath('/', 'layout')

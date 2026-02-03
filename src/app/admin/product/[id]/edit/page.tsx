@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
-import { ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-export default function AdminProductForm() {
+export default function EditProductPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
+    const params = useParams();
+    const productId = params.id as string;
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     // Form State
     const [name, setName] = useState("");
@@ -21,40 +25,67 @@ export default function AdminProductForm() {
     const [images, setImages] = useState<string[]>([]);
     const [inStock, setInStock] = useState(true);
 
+    useEffect(() => {
+        loadProduct();
+    }, [productId]);
+
+    const loadProduct = async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .eq('id', productId)
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                setName(data.name);
+                setDescription(data.description);
+                setPrice(data.price.toString());
+                setOriginalPrice(data.original_price ? data.original_price.toString() : "");
+                setCategory(data.category);
+                setBrand(data.brand || "");
+                setImages(data.images || []);
+                setInStock(data.in_stock);
+            }
+        } catch (error: any) {
+            console.error("Error loading product:", error);
+            alert("Failed to load product: " + error.message);
+            router.push('/admin/products');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setSaving(true);
 
         try {
-            const { error } = await supabase.from('products').insert({
-                name,
-                description,
-                price: Number(price),
-                original_price: originalPrice ? Number(originalPrice) : null,
-                category,
-                brand,
-                images,
-                in_stock: inStock,
-                rating: 0,
-                reviews: 0
-            });
+            const { error } = await supabase
+                .from('products')
+                .update({
+                    name,
+                    description,
+                    price: Number(price),
+                    original_price: originalPrice ? Number(originalPrice) : null,
+                    category,
+                    brand: brand || null,
+                    images,
+                    in_stock: inStock,
+                })
+                .eq('id', productId);
 
             if (error) throw error;
 
             // Success notification
             const successDiv = document.createElement('div');
             successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
-            successDiv.innerHTML = '✓ Product created successfully!';
+            successDiv.innerHTML = '✓ Product updated successfully!';
             document.body.appendChild(successDiv);
             setTimeout(() => successDiv.remove(), 3000);
-
-            // Reset form
-            setName("");
-            setDescription("");
-            setPrice("");
-            setOriginalPrice("");
-            setImages([]);
-            setBrand("");
 
             // Redirect to products page
             setTimeout(() => router.push('/admin/products'), 1500);
@@ -67,9 +98,20 @@ export default function AdminProductForm() {
             document.body.appendChild(errorDiv);
             setTimeout(() => errorDiv.remove(), 3000);
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0a0a0f] to-[#050505] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="size-10 animate-spin text-primary" />
+                    <p className="text-gray-400">Loading product...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0a0a0f] to-[#050505] p-4 md:p-8">
@@ -84,12 +126,12 @@ export default function AdminProductForm() {
                         Back to Products
                     </Link>
                     <div className="flex items-center gap-3">
-                        <div className="size-12 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shadow-lg shadow-primary/20">
-                            <Sparkles className="size-6 text-white" />
+                        <div className="size-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <Package className="size-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white">Add New Product</h1>
-                            <p className="text-gray-400 mt-1">Create a new product listing for your store</p>
+                            <h1 className="text-3xl font-bold text-white">Edit Product</h1>
+                            <p className="text-gray-400 mt-1">Update product information</p>
                         </div>
                     </div>
                 </div>
@@ -249,28 +291,28 @@ export default function AdminProductForm() {
                         />
                     </div>
 
-                    {/* Submit Button */}
+                    {/* Submit Buttons */}
                     <div className="flex gap-4">
                         <Link
                             href="/admin/products"
-                            className="flex-1 bg-[#1c222b] text-white font-bold py-4 px-6 rounded-xl hover:bg-[#252d38] transition-all border border-white/10"
+                            className="flex-1 bg-[#1c222b] text-white font-bold py-4 px-6 rounded-xl hover:bg-[#252d38] transition-all border border-white/10 text-center"
                         >
                             Cancel
                         </Link>
                         <button
                             type="submit"
-                            disabled={loading}
-                            className="flex-1 bg-gradient-to-r from-primary to-blue-600 text-white font-bold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                            disabled={saving}
+                            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold py-4 px-6 rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
                         >
-                            {loading ? (
+                            {saving ? (
                                 <>
                                     <Loader2 className="size-5 animate-spin" />
-                                    Creating Product...
+                                    Saving Changes...
                                 </>
                             ) : (
                                 <>
-                                    <Sparkles className="size-5 group-hover:rotate-12 transition-transform" />
-                                    Create Product
+                                    <Save className="size-5 group-hover:scale-110 transition-transform" />
+                                    Save Changes
                                 </>
                             )}
                         </button>

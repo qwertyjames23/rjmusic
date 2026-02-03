@@ -1,7 +1,7 @@
 import { Hero } from "@/components/features/Hero";
 import { CategoryGrid } from "@/components/features/CategoryGrid";
 import { getProducts } from "@/lib/data";
-import Link from "next/link";
+import { TrendingProductCard } from "@/components/features/TrendingProductCard";
 import { Mail } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -54,26 +54,7 @@ export default async function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {trendingProducts.length > 0 ? (
               trendingProducts.map(product => (
-                <div key={product.id} className="group relative bg-[#151b24] border border-white/5 rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300">
-                  <Link href={`/product/${product.id}`} className="block aspect-square relative bg-white/5">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={product.images[0] || 'https://placehold.co/600x400/101822/FFF?text=No+Image'} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    {product.tags?.includes("SALE") && <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">SALE</span>}
-                    {product.tags?.includes("NEW") && <span className="absolute top-3 left-3 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded">NEW</span>}
-                  </Link>
-                  <div className="p-4">
-                    <h3 className="font-bold text-white text-lg truncate">{product.name}</h3>
-                    <p className="text-sm text-gray-400 mb-2">{product.category}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-primary font-bold">
-                        {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(product.price)}
-                      </span>
-                      <Link href={`/product/${product.id}`} className="size-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                <TrendingProductCard key={product.id} product={product} />
               ))
             ) : (
               <p className="text-gray-400 col-span-full">No trending products found.</p>

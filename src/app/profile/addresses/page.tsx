@@ -3,31 +3,21 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
+interface Address {
+    id: number;
+    name: string;
+    phone: string;
+    address: string;
+    city: string;
+    region: string;
+    postal: string;
+    isDefault: boolean;
+    label: string;
+}
+
 export default function AddressesPage() {
-    const [addresses, setAddresses] = useState([
-        {
-            id: 1,
-            name: "Alexander Rivers",
-            phone: "(+63) 912 345 6789",
-            address: "128 Synth Avenue, Studio B",
-            city: "Makati City",
-            region: "Metro Manila",
-            postal: "1200",
-            isDefault: true,
-            label: "Home"
-        },
-        {
-            id: 2,
-            name: "Alex Rivera",
-            phone: "(+63) 998 765 4321",
-            address: "Unit 404, The Sound Garden, 5th Ave",
-            city: "Taguig City",
-            region: "Metro Manila",
-            postal: "1630",
-            isDefault: false,
-            label: "Work"
-        }
-    ]);
+    // Start with empty addresses - users will add their own
+    const [addresses, setAddresses] = useState<Address[]>([]);
 
     return (
         <div className="bg-card w-full rounded-xl shadow-sm border border-border overflow-hidden">
