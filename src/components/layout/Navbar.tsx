@@ -253,8 +253,8 @@ export function Navbar() {
                                 aria-label="Shopping Cart"
                             >
                                 <ShoppingCart className="size-5" />
-                                {/* Show cart count only for logged-in users, and hide on cart page */}
-                                {user && cartCount > 0 && pathname !== '/cart' && (
+                                {/* Show cart count for all users (guests and logged-in), but hide on cart page */}
+                                {cartCount > 0 && pathname !== '/cart' && (
                                     <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
                                         {cartCount}
                                     </span>
