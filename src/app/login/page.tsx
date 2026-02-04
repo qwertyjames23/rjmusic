@@ -1,6 +1,6 @@
 "use client";
 
-import { login, signup } from './actions'
+import { login } from './actions'
 import { createClient } from '@/utils/supabase/client'
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -13,7 +13,6 @@ function LoginForm() {
     const searchParams = useSearchParams();
     const next = searchParams.get('next') || '/';
     const [loading, setLoading] = useState(false);
-    const [isSignUp, setIsSignUp] = useState(false);
 
     const handleGoogleLogin = async () => {
         setLoading(true);
@@ -42,10 +41,10 @@ function LoginForm() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold text-white mb-2">
-                        {isSignUp ? 'Create Account' : 'Welcome Back'}
+                        Welcome Back
                     </h2>
                     <p className="text-gray-400">
-                        {isSignUp ? 'Sign up to start shopping' : 'Sign in to your account'}
+                        Sign in to your account
                     </p>
                 </div>
 
@@ -133,33 +132,23 @@ function LoginForm() {
                         {/* Submit Buttons */}
                         <div className="space-y-3 pt-2">
                             <button
-                                formAction={isSignUp ? signup : login}
+                                formAction={login}
                                 className="w-full bg-gradient-to-r from-primary to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group"
                             >
-                                {isSignUp ? 'Create Account' : 'Sign In'}
+                                Sign In
                                 <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
                     </form>
 
-                    {/* Toggle Sign Up/Login */}
+                    {/* Sign Up Link */}
                     <div className="mt-6 text-center">
-                        <button
-                            onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-sm text-gray-400 hover:text-white transition-colors"
-                        >
-                            {isSignUp ? (
-                                <>
-                                    Already have an account?{' '}
-                                    <span className="text-primary font-semibold">Sign In</span>
-                                </>
-                            ) : (
-                                <>
-                                    Don&apos;t have an account?{' '}
-                                    <span className="text-primary font-semibold">Sign Up</span>
-                                </>
-                            )}
-                        </button>
+                        <p className="text-sm text-gray-400">
+                            Don&apos;t have an account?{' '}
+                            <Link href="/register" className="text-primary font-semibold hover:underline">
+                                Sign Up
+                            </Link>
+                        </p>
                     </div>
                 </div>
 

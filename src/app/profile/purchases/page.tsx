@@ -1,14 +1,144 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Search, Store, Truck, ShoppingCart, Star, RotateCcw, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { Search, Truck, ShoppingBag, Star, RotateCcw, CheckCircle2, Package, Clock, XCircle, Loader2, ChevronRight } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import { Order, OrderItem } from "@/types";
+import { useRouter } from "next/navigation";
 
-type OrderStatus = "All" | "To Pay" | "To Ship" | "To Receive" | "Completed" | "Cancelled";
+type OrderStatus = "All" | "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
+
+interface OrderWithItems extends Order {
+    items: OrderItem[];
+}
 
 export default function MyPurchasesPage() {
+    const router = useRouter();
+    const supabase = createClient();
     const [activeTab, setActiveTab] = useState<OrderStatus>("All");
-    const tabs: OrderStatus[] = ["All", "To Pay", "To Ship", "To Receive", "Completed", "Cancelled"];
+    const [orders, setOrders] = useState<OrderWithItems[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const tabs: OrderStatus[] = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+    const fetchOrders = useCallback(async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                router.push("/login?next=/profile/purchases");
+                return;
+            }
+
+            // Fetch orders for current user
+            const { data: ordersData, error: ordersError } = await supabase
+                .from("orders")
+                .select("*")
+                .eq("user_id", user.id)
+                .order("created_at", { ascending: false });
+
+            if (ordersError) throw ordersError;
+
+            // Fetch items for each order
+            const ordersWithItems: OrderWithItems[] = [];
+            for (const order of ordersData || []) {
+                const { data: itemsData } = await supabase
+                    .from("order_items")
+                    .select("*")
+                    .eq("order_id", order.id);
+
+                ordersWithItems.push({
+                    ...order,
+                    items: itemsData || []
+                });
+            }
+
+            setOrders(ordersWithItems);
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [router, supabase]);
+
+    useEffect(() => {
+        fetchOrders();
+    }, [fetchOrders]);
+
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+        }).format(price);
+    };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('en-PH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'pending':
+                return <Clock className="size-5" />;
+            case 'processing':
+                return <Package className="size-5" />;
+            case 'shipped':
+                return <Truck className="size-5" />;
+            case 'delivered':
+                return <CheckCircle2 className="size-5" />;
+            case 'cancelled':
+                return <XCircle className="size-5" />;
+            default:
+                return <Package className="size-5" />;
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'pending':
+                return 'text-yellow-400';
+            case 'processing':
+                return 'text-blue-400';
+            case 'shipped':
+                return 'text-purple-400';
+            case 'delivered':
+                return 'text-green-400';
+            case 'cancelled':
+                return 'text-red-400';
+            default:
+                return 'text-gray-400';
+        }
+    };
+
+    // Filter orders based on active tab and search
+    const filteredOrders = orders.filter(order => {
+        const matchesTab = activeTab === "All" || order.status.toLowerCase() === activeTab.toLowerCase();
+        const matchesSearch = searchQuery === "" ||
+            order.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            order.items.some(item => item.product_name.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesTab && matchesSearch;
+    });
+
+    // Calculate summary
+    const totalOrders = orders.length;
+    const totalSpent = orders
+        .filter(o => o.status !== 'cancelled')
+        .reduce((sum, order) => sum + order.total, 0);
+    const completedOrders = orders.filter(o => o.status === 'delivered').length;
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-[50vh]">
+                <Loader2 className="size-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col gap-6 font-sans">
@@ -40,133 +170,144 @@ export default function MyPurchasesPage() {
                         </div>
                         <input
                             className="block w-full pl-11 pr-4 py-2.5 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder:text-muted-foreground"
-                            placeholder="Search by Order ID, Shop or Product Name"
+                            placeholder="Search by Order ID or Product Name"
                             type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
                 </div>
             </div>
 
-            {/* Order Card 1 (In Transit) */}
-            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                <div className="px-6 py-4 flex justify-between items-center border-b border-border bg-secondary/10">
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold">RJ MUSIC</span>
-                        <Link href="/products" className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded flex items-center gap-1 hover:bg-primary/20 transition-colors">
-                            <Store className="size-3" /> VISIT SHOP
-                        </Link>
-                    </div>
-                    <div className="flex items-center gap-2 text-primary">
-                        <Truck className="size-5" />
-                        <span className="text-xs font-bold uppercase tracking-wider">In Transit</span>
-                    </div>
+            {/* Orders List */}
+            {filteredOrders.length === 0 ? (
+                <div className="bg-card border border-border rounded-xl p-12 text-center">
+                    <ShoppingBag className="size-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-bold mb-2">No orders found</h3>
+                    <p className="text-muted-foreground mb-6">
+                        {activeTab === "All"
+                            ? "You haven't made any purchases yet."
+                            : `No ${activeTab.toLowerCase()} orders.`}
+                    </p>
+                    <Link
+                        href="/products"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-colors"
+                    >
+                        Start Shopping
+                        <ChevronRight className="size-4" />
+                    </Link>
                 </div>
-
-                <div className="p-6">
-                    <div className="flex flex-col sm:flex-row gap-6">
-                        <div className="size-24 sm:size-32 rounded-lg bg-secondary border border-border overflow-hidden shrink-0">
-                            <img
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuYjPU0TZHHvLVmblSnM1WNQM7f1ln4qwPFXrM94SsvDSFJV_SCBPcHzYA3alDdM4B1phrjFTR53IFPmvUBlBmy6NyFm-43fpMRKcu4jZrVrIOXGfIoioMPDXobrneSZzGZDETeiuPkgFEyMg-3nGZDF4ZAaOH3H3BYPlwLIjWEQfXmNgaDaBCOTC5GOuicZIkBo12CFieHBbXHRd09sqxKKR8f8f_15T9_7aD7pOirmL8MyKAArUTuZxMpcUtbgVl-pcdvQKC0Ag"
-                                alt="Gibson Les Paul"
-                                className="size-full object-cover"
-                            />
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between py-1">
-                            <div>
-                                <p className="text-muted-foreground text-[10px] tracking-widest font-medium mb-1 uppercase">ORDER ID: 8274192BH</p>
-                                <h3 className="text-lg font-bold mb-1 line-clamp-1">Gibson Les Paul Standard '60s Electric Guitar</h3>
-                                <p className="text-muted-foreground text-sm">Variation: Iced Tea | Qty: 1</p>
+            ) : (
+                filteredOrders.map((order) => (
+                    <div key={order.id} className="bg-card border border-border rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        {/* Order Header */}
+                        <div className="px-6 py-4 flex justify-between items-center border-b border-border bg-secondary/10">
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm font-bold">Order #{order.order_number}</span>
+                                <span className="text-xs text-muted-foreground">{formatDate(order.created_at)}</span>
                             </div>
-                            <div className="flex items-end justify-between mt-4">
-                                <div className="text-xs text-muted-foreground italic">Expected arrival: Nov 24, 2026</div>
-                                <div className="text-primary text-xl font-bold">₱145,000.00</div>
+                            <div className={`flex items-center gap-2 ${getStatusColor(order.status)}`}>
+                                {getStatusIcon(order.status)}
+                                <span className="text-xs font-bold uppercase tracking-wider capitalize">{order.status}</span>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div className="px-6 py-4 bg-secondary/5 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-xs text-muted-foreground w-full md:w-auto text-center md:text-left">Refund within 7 days of receipt for manufacturing defects.</p>
-                    <div className="flex gap-3 w-full md:w-auto">
-                        <button className="flex-1 md:flex-none px-6 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-lg transition-colors">
-                            Contact Seller
-                        </button>
-                        <button className="flex-1 md:flex-none px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-lg transition-all shadow-lg shadow-primary/20">
-                            Track Order
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Order Card 2 (Completed) */}
-            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow opacity-90 hover:opacity-100">
-                <div className="px-6 py-4 flex justify-between items-center border-b border-border bg-secondary/10">
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm font-bold">RJ MUSIC</span>
-                        <span className="px-2 py-0.5 bg-secondary text-muted-foreground text-[10px] font-bold rounded uppercase tracking-tighter border border-border">Official Store</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-green-500">
-                        <CheckCircle2 className="size-5" />
-                        <span className="text-xs font-bold uppercase tracking-wider">Completed</span>
-                    </div>
-                </div>
-
-                <div className="p-6">
-                    <div className="flex flex-col sm:flex-row gap-6">
-                        <div className="size-24 sm:size-32 rounded-lg bg-secondary border border-border overflow-hidden shrink-0">
-                            <img
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnYS9N2m8N-dK_Jmoy4bFpmYk3bm_kwRH3sjxbQnBtQ7dRzPS0P9IRJh8-yEUkePkn6nTheRHRTxvcQEGICBCG1jH51YgRhttHFa0i1iyWZyOyU2g58tUd_eLkGRo1jljVOVkYDRVg6yhNqLap4Iji_rMgpNq4PfEcNU5ZiuChKqlgxVk1ZqE5OpxQfmr5dg6iSkNkaRJe6b_PBBtaKeYK-wIyYmxpSLn8o567aAiqBttA9AgSoqI0iZdvEVKxe8I2jS0WtE6R0GE"
-                                alt="Yamaha P-125"
-                                className="size-full object-cover"
-                            />
+                        {/* Order Items */}
+                        <div className="p-6 space-y-4">
+                            {order.items.map((item) => (
+                                <div key={item.id} className="flex gap-4">
+                                    <div className="size-20 sm:size-24 rounded-lg bg-secondary border border-border overflow-hidden shrink-0 relative">
+                                        {item.product_image ? (
+                                            <Image
+                                                src={item.product_image}
+                                                alt={item.product_name}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                <Package className="size-8" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 flex flex-col justify-between py-1">
+                                        <div>
+                                            <h3 className="text-base font-bold mb-1 line-clamp-1">{item.product_name}</h3>
+                                            <p className="text-muted-foreground text-sm">Qty: {item.quantity}</p>
+                                        </div>
+                                        <div className="text-primary font-bold">
+                                            {formatPrice(item.subtotal)}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                        <div className="flex-1 flex flex-col justify-between py-1">
-                            <div>
-                                <p className="text-muted-foreground text-[10px] tracking-widest font-medium mb-1 uppercase">ORDER ID: 9912034XY</p>
-                                <h3 className="text-lg font-bold mb-1 line-clamp-1">Yamaha P-125 Digital Piano</h3>
-                                <p className="text-muted-foreground text-sm">Variation: White | Qty: 1</p>
+
+                        {/* Order Footer */}
+                        <div className="px-6 py-4 bg-secondary/5 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 w-full md:w-auto">
+                                <span className="text-sm text-muted-foreground">
+                                    {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                                </span>
+                                <div className="h-4 w-px bg-border" />
+                                <span className="text-lg font-bold text-primary">
+                                    Total: {formatPrice(order.total)}
+                                </span>
                             </div>
-                            <div className="flex items-end justify-between mt-4">
-                                <div className="text-xs text-green-500/80">Delivered on Oct 12, 2026</div>
-                                <div className="text-primary text-xl font-bold">₱42,500.00</div>
+                            <div className="flex gap-3 w-full md:w-auto">
+                                {order.status === 'delivered' && (
+                                    <>
+                                        <button className="flex-1 md:flex-none px-6 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+                                            <RotateCcw className="size-4" /> Buy Again
+                                        </button>
+                                        <button className="flex-1 md:flex-none px-6 py-2 border border-primary text-primary hover:bg-primary/10 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+                                            <Star className="size-4" /> Rate
+                                        </button>
+                                    </>
+                                )}
+                                {(order.status === 'pending' || order.status === 'processing') && (
+                                    <button className="flex-1 md:flex-none px-6 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-lg transition-colors">
+                                        Contact Seller
+                                    </button>
+                                )}
+                                {order.status === 'shipped' && (
+                                    <button className="flex-1 md:flex-none px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-lg transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                                        <Truck className="size-4" /> Track Order
+                                    </button>
+                                )}
+                                <Link
+                                    href={`/order-confirmation/${order.id}`}
+                                    className="flex-1 md:flex-none px-6 py-2 bg-white/5 hover:bg-white/10 text-foreground text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                                >
+                                    View Details
+                                    <ChevronRight className="size-4" />
+                                </Link>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div className="px-6 py-4 bg-secondary/5 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-xs text-green-500/80 w-full md:w-auto text-center md:text-left">Thank you for shopping! Rate the product to earn points.</p>
-                    <div className="flex gap-3 w-full md:w-auto">
-                        <button className="flex-1 md:flex-none px-6 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
-                            <RotateCcw className="size-4" /> Buy Again
-                        </button>
-                        <button className="flex-1 md:flex-none px-6 py-2 border border-primary text-primary hover:bg-primary/10 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
-                            <Star className="size-4" /> Rate Product
-                        </button>
-                    </div>
-                </div>
-            </div>
+                ))
+            )}
 
             {/* Purchase Summary */}
-            <div className="p-6 bg-card border border-border rounded-xl">
-                <h4 className="text-sm font-bold mb-4 uppercase tracking-wider border-b border-border pb-2">Purchase History Summary</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs uppercase font-medium">Total Orders</p>
-                        <p className="text-xl font-bold">12</p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs uppercase font-medium">Total Spent</p>
-                        <p className="text-xl font-bold text-primary">₱287,500.00</p>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs uppercase font-medium">Loyalty Status</p>
-                        <p className="text-xl font-bold text-amber-400 flex items-center gap-2">
-                            <Star className="size-5 fill-current" /> Platinum
-                        </p>
+            {orders.length > 0 && (
+                <div className="p-6 bg-card border border-border rounded-xl">
+                    <h4 className="text-sm font-bold mb-4 uppercase tracking-wider border-b border-border pb-2">Purchase History Summary</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground text-xs uppercase font-medium">Total Orders</p>
+                            <p className="text-xl font-bold">{totalOrders}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground text-xs uppercase font-medium">Total Spent</p>
+                            <p className="text-xl font-bold text-primary">{formatPrice(totalSpent)}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-muted-foreground text-xs uppercase font-medium">Completed Orders</p>
+                            <p className="text-xl font-bold text-green-400">{completedOrders}</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

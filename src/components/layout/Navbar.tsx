@@ -56,16 +56,52 @@ export function Navbar() {
     // Check Auth State for Badge & Cart Access
     useEffect(() => {
         const supabase = createClient();
-        supabase.auth.getUser().then(({ data: { user } }) => {
-            setUser(user);
-            setIsAuthLoading(false);
+        let mounted = true;
+
+        // Get initial session - called on mount AND when pathname changes
+        const initAuth = async () => {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (mounted) {
+                    if (error) {
+                        console.log('Session error:', error.message);
+                        setUser(null);
+                    } else {
+                        setUser(session?.user ?? null);
+                    }
+                    setIsAuthLoading(false);
+                }
+            } catch (err) {
+                console.log('Auth init error:', err);
+                if (mounted) {
+                    setUser(null);
+                    setIsAuthLoading(false);
+                }
+            }
+        };
+
+        initAuth();
+
+        // Listen for auth state changes (login, logout, token refresh)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event, session?.user?.email);
+
+            if (mounted) {
+                setUser(session?.user ?? null);
+                setIsAuthLoading(false);
+            }
+
+            // Force router refresh on sign in/out to update server components
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+                router.refresh();
+            }
         });
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
-            setIsAuthLoading(false);
-        });
-        return () => subscription.unsubscribe();
-    }, []);
+
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
+    }, [router, pathname]); // Re-run when pathname changes (after redirect)
 
     // Hide Navbar on Admin pages
     if (pathname && pathname.startsWith('/admin')) return null;
