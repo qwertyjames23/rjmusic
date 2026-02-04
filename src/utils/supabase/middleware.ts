@@ -33,9 +33,18 @@ export async function updateSession(request: NextRequest) {
     // supabase.auth.getUser(). A simple mistake could make it very hard to debug
     // issues with users being randomly logged out.
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    let user = null;
+    try {
+        const { data, error } = await supabase.auth.getUser()
+        if (error) {
+            // Handle invalid refresh token - clear cookies and treat as logged out
+            console.log('Auth error (possibly invalid refresh token):', error.message);
+        } else {
+            user = data.user;
+        }
+    } catch (error) {
+        console.log('Auth error caught:', error);
+    }
 
     console.log('🔍 Middleware Check:', {
         path: request.nextUrl.pathname,
