@@ -24,11 +24,6 @@ export async function createClient() {
                     }
                 },
             },
-            auth: {
-                flowType: 'pkce',
-                detectSessionInUrl: true,
-                persistSession: true,
-            }
         }
     )
 }
