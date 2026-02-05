@@ -27,8 +27,17 @@ export default async function CustomersPage() {
         .order('created_at', { ascending: false });
 
     if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        return <div className="p-8 text-red-500">Error loading customers</div>;
+        return (
+            <div className="p-8 text-red-500 border border-red-500/20 rounded-xl bg-red-500/10">
+                <h3 className="font-bold text-lg mb-2">Error Loading Customers</h3>
+                <p className="text-sm opacity-80 mb-4">
+                    The profiles table seems to be missing or inaccessible.
+                </p>
+                <div className="bg-black/50 p-4 rounded-lg overflow-auto text-xs font-mono">
+                    {JSON.stringify(profilesError, null, 2)}
+                </div>
+            </div>
+        );
     }
 
     // Fetch order stats for each customer

@@ -1,14 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Check, Clock, AlertCircle } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
-interface OrderRowProps {
-    order: any;
+interface Order {
+    id: string;
+    order_number?: string;
+    shipping_name?: string;
+    shipping_phone?: string;
+    total_amount?: number;
+    total?: number;
+    status: string;
+    created_at: string;
 }
 
-export function OrderRow({ order }: OrderRowProps) {
+interface OrderRowProps {
+    order: Order;
+    isNew?: boolean;
+}
+
+export function OrderRow({ order, isNew = false }: OrderRowProps) {
     const [status, setStatus] = useState(order.status);
     const [loading, setLoading] = useState(false);
     const supabase = createClient();
@@ -33,19 +45,21 @@ export function OrderRow({ order }: OrderRowProps) {
         }
     };
 
+    const amount: number = Number(order.total_amount || order.total || 0);
+
     return (
-        <tr className="group hover:bg-[#374151]/30 transition-colors border-b border-gray-800/50">
+        <tr className={`group hover:bg-[#374151]/30 transition-colors border-b border-gray-800/50 ${isNew ? 'bg-green-500/10 animate-pulse' : ''}`}>
             <td className="px-6 py-4 text-sm font-bold text-white max-w-[120px] truncate" title={order.id}>
                 #{order.id.slice(0, 8)}...
             </td>
             <td className="px-6 py-4">
                 <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white uppercase">
-                        {order.customer_name.charAt(0)}
+                        {order.shipping_name?.charAt(0) || '?'}
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-sm font-medium text-white">{order.customer_name}</span>
-                        <span className="text-xs text-gray-500">{order.customer_email}</span>
+                        <span className="text-sm font-medium text-white">{order.shipping_name || 'Unknown Customer'}</span>
+                        <span className="text-xs text-gray-500">{order.shipping_phone || 'No phone'}</span>
                     </div>
                 </div>
             </td>
@@ -53,17 +67,17 @@ export function OrderRow({ order }: OrderRowProps) {
                 {new Date(order.created_at).toLocaleDateString()}
             </td>
             <td className="px-6 py-4 text-sm font-bold text-white">
-                {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(order.total_amount)}
+                {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount)}
             </td>
             <td className="px-6 py-4">
                 <div className="relative group/status inline-block">
                     <button className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border transition-all ${status === 'Completed' ? 'bg-green-500/20 text-green-400 border-green-500/20' :
-                            status === 'Processing' ? 'bg-blue-500/20 text-blue-400 border-blue-500/20' :
-                                'bg-yellow-500/20 text-yellow-400 border-yellow-500/20'
+                        status === 'Processing' ? 'bg-blue-500/20 text-blue-400 border-blue-500/20' :
+                            'bg-yellow-500/20 text-yellow-400 border-yellow-500/20'
                         }`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${status === 'Completed' ? 'bg-green-400' :
-                                status === 'Processing' ? 'bg-blue-400' :
-                                    'bg-yellow-400'
+                            status === 'Processing' ? 'bg-blue-400' :
+                                'bg-yellow-400'
                             }`}></div>
                         {loading ? 'Updating...' : status}
                     </button>
@@ -78,7 +92,11 @@ export function OrderRow({ order }: OrderRowProps) {
                 </div>
             </td>
             <td className="px-6 py-4 text-right">
-                <button className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg">
+                <button
+                    className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg"
+                    aria-label="Order actions"
+                    title="Order actions"
+                >
                     <MoreVertical className="w-4 h-4" />
                 </button>
             </td>
