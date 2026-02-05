@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
-import { OrderRow } from "./_components/OrderRow";
-import { Search, Filter, Download } from "lucide-react";
+import { OrdersTable } from "./_components/OrdersTable";
+import { Search, Filter } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +22,22 @@ export default async function OrdersPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">Orders</h1>
-                    <p className="text-gray-400 mt-1">Manage and track all customer orders.</p>
+                    <p className="text-gray-400 mt-1">Manage and track all customer orders. <span className="text-green-400 text-sm">● Real-time updates enabled</span></p>
                 </div>
                 <div className="flex gap-2">
-                    <button className="h-10 px-4 bg-[#1f2937] border border-gray-700 hover:border-gray-600 text-white rounded-lg flex items-center gap-2 text-sm font-medium transition-colors">
+                    <button
+                        className="h-10 px-4 bg-[#1f2937] border border-gray-700 hover:border-gray-600 text-white rounded-lg flex items-center gap-2 text-sm font-medium transition-colors"
+                        aria-label="Export orders"
+                        title="Export orders"
+                    >
                         <ExportIcon className="w-4 h-4" />
                         Export
                     </button>
-                    <button className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm font-bold transition-colors shadow-lg shadow-blue-600/20">
+                    <button
+                        className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm font-bold transition-colors shadow-lg shadow-blue-600/20"
+                        aria-label="Filter orders"
+                        title="Filter orders"
+                    >
                         <Filter className="w-4 h-4" />
                         Filter
                     </button>
@@ -46,7 +54,10 @@ export default async function OrdersPage() {
                         className="w-full bg-[#111827] border border-gray-700 text-white text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                 </div>
-                <select className="bg-[#111827] border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none">
+                <select
+                    className="bg-[#111827] border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none"
+                    aria-label="Filter by status"
+                >
                     <option>All Status</option>
                     <option>Pending</option>
                     <option>Processing</option>
@@ -55,41 +66,13 @@ export default async function OrdersPage() {
                 </select>
             </div>
 
-            {/* Orders Table */}
-            <div className="bg-[#1f2937] border border-gray-800 rounded-xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-[#111827]/50 border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 font-bold">
-                                <th className="px-6 py-4">Order ID</th>
-                                <th className="px-6 py-4">Customer</th>
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Amount</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-[#1f2937]">
-                            {!orders || orders.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                        No orders found
-                                    </td>
-                                </tr>
-                            ) : (
-                                orders.map((order) => (
-                                    <OrderRow key={order.id} order={order} />
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            {/* Real-time Orders Table */}
+            <OrdersTable initialOrders={orders || []} />
         </div>
     );
 }
 
-function ExportIcon(props: any) {
+function ExportIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
         <svg
             {...props}

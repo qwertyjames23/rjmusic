@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
 import { ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Save, Loader2 } from "lucide-react";
@@ -11,6 +11,7 @@ export default function EditProductPage() {
     const router = useRouter();
     const params = useParams();
     const productId = params.id as string;
+    const supabase = createClient();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -20,14 +21,31 @@ export default function EditProductPage() {
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
     const [originalPrice, setOriginalPrice] = useState("");
-    const [category, setCategory] = useState("Guitars");
+    const [category, setCategory] = useState("");
     const [brand, setBrand] = useState("");
     const [images, setImages] = useState<string[]>([]);
     const [inStock, setInStock] = useState(true);
 
+    // Categories State
+    const [categories, setCategories] = useState<any[]>([]);
+
     useEffect(() => {
-        loadProduct();
+        Promise.all([loadProduct(), fetchCategories()]);
     }, [productId]);
+
+    const fetchCategories = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*')
+                .order('name');
+
+            if (error) throw error;
+            if (data) setCategories(data);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
 
     const loadProduct = async () => {
         setLoading(true);
@@ -200,11 +218,10 @@ export default function EditProductPage() {
                                         value={category}
                                         onChange={e => setCategory(e.target.value)}
                                     >
-                                        <option value="Guitars">Guitars</option>
-                                        <option value="Keys">Keys</option>
-                                        <option value="Percussion">Percussion</option>
-                                        <option value="Studio">Studio</option>
-                                        <option value="Accessories">Accessories</option>
+                                        <option value="" disabled>Select Category</option>
+                                        {categories.map((cat) => (
+                                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

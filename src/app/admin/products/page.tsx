@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client"; // Use authenticated client
 import { Product } from "@/types";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,6 +11,7 @@ import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
 export default function AdminProductsPage() {
     const router = useRouter();
+    const supabase = createClient(); // Initialize proper client
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState<string | null>(null);

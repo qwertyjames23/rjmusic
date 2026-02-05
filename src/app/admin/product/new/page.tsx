@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
 import { ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
@@ -9,6 +9,7 @@ import Link from "next/link";
 
 export default function AdminProductForm() {
     const router = useRouter();
+    const supabase = createClient();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -16,10 +17,31 @@ export default function AdminProductForm() {
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
     const [originalPrice, setOriginalPrice] = useState("");
-    const [category, setCategory] = useState("Guitars");
+    const [category, setCategory] = useState("");
     const [brand, setBrand] = useState("");
     const [images, setImages] = useState<string[]>([]);
     const [inStock, setInStock] = useState(true);
+
+    // Categories State
+    const [categories, setCategories] = useState<any[]>([]);
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*')
+                .order('name');
+
+            if (error) throw error;
+            if (data) setCategories(data);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        }
+    };
 
     const onSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,6 +77,7 @@ export default function AdminProductForm() {
             setOriginalPrice("");
             setImages([]);
             setBrand("");
+            setCategory("");
 
             // Redirect to products page
             setTimeout(() => router.push('/admin/products'), 1500);
@@ -154,15 +177,15 @@ export default function AdminProductForm() {
                                 <div className="relative">
                                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
                                     <select
+                                        required
                                         className="w-full bg-[#1c222b] border border-white/10 rounded-xl p-3 pl-10 text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none appearance-none cursor-pointer"
                                         value={category}
                                         onChange={e => setCategory(e.target.value)}
                                     >
-                                        <option value="Guitars">Guitars</option>
-                                        <option value="Keys">Keys</option>
-                                        <option value="Percussion">Percussion</option>
-                                        <option value="Studio">Studio</option>
-                                        <option value="Accessories">Accessories</option>
+                                        <option value="" disabled>Select Category</option>
+                                        {categories.map((cat) => (
+                                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -253,7 +276,7 @@ export default function AdminProductForm() {
                     <div className="flex gap-4">
                         <Link
                             href="/admin/products"
-                            className="flex-1 bg-[#1c222b] text-white font-bold py-4 px-6 rounded-xl hover:bg-[#252d38] transition-all border border-white/10"
+                            className="flex-1 bg-[#1c222b] text-white font-bold py-4 px-6 rounded-xl hover:bg-[#252d38] transition-all border border-white/10 text-center"
                         >
                             Cancel
                         </Link>
