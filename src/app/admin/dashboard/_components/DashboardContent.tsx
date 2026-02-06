@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TrendingUp, ShoppingCart, Package, Bell, MoreVertical } from "lucide-react";
+import { TrendingUp, ShoppingCart, Package, Bell, BarChart3 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { OrderRow } from "../../orders/_components/OrderRow";
 import Link from "next/link";
+import { RevenueChart } from "./RevenueChart";
 
 interface DashboardContentProps {
     initialStats: {
@@ -13,11 +14,13 @@ interface DashboardContentProps {
         products: number;
     };
     initialRecentOrders: any[];
+    initialChartData: { name: string; total: number }[];
 }
 
-export default function DashboardContent({ initialStats, initialRecentOrders }: DashboardContentProps) {
+export default function DashboardContent({ initialStats, initialRecentOrders, initialChartData }: DashboardContentProps) {
     const [stats, setStats] = useState(initialStats);
     const [recentOrders, setRecentOrders] = useState(initialRecentOrders);
+    const [chartData, setChartData] = useState(initialChartData);
     const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
     const [showNotification, setShowNotification] = useState(false);
     const supabase = createClient();
@@ -54,6 +57,14 @@ export default function DashboardContent({ initialStats, initialRecentOrders }: 
 
                     // Add to recent orders list
                     setRecentOrders((prev) => [newOrder, ...prev].slice(0, 5));
+
+                    // Update Chart Data (Simple approximation: add to today)
+                    const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+                    setChartData(prev => prev.map(item =>
+                        item.name === today
+                            ? { ...item, total: item.total + newOrder.total }
+                            : item
+                    ));
 
                     // Track new order for highlighting
                     setNewOrderIds((prev) => new Set([...prev, newOrder.id]));
@@ -158,6 +169,31 @@ export default function DashboardContent({ initialStats, initialRecentOrders }: 
                     <h3 className="text-gray-400 text-sm font-medium mb-1">Total Products</h3>
                     <p className="text-3xl font-bold text-white tracking-tight">{stats.products}</p>
                     <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors"></div>
+                </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+                {/* Revenue Chart */}
+                <div className="lg:col-span-4 bg-[#1f2937] border border-gray-800 rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <BarChart3 className="w-5 h-5" />
+                            Revenue Overview
+                        </h3>
+                    </div>
+                    <RevenueChart data={chartData} />
+                </div>
+
+                {/* Placeholder for future detailed stats or another chart */}
+                <div className="lg:col-span-3 bg-[#1f2937] border border-gray-800 rounded-xl p-6 flex flex-col justify-center items-center text-center">
+                    <h3 className="text-lg font-bold text-white mb-2">Detailed Analytics</h3>
+                    <p className="text-gray-400 text-sm mb-6">More insights coming soon.</p>
+                    <div className="relative w-48 h-48 rounded-full border-4 border-gray-700 flex items-center justify-center">
+                        <div className="text-2xl font-bold text-white">{stats.orders}</div>
+                        <div className="absolute inset-0 border-t-4 border-blue-500 rounded-full" style={{ transform: 'rotate(45deg)' }}></div>
+                    </div>
+                    <p className="mt-4 text-sm text-blue-400 font-bold">Total Orders Processed</p>
                 </div>
             </div>
 

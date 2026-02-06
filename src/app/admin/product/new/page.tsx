@@ -20,7 +20,7 @@ export default function AdminProductForm() {
     const [category, setCategory] = useState("");
     const [brand, setBrand] = useState("");
     const [images, setImages] = useState<string[]>([]);
-    const [inStock, setInStock] = useState(true);
+    const [stock, setStock] = useState("0"); // Stock State
 
     // Categories State
     const [categories, setCategories] = useState<any[]>([]);
@@ -48,6 +48,8 @@ export default function AdminProductForm() {
         setLoading(true);
 
         try {
+            const stockNum = Number(stock);
+
             const { error } = await supabase.from('products').insert({
                 name,
                 description,
@@ -56,7 +58,8 @@ export default function AdminProductForm() {
                 category,
                 brand,
                 images,
-                in_stock: inStock,
+                stock: stockNum,
+                in_stock: stockNum > 0, // Auto-set based on stock
                 rating: 0,
                 reviews: 0
             });
@@ -78,6 +81,7 @@ export default function AdminProductForm() {
             setImages([]);
             setBrand("");
             setCategory("");
+            setStock("0");
 
             // Redirect to products page
             setTimeout(() => router.push('/admin/products'), 1500);
@@ -199,8 +203,8 @@ export default function AdminProductForm() {
                                 <DollarSign className="size-5 text-primary" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-white">Pricing</h2>
-                                <p className="text-sm text-gray-400">Set your product pricing</p>
+                                <h2 className="text-lg font-bold text-white">Pricing & Stock</h2>
+                                <p className="text-sm text-gray-400">Set your product pricing and inventory</p>
                             </div>
                         </div>
 
@@ -236,19 +240,22 @@ export default function AdminProductForm() {
                                 </div>
                                 <p className="text-xs text-gray-500 mt-1">For sale items, show original price</p>
                             </div>
-                        </div>
 
-                        <div className="mt-6 flex items-center gap-3 p-4 bg-[#1c222b] rounded-xl border border-white/5">
-                            <input
-                                type="checkbox"
-                                id="inStock"
-                                checked={inStock}
-                                onChange={e => setInStock(e.target.checked)}
-                                className="size-5 rounded border-white/10 bg-[#0f141a] text-primary focus:ring-2 focus:ring-primary/20 cursor-pointer"
-                            />
-                            <label htmlFor="inStock" className="text-sm font-medium text-gray-300 cursor-pointer">
-                                Product is in stock and available for purchase
-                            </label>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-semibold mb-2 text-gray-300">Stock Quantity *</label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="0"
+                                    className="w-full bg-[#1c222b] border border-white/10 rounded-xl p-3 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                    value={stock}
+                                    onChange={e => setStock(e.target.value)}
+                                    placeholder="0"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Status will automatically allow 'Out of Stock' if 0.
+                                </p>
+                            </div>
                         </div>
                     </div>
 

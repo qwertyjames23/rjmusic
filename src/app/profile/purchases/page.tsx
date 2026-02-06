@@ -7,6 +7,7 @@ import { Search, Truck, ShoppingBag, Star, RotateCcw, CheckCircle2, Package, Clo
 import { createClient } from "@/utils/supabase/client";
 import { Order, OrderItem } from "@/types";
 import { useRouter } from "next/navigation";
+import { ReviewModal } from "./_components/ReviewModal";
 
 type OrderStatus = "All" | "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
 
@@ -21,6 +22,11 @@ export default function MyPurchasesPage() {
     const [orders, setOrders] = useState<OrderWithItems[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+
+    // Review Modal State
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [selectedReviewItem, setSelectedReviewItem] = useState<{ id: string, name: string, image: string } | null>(null);
+    const [selectedReviewOrderId, setSelectedReviewOrderId] = useState<string>("");
 
     const tabs: OrderStatus[] = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
 
@@ -66,6 +72,44 @@ export default function MyPurchasesPage() {
     useEffect(() => {
         fetchOrders();
     }, [fetchOrders]);
+
+    // Real-time subscription for Status Updates
+    useEffect(() => {
+        const setupRealtime = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const channel = supabase
+                .channel('customer-orders-updates')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'UPDATE',
+                        schema: 'public',
+                        table: 'orders',
+                    },
+                    (payload) => {
+                        console.log("Realtime update received:", payload);
+                        const updatedOrder = payload.new as Order;
+
+                        setOrders((prevOrders) =>
+                            prevOrders.map((order) =>
+                                order.id === updatedOrder.id
+                                    ? { ...order, ...updatedOrder } // Merge new status/data
+                                    : order
+                            )
+                        );
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
+        };
+
+        setupRealtime();
+    }, [supabase]);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('en-PH', {
@@ -114,6 +158,18 @@ export default function MyPurchasesPage() {
             default:
                 return 'text-gray-400';
         }
+    };
+
+    const handleRateItem = (item: OrderItem, orderId: string) => {
+        // item.product_id is likely the id we want, but check type definition. 
+        // OrderItem usually has product_id.
+        setSelectedReviewItem({
+            id: item.product_id,
+            name: item.product_name,
+            image: item.product_image
+        });
+        setSelectedReviewOrderId(orderId);
+        setReviewModalOpen(true);
     };
 
     // Filter orders based on active tab and search
@@ -203,12 +259,14 @@ export default function MyPurchasesPage() {
                         {/* Order Header */}
                         <div className="px-6 py-4 flex justify-between items-center border-b border-border bg-secondary/10">
                             <div className="flex items-center gap-4">
-                                <span className="text-sm font-bold">Order #{order.order_number}</span>
+                                <span className="text-sm font-bold">Order #{order.order_number || order.id.slice(0, 8)}</span>
                                 <span className="text-xs text-muted-foreground">{formatDate(order.created_at)}</span>
                             </div>
                             <div className={`flex items-center gap-2 ${getStatusColor(order.status)}`}>
                                 {getStatusIcon(order.status)}
-                                <span className="text-xs font-bold uppercase tracking-wider capitalize">{order.status}</span>
+                                <span className={`text-xs font-bold uppercase tracking-wider capitalize ${['pending', 'processing', 'shipped', 'delivered'].includes(order.status.toLowerCase()) ? 'animate-pulse' : ''}`}>
+                                    {order.status}
+                                </span>
                             </div>
                         </div>
 
@@ -235,8 +293,20 @@ export default function MyPurchasesPage() {
                                             <h3 className="text-base font-bold mb-1 line-clamp-1">{item.product_name}</h3>
                                             <p className="text-muted-foreground text-sm">Qty: {item.quantity}</p>
                                         </div>
-                                        <div className="text-primary font-bold">
-                                            {formatPrice(item.subtotal)}
+                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
+                                            <div className="text-primary font-bold">
+                                                {formatPrice(item.subtotal)}
+                                            </div>
+                                            {/* Rate Product Button - Only visible if delivered */}
+                                            {order.status.toLowerCase() === 'delivered' && (
+                                                <button
+                                                    onClick={() => handleRateItem(item, order.id)}
+                                                    className="flex items-center gap-1.5 text-xs font-bold text-yellow-500 hover:text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 px-3 py-1.5 rounded-lg transition-colors w-fit"
+                                                >
+                                                    <Star className="size-3.5 fill-yellow-500" />
+                                                    Rate Item
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -259,9 +329,6 @@ export default function MyPurchasesPage() {
                                     <>
                                         <button className="flex-1 md:flex-none px-6 py-2 bg-secondary hover:bg-secondary/80 text-foreground text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
                                             <RotateCcw className="size-4" /> Buy Again
-                                        </button>
-                                        <button className="flex-1 md:flex-none px-6 py-2 border border-primary text-primary hover:bg-primary/10 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
-                                            <Star className="size-4" /> Rate
                                         </button>
                                     </>
                                 )}
@@ -307,6 +374,20 @@ export default function MyPurchasesPage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Review Modal */}
+            {selectedReviewItem && (
+                <ReviewModal
+                    isOpen={reviewModalOpen}
+                    onClose={() => setReviewModalOpen(false)}
+                    product={selectedReviewItem}
+                    orderId={selectedReviewOrderId}
+                    onReviewSubmitted={() => {
+                        // Ideally show a toast here
+                        setReviewModalOpen(false);
+                    }}
+                />
             )}
         </div>
     );

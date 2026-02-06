@@ -11,7 +11,18 @@ import { Product } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import type { User as AuthUser } from "@supabase/supabase-js";
 
+// Wrapper to conditionally render based on path
 export function Navbar() {
+    const pathname = usePathname();
+    // Do not render Navbar on Admin pages
+    if (pathname && pathname.startsWith('/admin')) {
+        return null;
+    }
+    return <NavbarContent />;
+}
+
+// Actual Navbar Logic
+function NavbarContent() {
     const { cartCount } = useCart();
     const router = useRouter();
     const pathname = usePathname();
@@ -101,10 +112,7 @@ export function Navbar() {
             mounted = false;
             subscription.unsubscribe();
         };
-    }, [router, pathname]); // Re-run when pathname changes (after redirect)
-
-    // Hide Navbar on Admin pages
-    if (pathname && pathname.startsWith('/admin')) return null;
+    }, [router, pathname]);
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const query = e.target.value;
@@ -265,7 +273,7 @@ export function Navbar() {
                                             <div className="border-t border-border mt-1 pt-1">
                                                 <button
                                                     onClick={handleSearchSubmit}
-                                                    className="w-full text-left px-3 py-2 text-xs font-bold text-primary hover:bg-secondary/30 flex items-center justify-between"
+                                                    className="w-full text-left px-3 py-2 text-xs font-bold text-primary hover:bg-secondary/30 flex items-center justify-center"
                                                 >
                                                     See all results for &quot;{searchQuery}&quot;
                                                     <ChevronRight className="size-3" />

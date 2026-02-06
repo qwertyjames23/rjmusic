@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, ShoppingBag, List, ShoppingCart, Users, BarChart3, Settings, Bell, Search, Plus } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, List, ShoppingCart, Users, BarChart3, Settings, Bell, Search, Plus, ClipboardList } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 
@@ -42,6 +42,10 @@ export default async function AdminLayout({
                         <Link href="/admin/products" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
                             <ShoppingBag className="w-5 h-5 group-hover:text-white transition-colors" />
                             <span className="text-sm font-medium">Products</span>
+                        </Link>
+                        <Link href="/admin/inventory" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
+                            <ClipboardList className="w-5 h-5 group-hover:text-white transition-colors" />
+                            <span className="text-sm font-medium">Inventory</span>
                         </Link>
                         <Link href="/admin/categories" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
                             <List className="w-5 h-5 group-hover:text-white transition-colors" />

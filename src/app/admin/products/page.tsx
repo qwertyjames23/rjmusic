@@ -5,19 +5,22 @@ import { createClient } from "@/utils/supabase/client"; // Use authenticated cli
 import { Product } from "@/types";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, AlertTriangle, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
 export default function AdminProductsPage() {
     const router = useRouter();
-    const supabase = createClient(); // Initialize proper client
+    const supabase = createClient();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState<string | null>(null);
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; product: Product | null }>({ isOpen: false, product: null });
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
     const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+
+    // For handling stock edits directly
+    const [editingStock, setEditingStock] = useState<{ [key: string]: number }>({});
 
     useEffect(() => {
         loadProducts();
@@ -43,6 +46,7 @@ export default function AdminProductsPage() {
                 brand: item.brand,
                 images: item.images || [],
                 inStock: item.in_stock,
+                stock: item.stock || 0, // Ensure stock is mapped
                 rating: item.rating,
                 reviews: item.reviews,
                 tags: (item.tags as any) || [],
@@ -58,6 +62,28 @@ export default function AdminProductsPage() {
         }
     };
 
+    const handleStockChange = async (id: string, newStock: number) => {
+        if (newStock < 0) return;
+
+        // Optimistic UI update
+        setProducts(prev => prev.map(p =>
+            p.id === id ? { ...p, stock: newStock, inStock: newStock > 0 } : p
+        ));
+
+        try {
+            const { error } = await supabase
+                .from('products')
+                .update({ stock: newStock, in_stock: newStock > 0 })
+                .eq('id', id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error("Error updating stock:", error);
+            // Revert changes on error
+            loadProducts();
+        }
+    };
+
     const handleDeleteClick = (product: Product) => {
         setDeleteModal({ isOpen: true, product });
     };
@@ -65,7 +91,7 @@ export default function AdminProductsPage() {
     const handleDeleteConfirm = async () => {
         if (!deleteModal.product) return;
 
-        const { id, name } = deleteModal.product;
+        const { id } = deleteModal.product;
         setDeleting(id);
 
         try {
@@ -128,14 +154,12 @@ export default function AdminProductsPage() {
 
             if (error) throw error;
 
-            // Success notification
             const successDiv = document.createElement('div');
             successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
             successDiv.innerHTML = `✓ ${selectedProducts.size} product(s) deleted successfully!`;
             document.body.appendChild(successDiv);
             setTimeout(() => successDiv.remove(), 3000);
 
-            // Close modal, clear selection, and refresh list
             setBulkDeleteModal(false);
             setSelectedProducts(new Set());
             await loadProducts();
@@ -299,14 +323,27 @@ export default function AdminProductsPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <p className="font-bold text-white">{formatPrice(product.price)}</p>
-                                            {product.originalPrice && (
-                                                <p className="text-sm text-gray-500 line-through">{formatPrice(product.originalPrice)}</p>
-                                            )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 text-sm font-medium rounded-full ${product.inStock ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                                                {product.inStock ? 'In Stock' : 'Out of Stock'}
-                                            </span>
+                                            <div className="flex flex-col gap-1">
+                                                <input
+                                                    type="number"
+                                                    className="w-24 bg-[#1c222b] border border-white/10 rounded px-2 py-1 text-white text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                                                    value={product.stock ?? 0} // Default to 0 if undefined
+                                                    onChange={(e) => handleStockChange(product.id, parseInt(e.target.value) || 0)}
+                                                    min="0"
+                                                />
+                                                {(product.stock ?? 0) <= 5 && (product.stock ?? 0) > 0 && (
+                                                    <span className="text-xs text-orange-500 font-bold flex items-center gap-1">
+                                                        <AlertTriangle className="size-3" /> Low Stock
+                                                    </span>
+                                                )}
+                                                {(product.stock ?? 0) === 0 && (
+                                                    <span className="text-xs text-red-500 font-bold flex items-center gap-1">
+                                                        <AlertTriangle className="size-3" /> Out of Stock
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
