@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { OrderRow } from "./OrderRow";
-import { Bell } from "lucide-react";
+import { OrderDetailsModal } from "./OrderDetailsModal";
+import { Bell, Filter, Search } from "lucide-react";
 
 interface Order {
     id: string;
@@ -38,6 +39,11 @@ export function OrdersTable({ initialOrders }: OrdersTableProps) {
     const [orders, setOrders] = useState<Order[]>(initialOrders);
     const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
     const [showNotification, setShowNotification] = useState(false);
+
+    // Modal State
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
     const supabase = createClient();
 
     useEffect(() => {
@@ -52,32 +58,18 @@ export function OrdersTable({ initialOrders }: OrdersTableProps) {
                     table: 'orders',
                 },
                 (payload) => {
-                    console.log('New order received:', payload);
                     const newOrder = payload.new as Order;
-
-                    // Add total_amount alias for compatibility
                     newOrder.total_amount = newOrder.total;
-
-                    // Add to beginning of list
                     setOrders((prev) => [newOrder, ...prev]);
-
-                    // Track new order for highlighting
                     setNewOrderIds((prev) => new Set([...prev, newOrder.id]));
-
-                    // Show notification
                     setShowNotification(true);
-
-                    // Play notification sound (optional)
                     try {
                         const audio = new Audio('/notification.mp3');
                         audio.volume = 0.5;
-                        audio.play().catch(() => { }); // Ignore if no sound file
+                        audio.play().catch(() => { });
                     } catch { }
 
-                    // Auto-hide notification after 5 seconds
                     setTimeout(() => setShowNotification(false), 5000);
-
-                    // Remove highlight after 10 seconds
                     setTimeout(() => {
                         setNewOrderIds((prev) => {
                             const updated = new Set(prev);
@@ -95,10 +87,8 @@ export function OrdersTable({ initialOrders }: OrdersTableProps) {
                     table: 'orders',
                 },
                 (payload) => {
-                    console.log('Order updated:', payload);
                     const updatedOrder = payload.new as Order;
                     updatedOrder.total_amount = updatedOrder.total;
-
                     setOrders((prev) =>
                         prev.map((order) =>
                             order.id === updatedOrder.id ? updatedOrder : order
@@ -112,6 +102,11 @@ export function OrdersTable({ initialOrders }: OrdersTableProps) {
             supabase.removeChannel(channel);
         };
     }, [supabase]);
+
+    const handleViewDetails = (orderId: string) => {
+        setSelectedOrderId(orderId);
+        setIsDetailsOpen(true);
+    };
 
     return (
         <>
@@ -137,24 +132,27 @@ export function OrdersTable({ initialOrders }: OrdersTableProps) {
             )}
 
             {/* Orders Table */}
-            <div className="bg-[#1f2937] border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-[#1f2937] border border-gray-800 rounded-xl overflow-hidden shadow-lg shadow-black/20">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-[#111827]/50 border-b border-gray-800 text-xs uppercase tracking-wider text-gray-400 font-bold">
-                                <th className="px-6 py-4">Order ID</th>
-                                <th className="px-6 py-4">Customer</th>
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">Amount</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4 text-right">Action</th>
+                            <tr className="bg-[#111827]/80 border-b border-gray-700 text-xs uppercase tracking-wider text-gray-400 font-bold backdrop-blur-sm">
+                                <th className="px-6 py-5">Order ID</th>
+                                <th className="px-6 py-5">Customer</th>
+                                <th className="px-6 py-5">Date</th>
+                                <th className="px-6 py-5 text-right">Amount</th>
+                                <th className="px-6 py-5 text-center">Status</th>
+                                <th className="px-6 py-5 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-[#1f2937]">
+                        <tbody className="bg-[#1f2937]/50 divide-y divide-gray-800/50">
                             {!orders || orders.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                        No orders found
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Search className="size-8 text-gray-600" />
+                                            <p>No orders found</p>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : (
@@ -166,6 +164,7 @@ export function OrdersTable({ initialOrders }: OrdersTableProps) {
                                             total_amount: order.total_amount || order.total
                                         }}
                                         isNew={newOrderIds.has(order.id)}
+                                        onViewDetails={() => handleViewDetails(order.id)}
                                     />
                                 ))
                             )}
@@ -173,6 +172,13 @@ export function OrdersTable({ initialOrders }: OrdersTableProps) {
                     </table>
                 </div>
             </div>
+
+            {/* Order Details Modal */}
+            <OrderDetailsModal
+                isOpen={isDetailsOpen}
+                onClose={() => setIsDetailsOpen(false)}
+                orderId={selectedOrderId}
+            />
         </>
     );
 }

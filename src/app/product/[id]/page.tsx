@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import { BuyBox } from "@/components/features/BuyBox";
+import { ProductGallery } from "@/components/features/ProductGallery"; // Import Gallery
 import { ProductTabs } from "@/components/features/ProductTabs";
 import { ProductCard } from "@/components/features/ProductCard";
-import { supabase } from "@/lib/supabase"; // Import Supabase
+import { supabase } from "@/lib/supabase";
 import { Product } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ async function getRecommendations(currentId: string, category: string): Promise<
         .eq('category', category) // Attempt to match category
         .limit(4);
 
-    // Fallback if no category matches, just get any others
+    // Fallback if no category matches
     if (!data || data.length === 0) {
         const { data: fallbackData } = await supabase.from('products').select('*').neq('id', currentId).limit(4);
         if (!fallbackData) return [];
@@ -86,6 +87,36 @@ async function getRecommendations(currentId: string, category: string): Promise<
     }));
 }
 
+// Helper to fetch reviews with profiles
+async function getReviews(productId: string) {
+    // 1. Fetch reviews
+    const { data: reviews, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('product_id', productId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Error fetching reviews:", error);
+        return [];
+    }
+
+    if (!reviews || reviews.length === 0) return [];
+
+    // 2. Fetch profiles for these reviews
+    const userIds = Array.from(new Set(reviews.map(r => r.user_id)));
+    const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+
+    // 3. Merge data
+    return reviews.map(review => ({
+        ...review,
+        profiles: profiles?.find(p => p.id === review.user_id) || null
+    }));
+}
+
 export default async function ProductDetailPage({
     params
 }: {
@@ -99,6 +130,17 @@ export default async function ProductDetailPage({
     }
 
     const recommendations = await getRecommendations(product.id, product.category);
+    const reviews = await getReviews(product.id);
+
+    // Calculate real rating if available, otherwise use product table default
+    const realRating = reviews.length > 0
+        ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+        : product.rating;
+
+    const realReviewCount = reviews.length > 0 ? reviews.length : 0; // Or keep product.reviews if you want to support legacy count
+
+    // Format number helper
+    const fmt = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
 
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
@@ -116,31 +158,17 @@ export default async function ProductDetailPage({
 
                 {/* Left Column: Images (7 cols) */}
                 <div className="lg:col-span-7 flex flex-col gap-4">
-                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#282f39] bg-[#1a1f26]">
-                        <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            className="h-full w-full object-cover object-center hover:scale-105 transition-transform duration-700"
-                        />
-                        {product.tags?.[0] && (
-                            <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full z-10 shadow-lg shadow-black/20">
-                                {product.tags[0]}
-                            </span>
-                        )}
-                    </div>
 
-                    {/* Thumbnail Mockup - using same image for now due to data limits */}
-                    <div className="grid grid-cols-4 gap-4">
-                        {[0, 1, 2, 3].map((i) => (
-                            <div key={i} className="aspect-square rounded-lg border border-[#282f39] bg-[#1a1f26] overflow-hidden cursor-pointer hover:border-primary transition-colors">
-                                <img src={product.images[0]} alt="" className="h-full w-full object-cover opacity-70 hover:opacity-100 transition-opacity" />
-                            </div>
-                        ))}
-                    </div>
+                    {/* Replaced hardcoded images with Dynamic Gallery */}
+                    <ProductGallery
+                        images={product.images}
+                        productName={product.name}
+                        productTag={product.tags?.[0]}
+                    />
 
-                    {/* Tabs Section (Desktop placement basically, but flows naturally here) */}
+                    {/* Tabs Section (Desktop) */}
                     <div className="mt-8 hidden lg:block">
-                        <ProductTabs description={product.description} />
+                        <ProductTabs description={product.description} reviews={reviews} />
                     </div>
                 </div>
 
@@ -152,11 +180,14 @@ export default async function ProductDetailPage({
                         <div className="flex items-center gap-4 mb-2">
                             <div className="flex text-amber-500">
                                 {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className="size-4 fill-current" />
+                                    <Star
+                                        key={i}
+                                        className={`size-4 ${i < Math.round(realRating) ? 'fill-current' : 'text-gray-600 fill-gray-600'}`}
+                                    />
                                 ))}
                             </div>
                             <span className="text-sm text-muted-foreground hover:text-white cursor-pointer transition-colors">
-                                {product.rating} (124 reviews)
+                                {realRating.toFixed(1)} ({realReviewCount} reviews)
                             </span>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-4">
@@ -164,17 +195,17 @@ export default async function ProductDetailPage({
                         </h1>
                         <div className="flex items-baseline gap-4">
                             <span className="text-3xl font-bold text-primary">
-                                {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.price)}
+                                {fmt.format(product.price)}
                             </span>
                             {product.originalPrice && (
                                 <span className="text-lg text-muted-foreground line-through decoration-red-500/50">
-                                    {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(product.originalPrice)}
+                                    {fmt.format(product.originalPrice)}
                                 </span>
                             )}
                         </div>
                     </div>
 
-                    {/* Short Description (Using full description or substring if needed) */}
+                    {/* Short Description */}
                     <div className="text-gray-400 leading-relaxed text-sm border-t border-b border-[#282f39] py-6">
                         <p>
                             {product.description.substring(0, 150)}{product.description.length > 150 ? "..." : ""}
@@ -184,7 +215,7 @@ export default async function ProductDetailPage({
                     {/* Buy Box Component */}
                     <BuyBox product={product} />
 
-                    {/* Key Specs Grid (Small Preview) */}
+                    {/* Key Specs Grid */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="bg-[#1c222b] border border-[#282f39] p-3 rounded-lg">
                             <span className="text-[10px] uppercase text-gray-500 font-bold block mb-1">Warranty</span>
@@ -198,7 +229,7 @@ export default async function ProductDetailPage({
 
                     {/* Mobile Tabs */}
                     <div className="lg:hidden mt-8">
-                        <ProductTabs description={product.description} />
+                        <ProductTabs description={product.description} reviews={reviews} />
                     </div>
                 </div>
             </div>

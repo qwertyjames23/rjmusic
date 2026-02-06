@@ -8,6 +8,7 @@ export interface Product {
     brand: string;
     images: string[];
     inStock: boolean;
+    stock?: number; // Added for inventory management
     rating: number;
     reviews: number;
     tags?: ("NEW" | "SALE" | "BESTSELLER")[];
