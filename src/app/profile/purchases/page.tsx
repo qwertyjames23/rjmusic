@@ -41,27 +41,18 @@ export default function MyPurchasesPage() {
             // Fetch orders for current user
             const { data: ordersData, error: ordersError } = await supabase
                 .from("orders")
-                .select("*")
+                .select(`
+                    *,
+                    items:order_items(*)
+                `)
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false });
 
             if (ordersError) throw ordersError;
 
-            // Fetch items for each order
-            const ordersWithItems: OrderWithItems[] = [];
-            for (const order of ordersData || []) {
-                const { data: itemsData } = await supabase
-                    .from("order_items")
-                    .select("*")
-                    .eq("order_id", order.id);
-
-                ordersWithItems.push({
-                    ...order,
-                    items: itemsData || []
-                });
-            }
-
-            setOrders(ordersWithItems);
+            // Supabase returns the joined data structure; we just need to cast it if necessary
+            // or rely on the fact that the shape matches OrderWithItems if the relationship is correct.
+            setOrders(ordersData as unknown as OrderWithItems[]);
         } catch (error) {
             console.error("Error fetching orders:", error);
         } finally {
@@ -384,7 +375,7 @@ export default function MyPurchasesPage() {
                     product={selectedReviewItem}
                     orderId={selectedReviewOrderId}
                     onReviewSubmitted={() => {
-                        // Ideally show a toast here
+                        alert("Review submitted successfully!");
                         setReviewModalOpen(false);
                     }}
                 />

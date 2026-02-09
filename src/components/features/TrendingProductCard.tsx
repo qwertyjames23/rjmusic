@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
@@ -17,10 +18,10 @@ export function TrendingProductCard({ product }: { product: Product }) {
     return (
         <div className="group relative bg-[#151b24] border border-white/5 rounded-xl overflow-hidden hover:border-primary/50 transition-all duration-300">
             <Link href={`/product/${product.id}`} className="block aspect-square relative bg-white/5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                     src={product.images[0] || 'https://placehold.co/600x400/101822/FFF?text=No+Image'}
                     alt={product.name}
+                    fill
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 {product.tags?.includes("SALE") && <span className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">SALE</span>}
