@@ -20,13 +20,13 @@ export function Hero() {
                     <div className="max-w-2xl flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-forwards">
                         <div className="flex flex-col gap-2">
                             <h2 className="text-primary font-bold tracking-widest text-sm uppercase font-display">
-                                Professional Audio Equipment
+                                Musical Accessories & Audio Gear
                             </h2>
                             <h1 className="text-white text-5xl md:text-7xl font-black leading-[0.9] tracking-tighter glow-text font-display">
                                 UNLEASH<br />YOUR SOUND.
                             </h1>
                             <p className="text-gray-400 text-lg md:text-xl font-light mt-4 max-w-md leading-relaxed font-body">
-                                Discover premium instruments and studio gear curated for the modern creator.
+                                Discover musical accessories and studio gear curated for the modern creator.
                             </p>
                         </div>
 
@@ -35,7 +35,7 @@ export function Hero() {
                                 href="/products"
                                 className="flex items-center justify-center rounded-lg h-12 px-8 bg-primary hover:bg-primary/90 transition-all text-white text-base font-bold tracking-wide shadow-[0_0_20px_rgba(19,109,236,0.3)] hover:shadow-[0_0_30px_rgba(19,109,236,0.5)] font-display"
                             >
-                                SHOW NOW
+                                SHOP NOW
                             </Link>
                             {/* <Link
                                 href="/brands"

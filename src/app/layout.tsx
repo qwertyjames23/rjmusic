@@ -18,8 +18,11 @@ const notoSans = Noto_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "RJ MUSIC | Premium Musical Instruments",
+  title: "RJ MUSIC | Musical Accessories and Studio Gear",
   description: "RJ MUSIC - Premium instruments and studio gear for the modern creator.",
+  icons: {
+    icon: "/favicon.ico?v=2",
+  },
 };
 
 export default function RootLayout({
