@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { LayoutDashboard, ShoppingBag, List, ShoppingCart, Users, BarChart3, Settings, Bell, Search, Plus, ClipboardList } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, List, ShoppingCart, Users, BarChart3, Settings, Bell, Search, Plus, ClipboardList, Star } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { LogoutButton } from "@/components/admin/LogoutButton";
+import { redirect } from "next/navigation";
 
 export default async function AdminLayout({
     children,
@@ -10,6 +11,12 @@ export default async function AdminLayout({
 }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!user || user.email !== adminEmail) {
+        redirect("/");
+    }
+
     return (
         <div className="flex min-h-screen w-full bg-[#111827] text-white font-sans antialiased overflow-hidden">
 
@@ -50,6 +57,10 @@ export default async function AdminLayout({
                         <Link href="/admin/categories" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
                             <List className="w-5 h-5 group-hover:text-white transition-colors" />
                             <span className="text-sm font-medium">Categories</span>
+                        </Link>
+                        <Link href="/admin/reviews" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
+                            <Star className="w-5 h-5 group-hover:text-white transition-colors" />
+                            <span className="text-sm font-medium">Reviews</span>
                         </Link>
                         <Link href="/admin/orders" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
                             <ShoppingCart className="w-5 h-5 group-hover:text-white transition-colors" />

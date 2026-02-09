@@ -33,40 +33,10 @@ export default async function OrdersPage() {
                         <ExportIcon className="w-4 h-4" />
                         Export
                     </button>
-                    <button
-                        className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm font-bold transition-colors shadow-lg shadow-blue-600/20"
-                        aria-label="Filter orders"
-                        title="Filter orders"
-                    >
-                        <Filter className="w-4 h-4" />
-                        Filter
-                    </button>
                 </div>
             </div>
 
-            {/* Toolbar */}
-            <div className="flex items-center gap-4 bg-[#1f2937] p-2 rounded-xl border border-gray-800">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <input
-                        type="text"
-                        placeholder="Search by ID, Customer Name..."
-                        className="w-full bg-[#111827] border border-gray-700 text-white text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                </div>
-                <select
-                    className="bg-[#111827] border border-gray-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none"
-                    aria-label="Filter by status"
-                >
-                    <option>All Status</option>
-                    <option>Pending</option>
-                    <option>Processing</option>
-                    <option>Completed</option>
-                    <option>Cancelled</option>
-                </select>
-            </div>
-
-            {/* Real-time Orders Table */}
+            {/* Real-time Orders Table with internal filtering */}
             <OrdersTable initialOrders={orders || []} />
         </div>
     );

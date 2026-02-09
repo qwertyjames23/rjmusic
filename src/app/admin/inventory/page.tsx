@@ -13,6 +13,7 @@ export default function AdminInventoryPage() {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all');
     const [searchQuery, setSearchQuery] = useState("");
+    const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
     useEffect(() => {
         loadProducts();
@@ -68,14 +69,24 @@ export default function AdminInventoryPage() {
         try {
             const { error } = await supabase
                 .from('products')
-                .update({ stock: newStock })
+                .update({
+                    stock: newStock,
+                    in_stock: newStock > 0
+                })
                 .eq('id', id);
 
             if (error) throw error;
+
+            // Show brief success message (optional, might be annoying if too frequent)
+            // setNotification({ message: "Stock updated", type: "success" });
+            // setTimeout(() => setNotification(null), 2000);
+
         } catch (error) {
             console.error("Error updating stock:", error);
-            // Revert on error - essentially re-fetching or undoing optimistic update
-            // For simplicity, we just log and maybe could switch back if we stored prev state
+            // Revert on error
+            loadProducts();
+            setNotification({ message: "Failed to update stock", type: "error" });
+            setTimeout(() => setNotification(null), 3000);
         }
     };
 
@@ -104,7 +115,19 @@ export default function AdminInventoryPage() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 relative">
+            {/* Notification Toast */}
+            {notification && (
+                <div className={cn(
+                    "fixed top-24 right-8 px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-right duration-300 flex items-center gap-3",
+                    notification.type === 'success' ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                )}>
+                    {notification.type === 'error' && <AlertTriangle className="size-5" />}
+                    {notification.type === 'success' && <ClipboardList className="size-5" />}
+                    <span className="font-semibold">{notification.message}</span>
+                </div>
+            )}
+
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Inventory Management</h1>

@@ -18,10 +18,12 @@ interface Order {
 interface OrderRowProps {
     order: Order;
     isNew?: boolean;
+    isSelected?: boolean;
+    onSelect?: (video: boolean) => void;
     onViewDetails?: () => void;
 }
 
-export function OrderRow({ order, isNew = false, onViewDetails }: OrderRowProps) {
+export function OrderRow({ order, isNew = false, isSelected = false, onSelect, onViewDetails }: OrderRowProps) {
     const [status, setStatus] = useState(order.status);
     const [loading, setLoading] = useState(false);
     const supabase = createClient();
@@ -65,7 +67,17 @@ export function OrderRow({ order, isNew = false, onViewDetails }: OrderRowProps)
     };
 
     return (
-        <tr className={`group hover:bg-[#252d38] transition-all duration-200 border-b border-gray-800/30 ${isNew ? 'bg-green-500/10 animate-pulse' : ''}`}>
+        <tr className={`group hover:bg-[#252d38] transition-all duration-200 border-b border-gray-800/30 ${isNew ? 'bg-green-500/10 animate-pulse' : ''} ${isSelected ? 'bg-blue-500/5' : ''}`}>
+            {/* Checkbox */}
+            <td className="px-6 py-4 w-10">
+                <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={(e) => onSelect?.(e.target.checked)}
+                    className="size-4 rounded border-gray-700 bg-[#111827] text-blue-600 focus:ring-blue-500 focus:ring-offset-[#1f2937] transition-all cursor-pointer accent-blue-600"
+                />
+            </td>
+
             {/* Order ID */}
             <td className="px-6 py-4">
                 <div className="flex flex-col">
