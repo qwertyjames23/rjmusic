@@ -112,6 +112,70 @@ export function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDetailsModa
     const currentStepIndex = order ? steps.indexOf(order.status) : -1;
     const isCancelled = order?.status === 'Cancelled';
 
+    const [updating, setUpdating] = useState(false);
+
+    const handleStatusUpdate = async (newStatus: string) => {
+        if (!order || !orderId) return;
+
+        // Confirm before critical changes like cancelling
+        if (newStatus === 'Cancelled' && !window.confirm('Are you sure you want to cancel this order? This action usually cannot be undone.')) {
+            return;
+        }
+
+        setUpdating(true);
+        try {
+            const { error } = await supabase
+                .from('orders')
+                .update({ status: newStatus })
+                .eq('id', orderId);
+
+            if (error) throw error;
+
+            // Optimistic update locally
+            setOrder(prev => prev ? ({ ...prev, status: newStatus }) : null);
+
+            // Optionally, we could show a toast here via a context, but basic alert for now if needed or silent success
+            // Realtime subscription in parent will update the list/table, but we updated local modal state too.
+
+        } catch (error) {
+            console.error("Error updating status:", error);
+            alert("Failed to update status. Please try again.");
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        if (!order || !orderId) return;
+
+        if (!window.confirm('Are you ABSOLUTELY SURE you want to delete this order permanently? This action CANNOT be undone.')) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            // Delete order items first (if cascade is not set up, but usually it is)
+            // Assuming ON DELETE CASCADE is set on foreign keys in DB.
+            const { error } = await supabase
+                .from('orders')
+                .delete()
+                .eq('id', orderId);
+
+            if (error) throw error;
+
+            // Close modal after successful deletion
+            onClose();
+            // Local state update not needed as parent subscription will remove it from list
+
+        } catch (error) {
+            console.error("Error deleting order:", error);
+            alert("Failed to delete order. Please try again.");
+            setIsDeleting(false);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -133,7 +197,33 @@ export function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDetailsModa
                             </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 print:hidden">
+                    <div className="flex items-center gap-3 print:hidden">
+
+                        {/* Status Dropdown */}
+                        {order && (
+                            <div className="relative">
+                                <select
+                                    disabled={updating || isDeleting}
+                                    value={order.status}
+                                    onChange={(e) => handleStatusUpdate(e.target.value)}
+                                    className="appearance-none bg-[#1f2937] border border-gray-700 hover:border-gray-500 text-white text-sm font-medium rounded-lg pl-4 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all cursor-pointer"
+                                >
+                                    <option value="Pending">Pending</option>
+                                    <option value="Processing">Processing</option>
+                                    <option value="Shipped">Shipped</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-400">
+                                    {updating ? (
+                                        <Loader2 className="size-4 animate-spin" />
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         <button
                             onClick={handlePrint}
                             className="p-2.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -141,6 +231,23 @@ export function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDetailsModa
                         >
                             <Printer className="size-5" />
                         </button>
+
+                        {/* Delete Button (Only for Cancelled or Delivered) */}
+                        {order && (order.status === 'Cancelled' || order.status === 'Delivered') && (
+                            <button
+                                onClick={handleDelete}
+                                disabled={isDeleting}
+                                className="p-2.5 text-red-500 hover:text-white hover:bg-red-500/20 bg-red-500/10 border border-red-500/20 rounded-lg transition-colors disabled:opacity-50"
+                                title="Delete Order Permanently"
+                            >
+                                {isDeleting ? (
+                                    <Loader2 className="size-5 animate-spin" />
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
+                                )}
+                            </button>
+                        )}
+
                         <button
                             onClick={onClose}
                             className="p-2.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
@@ -177,8 +284,8 @@ export function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDetailsModa
                                             return (
                                                 <div key={step} className="flex flex-col items-center gap-2 group cursor-default relative">
                                                     <div className={`size-8 rounded-full flex items-center justify-center border-4 transition-all duration-500 z-10 ${isCompleted
-                                                            ? 'bg-primary border-primary text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-110'
-                                                            : 'bg-[#0f141a] border-[#0f141a] ring-2 ring-gray-800 text-gray-600'
+                                                        ? 'bg-primary border-primary text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] scale-110'
+                                                        : 'bg-[#0f141a] border-[#0f141a] ring-2 ring-gray-800 text-gray-600'
                                                         }`}>
                                                         {isCompleted ? <Check className="size-3.5" /> : <span className="text-xs font-bold">{index + 1}</span>}
                                                     </div>
