@@ -21,7 +21,7 @@ interface Review {
     // user details might be missing if relying on auth.users which is restricted
 }
 
-export default function ReviewsClient({ initialReviews }: { initialReviews: any[] }) {
+export default function ReviewsClient({ initialReviews }: { initialReviews: Review[] }) {
     const supabase = createClient();
     const [reviews, setReviews] = useState<Review[]>(initialReviews);
     const [searchQuery, setSearchQuery] = useState("");
