@@ -3,7 +3,7 @@ import { Space_Grotesk, Noto_Sans } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { CartProvider } from "@/context/CartContext";
+import CartProvider from "@/context/CartContext";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],

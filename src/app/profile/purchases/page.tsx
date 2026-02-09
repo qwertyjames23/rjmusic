@@ -157,7 +157,7 @@ export default function MyPurchasesPage() {
         setSelectedReviewItem({
             id: item.product_id,
             name: item.product_name,
-            image: item.product_image
+            image: item.product_image || ""
         });
         setSelectedReviewOrderId(orderId);
         setReviewModalOpen(true);

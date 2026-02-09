@@ -1,35 +1,38 @@
 import { createClient } from "@/utils/supabase/server";
-import ReviewsClient from "./_components/ReviewsClient";
+import { ReviewsTable } from "./_components/ReviewsTable";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminReviewsPage() {
     const supabase = await createClient();
-
+    
+    // Fetch reviews
     const { data: reviews, error } = await supabase
-        .from('reviews')
-        .select(`
-            *,
-            products (name, images)
-        `)
-        .order('created_at', { ascending: false });
+        .from("reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
 
     if (error) {
-        return (
-            <div className="p-8 text-red-500">
-                Failed to load reviews. Error: {error.message}
-            </div>
-        );
+        console.error("Error fetching reviews:", error);
+        return <div className="p-8 text-red-500">Error loading reviews.</div>;
     }
 
-    return (
-        <div className="flex flex-col gap-8 pb-20">
-            <div className="flex flex-col">
-                <h1 className="text-3xl font-bold text-white tracking-tight">Reviews</h1>
-                <p className="text-gray-400 mt-1">Manage customer reviews and ratings.</p>
-            </div>
+    // Fetch associated products manually since we don't have a direct FK relation set up in all SQL versions
+    const productIds = Array.from(new Set(reviews?.map(r => r.product_id) || []));
+    const { data: products } = await supabase.from("products").select("id, name, images").in("id", productIds);
 
-            <ReviewsClient initialReviews={reviews || []} />
+    const reviewsWithProducts = reviews?.map(r => ({
+        ...r,
+        product: products?.find(p => p.id === r.product_id)
+    }));
+
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold tracking-tight">Reviews</h1>
+                <p className="text-gray-400">Moderate user reviews and ratings.</p>
+            </div>
+            <ReviewsTable initialReviews={reviewsWithProducts || []} />
         </div>
     );
 }
