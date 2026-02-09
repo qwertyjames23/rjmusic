@@ -2,9 +2,9 @@ import { Hero } from "@/components/features/Hero";
 import { CategoryGrid } from "@/components/features/CategoryGrid";
 import { getProducts } from "@/lib/data";
 import { TrendingProductCard } from "@/components/features/TrendingProductCard";
-import { Mail } from "lucide-react";
+import { Mail, Truck, ShieldCheck, RotateCcw } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Revalidate at most every hour
 
 
 export default async function Home() {
@@ -19,21 +19,21 @@ export default async function Home() {
       <div className="bg-[#0f141a] py-6 border-y border-white/5">
         <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start gap-3">
-            <div className="text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg></div>
+            <div className="text-primary"><Truck className="size-6" /></div>
             <div>
               <h3 className="font-bold text-sm text-white">FREE SHIPPING ON ORDERS OVER ₱25,000</h3>
               <p className="text-xs text-gray-400">Insured delivery on all premium instruments.</p>
             </div>
           </div>
           <div className="flex items-center justify-center md:justify-start gap-3">
-            <div className="text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+            <div className="text-primary"><ShieldCheck className="size-6" /></div>
             <div>
               <h3 className="font-bold text-sm text-white">AUTHORIZED DEALER</h3>
               <p className="text-xs text-gray-400">Fender, Gibson, Roland, Yamaha & more.</p>
             </div>
           </div>
           <div className="flex items-center justify-center md:justify-start gap-3">
-            <div className="text-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></div>
+            <div className="text-primary"><RotateCcw className="size-6" /></div>
             <div>
               <h3 className="font-bold text-sm text-white">30-DAY RETURNS</h3>
               <p className="text-xs text-gray-400">Shop with total confidence.</p>
@@ -69,10 +69,10 @@ export default async function Home() {
           <Mail className="size-12 text-primary mx-auto mb-6" />
           <h2 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Join the Inner Circle</h2>
           <p className="text-gray-400 mb-8">Get early access to drops, exclusive artist interviews, and 10% off your first order.</p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <input type="email" placeholder="Enter your email address" className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors" />
-            <button className="bg-primary text-white font-bold px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors">SUBSCRIBE</button>
-          </div>
+          <form className="flex flex-col sm:flex-row gap-4">
+            <input type="email" required placeholder="Enter your email address" className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors" />
+            <button type="submit" className="bg-primary text-white font-bold px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors">SUBSCRIBE</button>
+          </form>
         </div>
       </section>
     </div>

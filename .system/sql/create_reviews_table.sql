@@ -1,37 +1,35 @@
--- Create Reviews Table
+-- Create reviews table
 CREATE TABLE IF NOT EXISTS reviews (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) NOT NULL,
-  product_id UUID REFERENCES products(id) NOT NULL,
+  product_id TEXT NOT NULL,
   order_id UUID REFERENCES orders(id) NOT NULL,
-  rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5) NOT NULL,
   comment TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, product_id, order_id) -- Ensure user can only review a product once per order
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  
+  -- Ensure a user can only review a product once per order
+  UNIQUE(user_id, order_id, product_id)
 );
 
--- Enable Row Level Security
+-- Enable RLS
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
--- Policies
-
--- 1. Everyone can read reviews
-DROP POLICY IF EXISTS "Public reviews are viewable by everyone" ON reviews;
-CREATE POLICY "Public reviews are viewable by everyone" 
-  ON reviews FOR SELECT 
-  USING (true);
-
--- 2. Users can insert reviews only for themselves
+-- Drop existing policies to avoid conflicts
+DROP POLICY IF EXISTS "Users can view all reviews" ON reviews;
 DROP POLICY IF EXISTS "Users can insert own reviews" ON reviews;
-CREATE POLICY "Users can insert own reviews" 
-  ON reviews FOR INSERT 
-  WITH CHECK (auth.uid() = user_id);
-
--- 3. Users can update their own reviews
 DROP POLICY IF EXISTS "Users can update own reviews" ON reviews;
-CREATE POLICY "Users can update own reviews" 
-  ON reviews FOR UPDATE
-  USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own reviews" ON reviews;
 
--- Optional: Add average_rating to products table for faster sorting/filtering (denormalization)
--- For now, we can calculate it on the fly or add a Trigger later.
+-- Policies
+CREATE POLICY "Users can view all reviews" ON reviews
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can insert own reviews" ON reviews
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own reviews" ON reviews
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own reviews" ON reviews
+  FOR DELETE USING (auth.uid() = user_id);

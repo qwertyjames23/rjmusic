@@ -35,14 +35,14 @@ export function Hero() {
                                 href="/products"
                                 className="flex items-center justify-center rounded-lg h-12 px-8 bg-primary hover:bg-primary/90 transition-all text-white text-base font-bold tracking-wide shadow-[0_0_20px_rgba(19,109,236,0.3)] hover:shadow-[0_0_30px_rgba(19,109,236,0.5)] font-display"
                             >
-                                SHOP COLLECTION
+                                SHOW NOW
                             </Link>
-                            <Link
+                            {/* <Link
                                 href="/brands"
                                 className="flex items-center justify-center rounded-lg h-12 px-6 border border-gray-700 hover:border-white bg-transparent text-white transition-colors text-base font-medium font-display"
                             >
                                 VIEW BRANDS
-                            </Link>
+                            </Link> */}
                         </div>
                     </div>
                 </div>
