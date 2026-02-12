@@ -13,10 +13,24 @@ export interface Product {
     reviews: number;
     tags?: ("NEW" | "SALE" | "BESTSELLER")[];
     features?: string[];
+    has_variants?: boolean;
+    variants?: ProductVariant[];
+}
+
+export interface ProductVariant {
+    id: string;
+    product_id: string;
+    label: string;
+    price: number;
+    stock: number;
+    image_url?: string | null;
+    sort_order: number;
+    is_active: boolean;
 }
 
 export interface CartItem extends Product {
     quantity: number;
+    selectedVariant?: ProductVariant; // Track which variant was selected
 }
 
 export interface Address {

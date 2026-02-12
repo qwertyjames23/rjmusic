@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
-import { ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Save, Loader2, Layers, Plus, Trash2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
 export default function EditProductPage() {
@@ -29,8 +29,26 @@ export default function EditProductPage() {
     // Categories State
     const [categories, setCategories] = useState<any[]>([]);
 
+    // Variants State
+    interface VariantItem {
+        id: string;
+        product_id: string;
+        label: string;
+        price: number;
+        stock: number;
+        image_url: string | null;
+        sort_order: number;
+        is_active: boolean;
+    }
+    const [variants, setVariants] = useState<VariantItem[]>([]);
+    const [showAddVariant, setShowAddVariant] = useState(false);
+    const [savingVariant, setSavingVariant] = useState<string | null>(null);
+    const [newVariant, setNewVariant] = useState({ label: "", price: "", stock: "0", image_url: "" });
+
     useEffect(() => {
         Promise.all([loadProduct(), fetchCategories()]);
+        // Load variants separately so it doesn't block the page
+        loadVariants();
     }, [productId]);
 
     const fetchCategories = async () => {
@@ -75,6 +93,105 @@ export default function EditProductPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadVariants = async () => {
+        try {
+            const res = await fetch(`/api/admin/variants?product_id=${productId}`);
+            if (!res.ok) {
+                console.warn("Variants API returned", res.status, "- table may not exist yet");
+                return;
+            }
+            const data = await res.json();
+            if (data.variants) setVariants(data.variants);
+        } catch (error) {
+            // Silently fail - variants table may not exist yet
+            console.warn("Could not load variants:", error);
+        }
+    };
+
+    const showNotification = (message: string, isError = false) => {
+        const div = document.createElement("div");
+        div.className = `fixed top-4 right-4 ${isError ? "bg-red-500" : "bg-green-500"} text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300`;
+        div.textContent = isError ? `✗ ${message}` : `✓ ${message}`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+    };
+
+    const handleAddVariant = async () => {
+        if (!newVariant.label || !newVariant.price) {
+            showNotification("Label and price are required", true);
+            return;
+        }
+        setSavingVariant("new");
+        try {
+            const res = await fetch("/api/admin/variants", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    product_id: productId,
+                    label: newVariant.label,
+                    price: Number(newVariant.price),
+                    stock: Number(newVariant.stock || 0),
+                    image_url: newVariant.image_url || null,
+                    sort_order: variants.length,
+                }),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setVariants(prev => [...prev, data.variant]);
+            setNewVariant({ label: "", price: "", stock: "0", image_url: "" });
+            setShowAddVariant(false);
+            showNotification("Variation added");
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to add variation", true);
+        } finally {
+            setSavingVariant(null);
+        }
+    };
+
+    const handleUpdateVariant = async (variant: VariantItem) => {
+        setSavingVariant(variant.id);
+        try {
+            const res = await fetch("/api/admin/variants", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(variant),
+            });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            showNotification("Variation updated");
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to update", true);
+        } finally {
+            setSavingVariant(null);
+        }
+    };
+
+    const handleDeleteVariant = async (variantId: string) => {
+        if (!confirm("Delete this variation?")) return;
+        setSavingVariant(variantId);
+        try {
+            const res = await fetch(`/api/admin/variants?id=${variantId}&product_id=${productId}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            setVariants(prev => prev.filter(v => v.id !== variantId));
+            showNotification("Variation deleted");
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to delete", true);
+        } finally {
+            setSavingVariant(null);
+        }
+    };
+
+    const handleVariantFieldChange = (variantId: string, field: keyof VariantItem, value: string | number) => {
+        setVariants(prev =>
+            prev.map(v =>
+                v.id === variantId
+                    ? { ...v, [field]: field === "price" || field === "stock" || field === "sort_order" ? Number(value) : value }
+                    : v
+            )
+        );
     };
 
     const onSubmit = async (e: React.FormEvent) => {
@@ -171,8 +288,8 @@ export default function EditProductPage() {
                         </div>
                         <ImageUpload
                             value={images}
-                            onChange={(url) => setImages([...images, url])}
-                            onRemove={(url) => setImages(images.filter((current) => current !== url))}
+                            onChange={(url) => setImages(prev => [...prev, url])}
+                            onRemove={(url) => setImages(prev => prev.filter((current) => current !== url))}
                         />
                     </div>
 
@@ -288,7 +405,7 @@ export default function EditProductPage() {
                                     placeholder="0"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
-                                    Status will automatically allow 'Out of Stock' if 0.
+                                    Status will automatically allow &apos;Out of Stock&apos; if 0.
                                 </p>
                             </div>
                         </div>
@@ -312,6 +429,176 @@ export default function EditProductPage() {
                             onChange={e => setDescription(e.target.value)}
                             placeholder="Describe the product features, specifications, and benefits..."
                         />
+                    </div>
+
+                    {/* Product Variations */}
+                    <div className="bg-[#0f141a] rounded-2xl border border-white/10 p-6 shadow-xl">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="size-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                    <Layers className="size-5 text-purple-400" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-white">Product Variations</h2>
+                                    <p className="text-sm text-gray-400">Add different models, sizes, or gauges</p>
+                                </div>
+                            </div>
+                            {!showAddVariant && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddVariant(true)}
+                                    className="flex items-center gap-2 bg-purple-500/10 text-purple-400 px-4 py-2 rounded-xl font-semibold text-sm hover:bg-purple-500/20 transition-all"
+                                >
+                                    <Plus className="size-4" />
+                                    Add Variation
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Existing Variants */}
+                        {variants.length > 0 && (
+                            <div className="space-y-3 mb-4">
+                                {variants.map((variant) => (
+                                    <div
+                                        key={variant.id}
+                                        className={`bg-[#1c222b] rounded-xl border ${variant.is_active ? 'border-white/10' : 'border-red-500/20 opacity-60'} p-4 transition-all`}
+                                    >
+                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                                            <div className="md:col-span-4">
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Label</label>
+                                                <input
+                                                    className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                                    value={variant.label}
+                                                    onChange={e => handleVariantFieldChange(variant.id, 'label', e.target.value)}
+                                                    placeholder="e.g. Light 10-47"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (₱)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                                    value={variant.price}
+                                                    onChange={e => handleVariantFieldChange(variant.id, 'price', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Stock</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                                    value={variant.stock}
+                                                    onChange={e => handleVariantFieldChange(variant.id, 'stock', e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="md:col-span-4 flex items-end gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleUpdateVariant(variant)}
+                                                    disabled={savingVariant === variant.id}
+                                                    className="size-9 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center hover:bg-blue-500/20 transition-all disabled:opacity-50 shrink-0"
+                                                    title="Save changes"
+                                                >
+                                                    {savingVariant === variant.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const updated = { ...variant, is_active: !variant.is_active };
+                                                        setVariants(prev => prev.map(v => v.id === variant.id ? updated : v));
+                                                        handleUpdateVariant(updated);
+                                                    }}
+                                                    className={`size-9 rounded-lg flex items-center justify-center transition-all shrink-0 ${variant.is_active ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' : 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20'
+                                                        }`}
+                                                    title={variant.is_active ? 'Disable' : 'Enable'}
+                                                >
+                                                    {variant.is_active ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteVariant(variant.id)}
+                                                    disabled={savingVariant === variant.id}
+                                                    className="size-9 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center hover:bg-red-500/20 transition-all disabled:opacity-50 shrink-0"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="size-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Add New Variant Form */}
+                        {showAddVariant && (
+                            <div className="bg-[#1c222b] rounded-xl border border-purple-500/30 p-4 mt-4">
+                                <h3 className="text-sm font-bold text-purple-400 mb-3 flex items-center gap-2">
+                                    <Plus className="size-4" />
+                                    New Variation
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Label *</label>
+                                        <input
+                                            className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                            value={newVariant.label}
+                                            onChange={e => setNewVariant(prev => ({ ...prev, label: e.target.value }))}
+                                            placeholder="e.g. Light 10-47"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (₱) *</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                            value={newVariant.price}
+                                            onChange={e => setNewVariant(prev => ({ ...prev, price: e.target.value }))}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Stock</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                            value={newVariant.stock}
+                                            onChange={e => setNewVariant(prev => ({ ...prev, stock: e.target.value }))}
+                                            placeholder="0"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 mt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setShowAddVariant(false); setNewVariant({ label: "", price: "", stock: "0", image_url: "" }); }}
+                                        className="px-4 py-2 rounded-lg bg-[#13171d] text-gray-400 font-semibold text-sm border border-white/10 hover:bg-[#1c222b] transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleAddVariant}
+                                        disabled={savingVariant === "new"}
+                                        className="px-4 py-2 rounded-lg bg-purple-500 text-white font-bold text-sm hover:bg-purple-600 transition-all disabled:opacity-50 flex items-center gap-2"
+                                    >
+                                        {savingVariant === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {variants.length === 0 && !showAddVariant && (
+                            <div className="text-center py-8 text-gray-500">
+                                <Layers className="size-10 mx-auto mb-2 opacity-30" />
+                                <p className="text-sm">No variations yet. Click &ldquo;Add Variation&rdquo; to get started.</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Submit Buttons */}

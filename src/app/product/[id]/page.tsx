@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
-import { BuyBox } from "@/components/features/BuyBox";
-import { ProductGallery } from "@/components/features/ProductGallery"; // Import Gallery
+import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductTabs } from "@/components/features/ProductTabs";
 import { ProductCard } from "@/components/features/ProductCard";
 import { supabase } from "@/lib/supabase";
-import { Product } from "@/types";
+import { Product, ProductVariant } from "@/types";
 
 export const dynamic = "force-dynamic";
 
-// Helper to fetch single product
+// Helper to fetch single product with variants
 async function getProduct(id: string): Promise<Product | null> {
     const { data, error } = await supabase
         .from('products')
@@ -20,7 +19,31 @@ async function getProduct(id: string): Promise<Product | null> {
 
     if (error || !data) {
         console.error("Error fetching product:", error);
-        return null; // Return null if not found
+        return null;
+    }
+
+    // Fetch variants
+    let variants: ProductVariant[] = [];
+    if (data.has_variants) {
+        const { data: variantData, error: variantError } = await supabase
+            .from('product_variants')
+            .select('*')
+            .eq('product_id', id)
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+
+        if (!variantError && variantData) {
+            variants = variantData.map((v: any) => ({
+                id: v.id,
+                product_id: v.product_id,
+                label: v.label,
+                price: Number(v.price),
+                stock: Number(v.stock),
+                image_url: v.image_url,
+                sort_order: v.sort_order,
+                is_active: v.is_active,
+            }));
+        }
     }
 
     // Map to Product Type
@@ -34,10 +57,13 @@ async function getProduct(id: string): Promise<Product | null> {
         brand: data.brand,
         images: data.images || [],
         inStock: data.in_stock,
+        stock: data.stock,
         rating: Number(data.rating),
         reviews: Number(data.reviews),
         tags: data.tags || [],
         features: data.features || [],
+        has_variants: data.has_variants || false,
+        variants: variants,
     };
 }
 
@@ -46,8 +72,8 @@ async function getRecommendations(currentId: string, category: string): Promise<
     const { data } = await supabase
         .from('products')
         .select('*')
-        .neq('id', currentId) // Exclude current
-        .eq('category', category) // Attempt to match category
+        .neq('id', currentId)
+        .eq('category', category)
         .limit(4);
 
     // Fallback if no category matches
@@ -89,7 +115,6 @@ async function getRecommendations(currentId: string, category: string): Promise<
 
 // Helper to fetch reviews with profiles
 async function getReviews(productId: string) {
-    // 1. Fetch reviews
     const { data: reviews, error } = await supabase
         .from('reviews')
         .select('*')
@@ -103,14 +128,12 @@ async function getReviews(productId: string) {
 
     if (!reviews || reviews.length === 0) return [];
 
-    // 2. Fetch profiles for these reviews
     const userIds = Array.from(new Set(reviews.map(r => r.user_id)));
     const { data: profiles } = await supabase
         .from('profiles')
         .select('id, full_name, avatar_url')
         .in('id', userIds);
 
-    // 3. Merge data
     return reviews.map(review => ({
         ...review,
         profiles: profiles?.find(p => p.id === review.user_id) || null
@@ -132,14 +155,13 @@ export default async function ProductDetailPage({
     const recommendations = await getRecommendations(product.id, product.category);
     const reviews = await getReviews(product.id);
 
-    // Calculate real rating if available, otherwise use product table default
+    // Calculate real rating if available
     const realRating = reviews.length > 0
-        ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+        ? reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviews.length
         : product.rating;
 
-    const realReviewCount = reviews.length > 0 ? reviews.length : 0; // Or keep product.reviews if you want to support legacy count
+    const realReviewCount = reviews.length > 0 ? reviews.length : 0;
 
-    // Format number helper
     const fmt = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
 
     return (
@@ -156,14 +178,11 @@ export default async function ProductDetailPage({
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
-                {/* Left Column: Images (7 cols) */}
+                {/* Left Column: Images + Tabs (7 cols) */}
                 <div className="lg:col-span-7 flex flex-col gap-4">
-
-                    {/* Replaced hardcoded images with Dynamic Gallery */}
-                    <ProductGallery
-                        images={product.images}
-                        productName={product.name}
-                        productTag={product.tags?.[0]}
+                    {/* Client component handles gallery + variant image switching */}
+                    <ProductDetailClient
+                        product={product}
                     />
 
                     {/* Tabs Section (Desktop) */}
@@ -193,16 +212,38 @@ export default async function ProductDetailPage({
                         <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] mb-4">
                             {product.name}
                         </h1>
-                        <div className="flex items-baseline gap-4">
-                            <span className="text-3xl font-bold text-primary">
-                                {fmt.format(product.price)}
-                            </span>
-                            {product.originalPrice && (
-                                <span className="text-lg text-muted-foreground line-through decoration-red-500/50">
-                                    {fmt.format(product.originalPrice)}
+
+                        {/* Show base price only if no variants */}
+                        {!product.has_variants && (
+                            <div className="flex items-baseline gap-4">
+                                <span className="text-3xl font-bold text-primary">
+                                    {fmt.format(product.price)}
                                 </span>
-                            )}
-                        </div>
+                                {product.originalPrice && (
+                                    <span className="text-lg text-muted-foreground line-through decoration-red-500/50">
+                                        {fmt.format(product.originalPrice)}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Show price range for variant products */}
+                        {product.has_variants && product.variants && product.variants.length > 0 && (
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-sm text-gray-400">From</span>
+                                <span className="text-3xl font-bold text-primary">
+                                    {fmt.format(Math.min(...product.variants.map(v => v.price)))}
+                                </span>
+                                {product.variants.length > 1 && (
+                                    <>
+                                        <span className="text-gray-400">—</span>
+                                        <span className="text-3xl font-bold text-primary">
+                                            {fmt.format(Math.max(...product.variants.map(v => v.price)))}
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Short Description */}
@@ -213,7 +254,7 @@ export default async function ProductDetailPage({
                     </div>
 
                     {/* Buy Box Component */}
-                    <BuyBox product={product} />
+                    <BuyBoxWrapper product={product} />
 
                     {/* Key Specs Grid */}
                     <div className="grid grid-cols-2 gap-3">
@@ -249,3 +290,13 @@ export default async function ProductDetailPage({
         </div>
     );
 }
+
+// Wrapper to import BuyBox (client component) in server component
+function BuyBoxWrapper({ product }: { product: Product }) {
+    // This is a server component wrapper — the actual BuyBox is imported in ProductDetailClient
+    // We keep a simple version here for the right column
+    return <BuyBoxClient product={product} />;
+}
+
+// Dynamic import of client-side BuyBox
+import { BuyBox as BuyBoxClient } from "@/components/features/BuyBox";

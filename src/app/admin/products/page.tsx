@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/client"; // Use authenticated cli
 import { Product } from "@/types";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Pencil, Trash2, Loader2, AlertTriangle, Save } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, AlertTriangle, Save, Layers } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
@@ -95,12 +95,14 @@ export default function AdminProductsPage() {
         setDeleting(id);
 
         try {
-            const { error } = await supabase
-                .from('products')
-                .delete()
-                .eq('id', id);
+            const res = await fetch('/api/admin/delete-product', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productIds: [id] }),
+            });
 
-            if (error) throw error;
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to delete product');
 
             // Success notification
             const successDiv = document.createElement('div');
@@ -145,14 +147,17 @@ export default function AdminProductsPage() {
     const handleBulkDelete = async () => {
         if (selectedProducts.size === 0) return;
 
+        const productIds = Array.from(selectedProducts);
         setDeleting('bulk');
         try {
-            const { error } = await supabase
-                .from('products')
-                .delete()
-                .in('id', Array.from(selectedProducts));
+            const res = await fetch('/api/admin/delete-product', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productIds }),
+            });
 
-            if (error) throw error;
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to delete products');
 
             const successDiv = document.createElement('div');
             successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
@@ -360,6 +365,13 @@ export default function AdminProductsPage() {
                                                     title="Edit"
                                                 >
                                                     <Pencil className="size-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => router.push(`/admin/product/${product.id}/variants`)}
+                                                    className="p-2 text-purple-400 hover:bg-purple-500/10 rounded-lg transition-colors"
+                                                    title="Manage Variants"
+                                                >
+                                                    <Layers className="size-4" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteClick(product)}
