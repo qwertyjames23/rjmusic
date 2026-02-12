@@ -106,8 +106,8 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
                     <label className="block text-sm font-medium mb-2 text-gray-300">Product Images</label>
                     <ImageUpload
                         value={images}
-                        onChange={(url) => setImages([...images, url])}
-                        onRemove={(url) => setImages(images.filter((current) => current !== url))}
+                        onChange={(url) => setImages(prev => [...prev, url])}
+                        onRemove={(url) => setImages(prev => prev.filter((current) => current !== url))}
                     />
                 </div>
 

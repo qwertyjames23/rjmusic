@@ -135,8 +135,8 @@ export default function AdminProductForm() {
                         </div>
                         <ImageUpload
                             value={images}
-                            onChange={(url) => setImages([...images, url])}
-                            onRemove={(url) => setImages(images.filter((current) => current !== url))}
+                            onChange={(url) => setImages(prev => [...prev, url])}
+                            onRemove={(url) => setImages(prev => prev.filter((current) => current !== url))}
                         />
                     </div>
 
