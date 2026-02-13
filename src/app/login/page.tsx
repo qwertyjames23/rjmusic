@@ -1,19 +1,19 @@
 "use client";
 
-import { login } from './actions'
-import { createClient } from '@/utils/supabase/client'
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Chrome, Mail, Lock, ArrowRight } from 'lucide-react';
-import { Suspense } from 'react';
-import Link from 'next/link';
+import { login, signup } from "./actions";
+import { createClient } from "@/utils/supabase/client";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Chrome, Mail, Lock, ArrowRight } from "lucide-react";
+import { Suspense } from "react";
+import Link from "next/link";
 
 function LoginForm() {
     const supabase = createClient();
     const searchParams = useSearchParams();
-    const next = searchParams.get('next') || '/';
+    const next = searchParams.get("next") || "/";
     const [loading, setLoading] = useState(false);
-    const signupParam = searchParams.get('mode') === 'signup' || searchParams.get('signup') === '1';
+    const signupParam = searchParams.get("mode") === "signup" || searchParams.get("signup") === "1";
     const [isSignUp, setIsSignUp] = useState(signupParam);
 
     useEffect(() => {
@@ -23,7 +23,7 @@ function LoginForm() {
     const handleGoogleLogin = async () => {
         setLoading(true);
         const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
+            provider: "google",
             options: {
                 redirectTo: `${location.origin}/auth/callback?next=${next}`,
             },
@@ -37,39 +37,34 @@ function LoginForm() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0a0a0f] to-[#050505] flex items-center justify-center p-4">
-            {/* Background Effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/4 -left-48 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
             </div>
 
             <div className="relative w-full max-w-md">
-                {/* Header */}
                 <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold text-white mb-2">
-                        Welcome Back
+                        {isSignUp ? "Create Account" : "Welcome Back"}
                     </h2>
                     <p className="text-gray-400">
-                        Sign in to your account
+                        {isSignUp ? "Sign up to get started" : "Sign in to your account"}
                     </p>
                 </div>
 
-                {/* Main Card */}
                 <div className="bg-[#0f141a] rounded-2xl border border-white/10 p-8 shadow-2xl">
-                    {/* Error/Success Messages */}
-                    {searchParams.get('error') && (
+                    {searchParams.get("error") && (
                         <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-sm mb-6 animate-in slide-in-from-top-2">
-                            {searchParams.get('error')}
+                            {searchParams.get("error")}
                         </div>
                     )}
 
-                    {searchParams.get('message') && (
+                    {searchParams.get("message") && (
                         <div className="bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-xl text-sm mb-6 animate-in slide-in-from-top-2">
-                            {searchParams.get('message')}
+                            {searchParams.get("message")}
                         </div>
                     )}
 
-                    {/* Google Login */}
                     <button
                         onClick={handleGoogleLogin}
                         disabled={loading}
@@ -85,7 +80,6 @@ function LoginForm() {
                         )}
                     </button>
 
-                    {/* Divider */}
                     <div className="relative mb-6">
                         <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t border-white/10" />
@@ -95,11 +89,9 @@ function LoginForm() {
                         </div>
                     </div>
 
-                    {/* Email/Password Form */}
                     <form className="space-y-4">
                         <input type="hidden" name="next" value={next} />
 
-                        {/* Email Field */}
                         <div>
                             <label className="block text-sm font-semibold mb-2 text-gray-300" htmlFor="email">
                                 Email Address
@@ -117,7 +109,6 @@ function LoginForm() {
                             </div>
                         </div>
 
-                        {/* Password Field */}
                         <div>
                             <label className="block text-sm font-semibold mb-2 text-gray-300" htmlFor="password">
                                 Password
@@ -130,41 +121,44 @@ function LoginForm() {
                                     type="password"
                                     required
                                     className="w-full bg-[#1c222b] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                    placeholder="••••••••"
+                                    placeholder="********"
                                 />
                             </div>
                         </div>
 
-                        {/* Submit Buttons */}
                         <div className="space-y-3 pt-2">
                             <button
-                                formAction={login}
+                                formAction={isSignUp ? signup : login}
                                 className="w-full bg-gradient-to-r from-primary to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group"
                             >
-                                Sign In
+                                {isSignUp ? "Sign Up" : "Sign In"}
                                 <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
                     </form>
 
-                    {/* Sign Up Link */}
                     <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-400">
-                            Don&apos;t have an account?{' '}
-                            <Link href="/register" className="text-primary font-semibold hover:underline">
-                                Sign Up
-                            </Link>
-                        </p>
+                        {isSignUp ? (
+                            <p className="text-sm text-gray-400">
+                                Already have an account?{" "}
+                                <Link href="/login" className="text-primary font-semibold hover:underline">
+                                    Sign In
+                                </Link>
+                            </p>
+                        ) : (
+                            <p className="text-sm text-gray-400">
+                                Don&apos;t have an account?{" "}
+                                <Link href="/login?mode=signup" className="text-primary font-semibold hover:underline">
+                                    Sign Up
+                                </Link>
+                            </p>
+                        )}
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="mt-6 text-center">
-                    <Link
-                        href="/"
-                        className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
-                    >
-                        ← Back to Home
+                    <Link href="/" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+                        {"<-"} Back to Home
                     </Link>
                 </div>
             </div>
@@ -174,11 +168,13 @@ function LoginForm() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0a0a0f] to-[#050505] flex items-center justify-center">
-                <div className="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-        }>
+        <Suspense
+            fallback={
+                <div className="min-h-screen bg-gradient-to-br from-[#050505] via-[#0a0a0f] to-[#050505] flex items-center justify-center">
+                    <div className="size-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                </div>
+            }
+        >
             <LoginForm />
         </Suspense>
     );

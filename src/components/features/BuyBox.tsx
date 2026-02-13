@@ -82,13 +82,6 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
     // Are all groups selected?
     const allGroupsSelected = groupNames.every(g => !!selectedVariants[g]);
 
-    // Reset quantity if it exceeds stock
-    useEffect(() => {
-        if (quantity > currentStock && currentStock > 0) {
-            setQuantity(currentStock);
-        }
-    }, [currentStock, quantity]);
-
     const handleVariantSelect = (variant: ProductVariant) => {
         const groupName = variant.variant_type || "Variation";
         setSelectedVariants(prev => ({ ...prev, [groupName]: variant }));
@@ -113,7 +106,8 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
             // Store all selected variants info in description for order clarity
         };
 
-        addToCart(cartProduct, quantity);
+        const safeQuantity = Math.min(quantity, Math.max(currentStock, 1));
+        addToCart(cartProduct, safeQuantity);
     };
 
     const fmt = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });

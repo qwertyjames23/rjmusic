@@ -3,6 +3,13 @@ import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function GET(req: NextRequest) {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user || user.email !== process.env.ADMIN_EMAIL) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const productId = req.nextUrl.searchParams.get("product_id");
     if (!productId) {
         return NextResponse.json({ error: "product_id is required" }, { status: 400 });
