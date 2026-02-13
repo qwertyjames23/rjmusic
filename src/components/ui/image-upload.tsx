@@ -10,6 +10,7 @@ interface ImageUploadProps {
     onRemove: (value: string) => void;
     value: string[];
     maxImages?: number; // Added limit prop
+    compact?: boolean; // New compact mode for tables
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -17,7 +18,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     onChange,
     onRemove,
     value,
-    maxImages = 5
+    maxImages = 5,
+    compact = false
 }) => {
     const onUpload = (result: any) => {
         console.log('Upload result:', result);
@@ -32,6 +34,54 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     };
 
     const isLimitReached = value.length >= maxImages;
+
+    if (compact) {
+        return (
+            <div className="flex items-center justify-center">
+                {value.length > 0 ? (
+                    <div className="relative size-12 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 group">
+                        <Image
+                            fill
+                            className="object-cover"
+                            alt="Variant"
+                            src={value[0]}
+                            sizes="48px"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => onRemove(value[0])}
+                            className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <Trash className="size-4" />
+                        </button>
+                    </div>
+                ) : (
+                    <CldUploadWidget
+                        uploadPreset="rjmusic_preset"
+                        onSuccess={onUpload}
+                        onError={onError}
+                        options={{
+                            maxFiles: 1,
+                            sources: ['local', 'url', 'camera'],
+                            multiple: false,
+                            resourceType: 'image'
+                        }}
+                    >
+                        {({ open }) => (
+                            <button
+                                type="button"
+                                onClick={() => open()}
+                                disabled={disabled}
+                                className="size-12 rounded-lg bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-500 transition-colors"
+                            >
+                                <ImagePlus className="size-5" />
+                            </button>
+                        )}
+                    </CldUploadWidget>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div>

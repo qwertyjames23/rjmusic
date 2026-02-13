@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Product, ProductVariant } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, ArrowRight } from "lucide-react";
@@ -24,11 +24,40 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
 
     const hasVariants = product.has_variants && product.variants && product.variants.length > 0;
 
-    // Default to first in-stock variant, or first variant
-    const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(() => {
+    // Group variants by type for multi-group selection
+    const variantGroups = useMemo(() => {
+        if (!hasVariants) return {};
+        const groups: Record<string, ProductVariant[]> = {};
+        for (const v of product.variants!) {
+            const type = v.variant_type || "Variation";
+            if (!groups[type]) groups[type] = [];
+            groups[type].push(v);
+        }
+        return groups;
+    }, [hasVariants, product.variants]);
+
+    const groupNames = Object.keys(variantGroups);
+
+    // Track selected variant per group — initialize with first in-stock variant of each group
+    const [selectedVariants, setSelectedVariants] = useState<Record<string, ProductVariant>>(() => {
+        if (!hasVariants) return {};
+        const initial: Record<string, ProductVariant> = {};
+        for (const [groupName, variants] of Object.entries(variantGroups)) {
+            const firstAvailable = variants.find(v => v.stock > 0);
+            if (firstAvailable) initial[groupName] = firstAvailable;
+            else if (variants[0]) initial[groupName] = variants[0];
+        }
+        return initial;
+    });
+
+    // The "primary" selected variant (used for price/stock) is the one most recently changed
+    // or if there's only one group, it's just the selected variant from that group.
+    // For pricing: we use the last selected variant's price (most relevant to user action)
+    const [activeVariant, setActiveVariant] = useState<ProductVariant | null>(() => {
         if (!hasVariants) return null;
-        const firstAvailable = product.variants!.find(v => v.stock > 0);
-        return firstAvailable || product.variants![0] || null;
+        // Default: first group's selection
+        const firstGroup = groupNames[0];
+        return firstGroup ? (selectedVariants[firstGroup] || null) : null;
     });
 
     useEffect(() => {
@@ -39,16 +68,19 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
     // Notify parent of variant changes (e.g., to update gallery image)
     useEffect(() => {
         if (onVariantChange) {
-            onVariantChange(selectedVariant);
+            onVariantChange(activeVariant);
         }
-    }, [selectedVariant, onVariantChange]);
+    }, [activeVariant, onVariantChange]);
 
-    // Derived values based on selected variant or base product
-    const currentPrice = selectedVariant ? selectedVariant.price : product.price;
-    const currentStock = selectedVariant ? selectedVariant.stock : (product.stock ?? 0);
+    // Derived values based on active variant or base product
+    const currentPrice = activeVariant ? activeVariant.price : product.price;
+    const currentStock = activeVariant ? activeVariant.stock : (product.stock ?? 0);
     const isInStock = hasVariants
-        ? (selectedVariant ? selectedVariant.stock > 0 : false)
+        ? (activeVariant ? activeVariant.stock > 0 : false)
         : product.inStock;
+
+    // Are all groups selected?
+    const allGroupsSelected = groupNames.every(g => !!selectedVariants[g]);
 
     // Reset quantity if it exceeds stock
     useEffect(() => {
@@ -58,7 +90,9 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
     }, [currentStock, quantity]);
 
     const handleVariantSelect = (variant: ProductVariant) => {
-        setSelectedVariant(variant);
+        const groupName = variant.variant_type || "Variation";
+        setSelectedVariants(prev => ({ ...prev, [groupName]: variant }));
+        setActiveVariant(variant);
         setQuantity(1); // Reset quantity on variant change
     };
 
@@ -68,16 +102,15 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
             return;
         }
 
-        // If product has variants, user must select one
-        if (hasVariants && !selectedVariant) return;
+        // If product has variants, user must select from each group
+        if (hasVariants && !allGroupsSelected) return;
 
-        // Create a cart item with variant info
+        // Create a cart item with variant info — use the active variant for price
         const cartProduct = {
             ...product,
-            // Override price with variant price
             price: currentPrice,
-            // Store variant info
-            selectedVariant: selectedVariant || undefined,
+            selectedVariant: activeVariant || undefined,
+            // Store all selected variants info in description for order clarity
         };
 
         addToCart(cartProduct, quantity);
@@ -91,7 +124,7 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
             {hasVariants && (
                 <div className="flex items-baseline gap-3 mb-5">
                     <span className="text-2xl font-bold text-primary">
-                        {fmt.format(currentPrice)}
+                        {currentPrice > 0 ? fmt.format(currentPrice) : "Unavailable"}
                     </span>
                     {product.originalPrice && currentPrice < product.originalPrice && (
                         <span className="text-sm text-muted-foreground line-through">
@@ -107,7 +140,7 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
                     <span className={cn("size-2.5 rounded-full animate-pulse", isInStock ? "bg-green-500" : "bg-red-500")} />
                     <span className={cn("text-xs font-bold uppercase tracking-wide", isInStock ? "text-green-500" : "text-red-500")}>
                         {isInStock
-                            ? hasVariants && selectedVariant
+                            ? hasVariants && activeVariant
                                 ? `In Stock (${currentStock})`
                                 : "In Stock"
                             : "Out of Stock"
@@ -117,11 +150,11 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Free shipping worldwide</span>
             </div>
 
-            {/* Variation Selector */}
+            {/* Variation Selectors (grouped by type) */}
             {hasVariants && (
                 <VariationSelector
                     variants={product.variants!}
-                    selectedVariant={selectedVariant}
+                    selectedVariants={selectedVariants}
                     onSelect={handleVariantSelect}
                 />
             )}
@@ -168,10 +201,10 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
                     {/* Add To Cart */}
                     <button
                         onClick={handleAddToCart}
-                        disabled={!isInStock || (hasVariants && !selectedVariant)}
+                        disabled={!isInStock || (hasVariants && !allGroupsSelected)}
                         className={cn(
                             "flex-1 h-12 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2",
-                            isInStock && (!hasVariants || selectedVariant)
+                            isInStock && (!hasVariants || allGroupsSelected)
                                 ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98]"
                                 : "bg-muted text-muted-foreground cursor-not-allowed"
                         )}

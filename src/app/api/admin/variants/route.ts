@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { product_id, label, price, stock, image_url, sort_order } = body;
+    const { product_id, label, price, stock, image_url, sort_order, variant_type } = body;
 
     if (!product_id || !label || price === undefined) {
         return NextResponse.json({ error: "product_id, label, and price are required" }, { status: 400 });
@@ -42,17 +42,21 @@ export async function POST(req: NextRequest) {
 
     const adminClient = createAdminClient();
 
-    // Insert variant
+    // Insert variant — build object dynamically to handle optional columns
+    const insertData: Record<string, unknown> = {
+        product_id,
+        label,
+        price: Number(price),
+        stock: Number(stock || 0),
+        image_url: image_url || null,
+        sort_order: sort_order || 0,
+    };
+    // Only include variant_type if provided (avoids error if column doesn't exist yet)
+    if (variant_type) insertData.variant_type = variant_type;
+
     const { data, error } = await adminClient
         .from("product_variants")
-        .insert({
-            product_id,
-            label,
-            price: Number(price),
-            stock: Number(stock || 0),
-            image_url: image_url || null,
-            sort_order: sort_order || 0,
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -79,7 +83,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, label, price, stock, image_url, sort_order, is_active } = body;
+    const { id, label, price, stock, image_url, sort_order, is_active, variant_type } = body;
 
     if (!id) {
         return NextResponse.json({ error: "Variant id is required" }, { status: 400 });
@@ -94,6 +98,8 @@ export async function PUT(req: NextRequest) {
     if (image_url !== undefined) updateData.image_url = image_url || null;
     if (sort_order !== undefined) updateData.sort_order = sort_order;
     if (is_active !== undefined) updateData.is_active = is_active;
+    // Only include variant_type if explicitly provided with a value (avoids error if column doesn't exist yet)
+    if (variant_type) updateData.variant_type = variant_type;
     updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await adminClient

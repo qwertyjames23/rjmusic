@@ -11,14 +11,31 @@ export const dynamic = "force-dynamic";
 
 // Helper to fetch single product with variants
 async function getProduct(id: string): Promise<Product | null> {
+    // Validate UUID format to prevent database errors
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+        console.warn(`Invalid UUID format for product ID: ${id}`);
+        return null;
+    }
+
     const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('id', id)
         .single();
 
-    if (error || !data) {
-        console.error("Error fetching product:", error);
+    if (error) {
+        if (error.code === 'PGRST116') return null; // Standard 404, no error log needed
+
+        console.error(`Error fetching product [${id}]:`, error);
+        if (Object.keys(error).length === 0) {
+            console.error("Empty error object details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+        }
+        return null;
+    }
+
+    if (!data) {
+        console.error(`Product not found [${id}]`);
         return null;
     }
 
@@ -42,6 +59,7 @@ async function getProduct(id: string): Promise<Product | null> {
                 image_url: v.image_url,
                 sort_order: v.sort_order,
                 is_active: v.is_active,
+                variant_type: v.variant_type || null,
             }));
         }
     }

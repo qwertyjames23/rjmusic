@@ -26,8 +26,10 @@ export async function GET(request: Request) {
                 return NextResponse.redirect(`${origin}${finalNext}`)
             }
         }
+        // If there is an error, redirect with the error message
+        return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error.message)}`)
     }
 
-    // return the user to an error page with instructions
-    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+    // return the user to an error page with instructions if no code is present
+    return NextResponse.redirect(`${origin}/auth/auth-code-error?error=No%20auth%20code%20provided`)
 }
