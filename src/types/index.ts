@@ -26,6 +26,7 @@ export interface ProductVariant {
     image_url?: string | null;
     sort_order: number;
     is_active: boolean;
+    variant_type?: string | null; // e.g. "Model", "Size", "Color", "Gauge"
 }
 
 export interface CartItem extends Product {

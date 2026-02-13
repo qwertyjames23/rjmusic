@@ -26,7 +26,9 @@ interface Variant {
     image_url: string | null;
     sort_order: number;
     is_active: boolean;
+    variant_type: string | null;
 }
+const VARIANT_TYPE_SUGGESTIONS = ["Model", "Size", "Color", "Gauge", "Material"];
 
 interface ProductInfo {
     id: string;
@@ -51,6 +53,7 @@ export default function ManageVariantsPage() {
         price: "",
         stock: "0",
         image_url: "",
+        variant_type: "",
     });
 
     const loadData = useCallback(async () => {
@@ -106,6 +109,7 @@ export default function ManageVariantsPage() {
                     stock: Number(newVariant.stock || 0),
                     image_url: newVariant.image_url || null,
                     sort_order: variants.length,
+                    ...(newVariant.variant_type ? { variant_type: newVariant.variant_type } : {}),
                 }),
             });
 
@@ -113,7 +117,7 @@ export default function ManageVariantsPage() {
             if (data.error) throw new Error(data.error);
 
             setVariants(prev => [...prev, data.variant]);
-            setNewVariant({ label: "", price: "", stock: "0", image_url: "" });
+            setNewVariant({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
             setShowAddForm(false);
             showNotification("Variant added successfully");
         } catch (error: any) {
@@ -137,6 +141,7 @@ export default function ManageVariantsPage() {
                     image_url: variant.image_url,
                     sort_order: variant.sort_order,
                     is_active: variant.is_active,
+                    ...(variant.variant_type ? { variant_type: variant.variant_type } : {}),
                 }),
             });
 
@@ -258,9 +263,23 @@ export default function ManageVariantsPage() {
                                 </div>
 
                                 {/* Fields */}
-                                <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    {/* Type */}
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                            Type
+                                        </label>
+                                        <input
+                                            className="w-full bg-[#1c222b] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                            value={variant.variant_type || ""}
+                                            onChange={e => handleFieldChange(variant.id, "variant_type", e.target.value)}
+                                            placeholder="e.g. Model"
+                                            list="variant-type-list"
+                                        />
+                                    </div>
+
                                     {/* Label */}
-                                    <div className="md:col-span-2">
+                                    <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                                             Label
                                         </label>
@@ -301,7 +320,7 @@ export default function ManageVariantsPage() {
                                     </div>
 
                                     {/* Image URL (optional) */}
-                                    <div className="md:col-span-4">
+                                    <div className="md:col-span-5">
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                                             <ImageIcon className="size-3 inline mr-1" />
                                             Image URL (Optional)
@@ -351,6 +370,9 @@ export default function ManageVariantsPage() {
                             </div>
                         </div>
                     ))}
+                    <datalist id="variant-type-list">
+                        {VARIANT_TYPE_SUGGESTIONS.map(t => <option key={t} value={t} />)}
+                    </datalist>
                 </div>
 
                 {/* Add New Variant Form */}
@@ -360,8 +382,23 @@ export default function ManageVariantsPage() {
                             <Plus className="size-5 text-primary" />
                             Add New Variation
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div className="md:col-span-2">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                    Type
+                                </label>
+                                <input
+                                    className="w-full bg-[#1c222b] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                    value={newVariant.variant_type}
+                                    onChange={e => setNewVariant(prev => ({ ...prev, variant_type: e.target.value }))}
+                                    placeholder="e.g. Model, Size"
+                                    list="variant-type-list-new"
+                                />
+                                <datalist id="variant-type-list-new">
+                                    {VARIANT_TYPE_SUGGESTIONS.map(t => <option key={t} value={t} />)}
+                                </datalist>
+                            </div>
+                            <div>
                                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                                     Label *
                                 </label>
@@ -398,7 +435,7 @@ export default function ManageVariantsPage() {
                                     placeholder="0"
                                 />
                             </div>
-                            <div className="md:col-span-4">
+                            <div className="md:col-span-5">
                                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                                     <ImageIcon className="size-3 inline mr-1" />
                                     Image URL (Optional)
@@ -416,7 +453,7 @@ export default function ManageVariantsPage() {
                             <button
                                 onClick={() => {
                                     setShowAddForm(false);
-                                    setNewVariant({ label: "", price: "", stock: "0", image_url: "" });
+                                    setNewVariant({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
                                 }}
                                 className="px-5 py-2.5 rounded-xl bg-[#1c222b] text-gray-400 font-semibold border border-white/10 hover:bg-[#252d38] transition-all"
                             >
@@ -460,28 +497,40 @@ export default function ManageVariantsPage() {
                         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
                             Preview — How customers see it
                         </h3>
-                        <div className="bg-[#1c222b] rounded-xl p-5 border border-[#282f39]">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Package className="size-4 text-gray-400" />
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                    Variation
-                                </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {variants.filter(v => v.is_active).map((variant, i) => (
-                                    <button
-                                        key={variant.id}
-                                        className={`px-4 py-2.5 rounded-lg text-sm font-semibold border-2 transition-all ${i === 0
-                                            ? "border-primary bg-primary/10 text-primary"
-                                            : variant.stock <= 0
-                                                ? "border-[#282f39] bg-[#13171d] text-gray-600 opacity-50 line-through"
-                                                : "border-[#282f39] bg-[#1c222b] text-gray-300"
-                                            }`}
-                                    >
-                                        {variant.label}
-                                    </button>
-                                ))}
-                            </div>
+                        <div className="bg-[#1c222b] rounded-xl p-5 border border-[#282f39] space-y-4">
+                            {(() => {
+                                const groups: Record<string, Variant[]> = {};
+                                for (const v of variants.filter(v => v.is_active)) {
+                                    const type = v.variant_type || "Variation";
+                                    if (!groups[type]) groups[type] = [];
+                                    groups[type].push(v);
+                                }
+                                return Object.entries(groups).map(([groupName, groupVariants]) => (
+                                    <div key={groupName}>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Package className="size-4 text-gray-400" />
+                                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                                {groupName}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {groupVariants.map((variant, i) => (
+                                                <button
+                                                    key={variant.id}
+                                                    className={`px-4 py-2.5 rounded-lg text-sm font-semibold border-2 transition-all ${i === 0
+                                                        ? "border-primary bg-primary/10 text-primary"
+                                                        : variant.stock <= 0
+                                                            ? "border-[#282f39] bg-[#13171d] text-gray-600 opacity-50 line-through"
+                                                            : "border-[#282f39] bg-[#1c222b] text-gray-300"
+                                                        }`}
+                                                >
+                                                    {variant.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
                         </div>
                     </div>
                 )}

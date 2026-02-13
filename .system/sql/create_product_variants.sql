@@ -16,9 +16,14 @@ CREATE TABLE IF NOT EXISTS product_variants (
     sort_order INTEGER NOT NULL DEFAULT 0,
     -- For ordering buttons
     is_active BOOLEAN NOT NULL DEFAULT true,
+    variant_type TEXT DEFAULT NULL,
+    -- e.g. "Model", "Size", "Color", "Gauge" — groups variants by type
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+-- Add variant_type column if table already exists (migration)
+ALTER TABLE product_variants
+ADD COLUMN IF NOT EXISTS variant_type TEXT DEFAULT NULL;
 -- Index for fast lookup by product
 CREATE INDEX IF NOT EXISTS idx_product_variants_product_id ON product_variants(product_id);
 -- Index for ordering

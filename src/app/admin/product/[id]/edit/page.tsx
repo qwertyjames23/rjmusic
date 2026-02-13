@@ -28,6 +28,7 @@ export default function EditProductPage() {
 
     // Categories State
     const [categories, setCategories] = useState<any[]>([]);
+    const [hasVariants, setHasVariants] = useState(false);
 
     // Variants State
     interface VariantItem {
@@ -39,11 +40,13 @@ export default function EditProductPage() {
         image_url: string | null;
         sort_order: number;
         is_active: boolean;
+        variant_type: string | null;
     }
+    const VARIANT_TYPE_SUGGESTIONS = ["Model", "Size", "Color", "Gauge", "Material"];
     const [variants, setVariants] = useState<VariantItem[]>([]);
     const [showAddVariant, setShowAddVariant] = useState(false);
     const [savingVariant, setSavingVariant] = useState<string | null>(null);
-    const [newVariant, setNewVariant] = useState({ label: "", price: "", stock: "0", image_url: "" });
+    const [newVariant, setNewVariant] = useState({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
 
     useEffect(() => {
         Promise.all([loadProduct(), fetchCategories()]);
@@ -85,6 +88,7 @@ export default function EditProductPage() {
                 setBrand(data.brand || "");
                 setImages(data.images || []);
                 setStock(data.stock ? data.stock.toString() : "0");
+                setHasVariants(data.has_variants || false);
             }
         } catch (error: any) {
             console.error("Error loading product:", error);
@@ -135,13 +139,15 @@ export default function EditProductPage() {
                     stock: Number(newVariant.stock || 0),
                     image_url: newVariant.image_url || null,
                     sort_order: variants.length,
+                    ...(newVariant.variant_type ? { variant_type: newVariant.variant_type } : {}),
                 }),
             });
             const data = await res.json();
             if (data.error) throw new Error(data.error);
             setVariants(prev => [...prev, data.variant]);
-            setNewVariant({ label: "", price: "", stock: "0", image_url: "" });
+            setNewVariant({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
             setShowAddVariant(false);
+            setHasVariants(true);
             showNotification("Variation added");
         } catch (error: unknown) {
             showNotification(error instanceof Error ? error.message : "Failed to add variation", true);
@@ -206,13 +212,14 @@ export default function EditProductPage() {
                 .update({
                     name,
                     description,
-                    price: Number(price),
-                    original_price: originalPrice ? Number(originalPrice) : null,
+                    price: hasVariants ? 0 : Number(price),
+                    original_price: hasVariants ? null : (originalPrice ? Number(originalPrice) : null),
                     category,
                     brand: brand || null,
                     images,
-                    stock: stockNum,
-                    in_stock: stockNum > 0, // Auto-sync
+                    stock: hasVariants ? 0 : stockNum,
+                    in_stock: hasVariants ? false : stockNum > 0, // Auto-sync
+                    has_variants: hasVariants,
                 })
                 .eq('id', productId);
 
@@ -349,6 +356,7 @@ export default function EditProductPage() {
                     </div>
 
                     {/* Pricing */}
+                    {/* Pricing */}
                     <div className="bg-[#0f141a] rounded-2xl border border-white/10 p-6 shadow-xl">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -360,55 +368,63 @@ export default function EditProductPage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-semibold mb-2 text-gray-300">Price (PHP) *</label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₱</span>
+                        {hasVariants ? (
+                            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
+                                <div className="text-blue-400 font-medium">
+                                    Product has variations. Pricing and stock are managed individually below.
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold mb-2 text-gray-300">Price (PHP) *</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₱</span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            required
+                                            className="w-full bg-[#1c222b] border border-white/10 rounded-xl p-3 pl-8 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                            value={price}
+                                            onChange={e => setPrice(e.target.value)}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold mb-2 text-gray-300">Original Price (Optional)</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₱</span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            className="w-full bg-[#1c222b] border border-white/10 rounded-xl p-3 pl-8 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                            value={originalPrice}
+                                            onChange={e => setOriginalPrice(e.target.value)}
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">For sale items, show original price</p>
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-semibold mb-2 text-gray-300">Stock Quantity *</label>
                                     <input
                                         type="number"
-                                        step="0.01"
                                         required
-                                        className="w-full bg-[#1c222b] border border-white/10 rounded-xl p-3 pl-8 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                        value={price}
-                                        onChange={e => setPrice(e.target.value)}
-                                        placeholder="0.00"
+                                        min="0"
+                                        className="w-full bg-[#1c222b] border border-white/10 rounded-xl p-3 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                                        value={stock}
+                                        onChange={e => setStock(e.target.value)}
+                                        placeholder="0"
                                     />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Status will automatically allow &apos;Out of Stock&apos; if 0.
+                                    </p>
                                 </div>
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold mb-2 text-gray-300">Original Price (Optional)</label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₱</span>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        className="w-full bg-[#1c222b] border border-white/10 rounded-xl p-3 pl-8 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                        value={originalPrice}
-                                        onChange={e => setOriginalPrice(e.target.value)}
-                                        placeholder="0.00"
-                                    />
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">For sale items, show original price</p>
-                            </div>
-
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-semibold mb-2 text-gray-300">Stock Quantity *</label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    className="w-full bg-[#1c222b] border border-white/10 rounded-xl p-3 text-white placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                                    value={stock}
-                                    onChange={e => setStock(e.target.value)}
-                                    placeholder="0"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    Status will automatically allow &apos;Out of Stock&apos; if 0.
-                                </p>
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Description */}
@@ -464,7 +480,17 @@ export default function EditProductPage() {
                                         className={`bg-[#1c222b] rounded-xl border ${variant.is_active ? 'border-white/10' : 'border-red-500/20 opacity-60'} p-4 transition-all`}
                                     >
                                         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                                            <div className="md:col-span-4">
+                                            <div className="md:col-span-2">
+                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
+                                                <input
+                                                    className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                                    value={variant.variant_type || ''}
+                                                    onChange={e => handleVariantFieldChange(variant.id, 'variant_type', e.target.value)}
+                                                    placeholder="e.g. Model"
+                                                    list="variant-type-suggestions"
+                                                />
+                                            </div>
+                                            <div className="md:col-span-3">
                                                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Label</label>
                                                 <input
                                                     className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
@@ -493,7 +519,7 @@ export default function EditProductPage() {
                                                     onChange={e => handleVariantFieldChange(variant.id, 'stock', e.target.value)}
                                                 />
                                             </div>
-                                            <div className="md:col-span-4 flex items-end gap-2">
+                                            <div className="md:col-span-3 flex items-end gap-2">
                                                 <button
                                                     type="button"
                                                     onClick={() => handleUpdateVariant(variant)}
@@ -529,6 +555,10 @@ export default function EditProductPage() {
                                         </div>
                                     </div>
                                 ))}
+                                {/* HTML datalist for type suggestions */}
+                                <datalist id="variant-type-suggestions">
+                                    {VARIANT_TYPE_SUGGESTIONS.map(t => <option key={t} value={t} />)}
+                                </datalist>
                             </div>
                         )}
 
@@ -539,7 +569,20 @@ export default function EditProductPage() {
                                     <Plus className="size-4" />
                                     New Variation
                                 </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
+                                        <input
+                                            className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                            value={newVariant.variant_type}
+                                            onChange={e => setNewVariant(prev => ({ ...prev, variant_type: e.target.value }))}
+                                            placeholder="e.g. Model, Size"
+                                            list="variant-type-suggestions-new"
+                                        />
+                                        <datalist id="variant-type-suggestions-new">
+                                            {VARIANT_TYPE_SUGGESTIONS.map(t => <option key={t} value={t} />)}
+                                        </datalist>
+                                    </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Label *</label>
                                         <input
@@ -575,7 +618,7 @@ export default function EditProductPage() {
                                 <div className="flex gap-3 mt-4">
                                     <button
                                         type="button"
-                                        onClick={() => { setShowAddVariant(false); setNewVariant({ label: "", price: "", stock: "0", image_url: "" }); }}
+                                        onClick={() => { setShowAddVariant(false); setNewVariant({ label: "", price: "", stock: "0", image_url: "", variant_type: "" }); }}
                                         className="px-4 py-2 rounded-lg bg-[#13171d] text-gray-400 font-semibold text-sm border border-white/10 hover:bg-[#1c222b] transition-all"
                                     >
                                         Cancel
