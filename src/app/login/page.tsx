@@ -2,7 +2,7 @@
 
 import { login } from './actions'
 import { createClient } from '@/utils/supabase/client'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Chrome, Mail, Lock, ArrowRight } from 'lucide-react';
 import { Suspense } from 'react';
@@ -13,6 +13,12 @@ function LoginForm() {
     const searchParams = useSearchParams();
     const next = searchParams.get('next') || '/';
     const [loading, setLoading] = useState(false);
+    const signupParam = searchParams.get('mode') === 'signup' || searchParams.get('signup') === '1';
+    const [isSignUp, setIsSignUp] = useState(signupParam);
+
+    useEffect(() => {
+        setIsSignUp(signupParam);
+    }, [signupParam]);
 
     const handleGoogleLogin = async () => {
         setLoading(true);

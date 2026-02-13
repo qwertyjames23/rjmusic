@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
 
 export async function login(formData: FormData) {
@@ -19,7 +20,8 @@ export async function login(formData: FormData) {
     })
 
     if (error) {
-        redirect(`/login?error=Invalid credentials&next=${next}`)
+        const message = error.message || 'Invalid credentials'
+        redirect(`/login?error=${encodeURIComponent(message)}&next=${encodeURIComponent(next)}`)
     }
 
     revalidatePath('/', 'layout')
@@ -47,10 +49,25 @@ export async function signup(formData: FormData) {
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string
+    const next = (formData.get('next') as string) || '/'
+
+    const headerStore = await headers()
+    const forwardedHost = headerStore.get('x-forwarded-host')
+    const host = forwardedHost ?? headerStore.get('host')
+    const proto = headerStore.get('x-forwarded-proto') ?? 'http'
+    const origin = host ? `${proto}://${host}` : undefined
+    const emailRedirectTo = origin
+        ? `${origin}/auth/callback?next=${encodeURIComponent(next)}`
+        : undefined
 
     const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: emailRedirectTo
+            ? {
+                  emailRedirectTo,
+              }
+            : undefined,
     })
 
     if (error) {
@@ -64,5 +81,5 @@ export async function signup(formData: FormData) {
     }
 
     revalidatePath('/', 'layout')
-    redirect('/login?message=Check email to continue sign in process')
+    redirect(`/login?message=Check email to continue sign in process&next=${encodeURIComponent(next)}`)
 }

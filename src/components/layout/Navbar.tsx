@@ -359,7 +359,7 @@ function NavbarContent() {
                                         Login
                                     </Link>
                                     <Link
-                                        href="/register"
+                                        href="/login?mode=signup"
                                         className="px-4 py-2 text-sm font-bold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                                     >
                                         Sign Up
@@ -461,7 +461,7 @@ function NavbarContent() {
                                         Login
                                     </Link>
                                     <Link
-                                        href="/register"
+                                        href="/login?mode=signup"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                         className="text-center bg-primary text-white px-4 py-3 rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors"
                                     >
