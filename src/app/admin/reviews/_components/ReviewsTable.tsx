@@ -6,7 +6,18 @@ import { useRouter } from "next/navigation";
 import { Loader2, Trash2, Star } from "lucide-react";
 import Image from "next/image";
 
-export function ReviewsTable({ initialReviews }: { initialReviews: any[] }) {
+interface ReviewRow {
+    id: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+    product?: {
+        name?: string;
+        images?: string[];
+    } | null;
+}
+
+export function ReviewsTable({ initialReviews }: { initialReviews: ReviewRow[] }) {
     const router = useRouter();
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -67,7 +78,7 @@ export function ReviewsTable({ initialReviews }: { initialReviews: any[] }) {
                                         ))}
                                     </div>
                                 </td>
-                                <td className="p-4 text-gray-300 italic">"{review.comment}"</td>
+                                <td className="p-4 text-gray-300 italic">&ldquo;{review.comment}&rdquo;</td>
                                 <td className="p-4 text-gray-400 text-xs">{new Date(review.created_at).toLocaleDateString()}</td>
                                 <td className="p-4">
                                     <button 

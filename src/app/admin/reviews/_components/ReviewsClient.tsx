@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Star, Trash2, Loader2, Calendar, Search, MessageSquare, AlertTriangle } from "lucide-react";
+import { Star, Trash2, Loader2, Calendar, Search, MessageSquare } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { cn } from "@/lib/utils";
 
