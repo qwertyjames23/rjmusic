@@ -122,8 +122,8 @@ export default function ManageVariantsPage() {
             setNewVariant({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
             setShowAddForm(false);
             showNotification("Variant added successfully");
-        } catch (error: any) {
-            showNotification(error.message || "Failed to add variant", true);
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to add variant", true);
         } finally {
             setSaving(null);
         }
@@ -151,8 +151,8 @@ export default function ManageVariantsPage() {
             if (data.error) throw new Error(data.error);
 
             showNotification("Variant updated");
-        } catch (error: any) {
-            showNotification(error.message || "Failed to update variant", true);
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to update variant", true);
         } finally {
             setSaving(null);
         }
@@ -173,8 +173,8 @@ export default function ManageVariantsPage() {
 
             setVariants(prev => prev.filter(v => v.id !== variantId));
             showNotification("Variant deleted");
-        } catch (error: any) {
-            showNotification(error.message || "Failed to delete variant", true);
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to delete variant", true);
         } finally {
             setSaving(null);
         }

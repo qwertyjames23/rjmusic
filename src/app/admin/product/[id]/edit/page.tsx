@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
@@ -27,7 +27,7 @@ export default function EditProductPage() {
     const [stock, setStock] = useState("0");
 
     // Categories State
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
     const [hasVariants, setHasVariants] = useState(false);
 
     // Variants State
@@ -49,20 +49,7 @@ export default function EditProductPage() {
     const [newVariant, setNewVariant] = useState({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
     const lockedVariantType = variants.find((v) => (v.variant_type || "").trim())?.variant_type?.trim() || "";
 
-    useEffect(() => {
-        Promise.all([loadProduct(), fetchCategories()]);
-        // Load variants separately so it doesn't block the page
-        loadVariants();
-    }, [productId]);
-
-    useEffect(() => {
-        // For variable products with no variants yet, open the add form immediately.
-        if (hasVariants && variants.length === 0) {
-            setShowAddVariant(true);
-        }
-    }, [hasVariants, variants.length]);
-
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         try {
             const { data, error } = await supabase
                 .from('categories')
@@ -70,13 +57,13 @@ export default function EditProductPage() {
                 .order('name');
 
             if (error) throw error;
-            if (data) setCategories(data);
+            if (data) setCategories(data as Array<{ id: string; name: string }>);
         } catch (error) {
             console.error("Error fetching categories:", error);
         }
-    };
+    }, [supabase]);
 
-    const loadProduct = async () => {
+    const loadProduct = useCallback(async () => {
         setLoading(true);
         try {
             const { data, error } = await supabase
@@ -98,16 +85,16 @@ export default function EditProductPage() {
                 setStock(data.stock ? data.stock.toString() : "0");
                 setHasVariants(data.has_variants || false);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error loading product:", error);
-            alert("Failed to load product: " + error.message);
+            alert("Failed to load product: " + (error instanceof Error ? error.message : "Unknown error"));
             router.push('/admin/products');
         } finally {
             setLoading(false);
         }
-    };
+    }, [productId, router, supabase]);
 
-    const loadVariants = async () => {
+    const loadVariants = useCallback(async () => {
         try {
             const res = await fetch(`/api/admin/variants?product_id=${productId}`);
             if (!res.ok) {
@@ -120,7 +107,20 @@ export default function EditProductPage() {
             // Silently fail - variants table may not exist yet
             console.warn("Could not load variants:", error);
         }
-    };
+    }, [productId]);
+
+    useEffect(() => {
+        Promise.all([loadProduct(), fetchCategories()]);
+        // Load variants separately so it doesn't block the page
+        loadVariants();
+    }, [fetchCategories, loadProduct, loadVariants]);
+
+    useEffect(() => {
+        // For variable products with no variants yet, open the add form immediately.
+        if (hasVariants && variants.length === 0) {
+            setShowAddVariant(true);
+        }
+    }, [hasVariants, variants.length]);
 
     const showNotification = (message: string, isError = false) => {
         const div = document.createElement("div");
@@ -243,11 +243,11 @@ export default function EditProductPage() {
             // Redirect to products page
             setTimeout(() => router.push('/admin/products'), 1500);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
             const errorDiv = document.createElement('div');
             errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
-            errorDiv.innerHTML = '✗ Error: ' + error.message;
+            errorDiv.innerHTML = '✗ Error: ' + (error instanceof Error ? error.message : 'Unknown error');
             document.body.appendChild(errorDiv);
             setTimeout(() => errorDiv.remove(), 3000);
         } finally {
@@ -685,3 +685,4 @@ export default function EditProductPage() {
         </div>
     );
 }
+
