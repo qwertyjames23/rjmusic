@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
 import { ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Sparkles, Loader2, Layers, Plus, Trash2, Save, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -18,10 +17,18 @@ interface VariantItem {
     is_active: boolean;
     variant_type: string | null;
 }
+interface CategoryOption {
+    id: string;
+    name: string;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof Error) return error.message;
+    return fallback;
+}
 const VARIANT_TYPE_SUGGESTIONS = ["Model", "Size", "Color", "Gauge", "Material"];
 
 export default function AdminProductForm() {
-    const router = useRouter();
     const supabase = createClient();
     const [loading, setLoading] = useState(false);
 
@@ -37,7 +44,7 @@ export default function AdminProductForm() {
     const [hasVariants, setHasVariants] = useState(false);
 
     // Categories State
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<CategoryOption[]>([]);
 
     // Created product ID — when set, the product has been saved and we show the variations section
     const [createdProductId, setCreatedProductId] = useState<string | null>(null);
@@ -50,11 +57,7 @@ export default function AdminProductForm() {
     const [firstVariant, setFirstVariant] = useState({ label: "", price: "", stock: "0", variant_type: "" });
     const lockedVariantType = variants.find((v) => (v.variant_type || "").trim())?.variant_type?.trim() || "";
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         try {
             const { data, error } = await supabase
                 .from('categories')
@@ -62,11 +65,15 @@ export default function AdminProductForm() {
                 .order('name');
 
             if (error) throw error;
-            if (data) setCategories(data);
+            if (data) setCategories(data as CategoryOption[]);
         } catch (error) {
             console.error("Error fetching categories:", error);
         }
-    };
+    }, [supabase]);
+
+    useEffect(() => {
+        fetchCategories();
+    }, [fetchCategories]);
 
     const showNotification = (message: string, isError = false) => {
         const div = document.createElement("div");
@@ -133,9 +140,9 @@ export default function AdminProductForm() {
                 }
             }
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            showNotification("Error: " + error.message, true);
+            showNotification("Error: " + getErrorMessage(error, "Unknown error"), true);
         } finally {
             setLoading(false);
         }
