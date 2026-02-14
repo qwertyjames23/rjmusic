@@ -1,5 +1,6 @@
 -- Core schema hardening for production readiness
 create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";
 
 -- Profiles (for role-based access)
 create table if not exists public.profiles (
@@ -36,7 +37,7 @@ end $$;
 
 -- Payments table
 create table if not exists public.payments (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   order_id uuid not null references public.orders(id) on delete cascade,
   provider text not null,
   provider_ref text,
@@ -51,49 +52,67 @@ create table if not exists public.payments (
 do $$
 begin
   if to_regclass('public.order_items') is not null then
-    if not exists (select 1 from pg_constraint where conname = 'order_items_quantity_positive_chk') then
+    if exists (
+      select 1 from information_schema.columns
+      where table_schema = 'public' and table_name = 'order_items' and column_name = 'quantity'
+    ) and not exists (select 1 from pg_constraint where conname = 'order_items_quantity_positive_chk') then
       alter table public.order_items
-        add constraint order_items_quantity_positive_chk check (quantity > 0);
+        add constraint order_items_quantity_positive_chk check (quantity > 0) not valid;
     end if;
-    if not exists (select 1 from pg_constraint where conname = 'order_items_price_positive_chk') then
+    if exists (
+      select 1 from information_schema.columns
+      where table_schema = 'public' and table_name = 'order_items' and column_name = 'price'
+    ) and not exists (select 1 from pg_constraint where conname = 'order_items_price_positive_chk') then
       alter table public.order_items
-        add constraint order_items_price_positive_chk check (price >= 0);
+        add constraint order_items_price_positive_chk check (price >= 0) not valid;
     end if;
   end if;
 
   if to_regclass('public.orders') is not null then
-    if not exists (select 1 from pg_constraint where conname = 'orders_total_amount_positive_chk') then
+    if exists (
+      select 1 from information_schema.columns
+      where table_schema = 'public' and table_name = 'orders' and column_name = 'total_amount'
+    ) and not exists (select 1 from pg_constraint where conname = 'orders_total_amount_positive_chk') then
       alter table public.orders
-        add constraint orders_total_amount_positive_chk check (total_amount >= 0);
+        add constraint orders_total_amount_positive_chk check (total_amount >= 0) not valid;
     end if;
-    if not exists (select 1 from pg_constraint where conname = 'orders_status_chk') then
+    if exists (
+      select 1 from information_schema.columns
+      where table_schema = 'public' and table_name = 'orders' and column_name = 'status'
+    ) and not exists (select 1 from pg_constraint where conname = 'orders_status_chk') then
       alter table public.orders
         add constraint orders_status_chk
-        check (status in ('Pending','Processing','Shipped','Delivered','Cancelled'));
+        check (status in ('Pending','Processing','Shipped','Delivered','Cancelled')) not valid;
     end if;
-    if not exists (select 1 from pg_constraint where conname = 'orders_payment_status_chk') then
+    if exists (
+      select 1 from information_schema.columns
+      where table_schema = 'public' and table_name = 'orders' and column_name = 'payment_status'
+    ) and not exists (select 1 from pg_constraint where conname = 'orders_payment_status_chk') then
       alter table public.orders
         add constraint orders_payment_status_chk
-        check (payment_status in ('pending','paid','failed','refunded'));
+        check (payment_status in ('pending','paid','failed','refunded')) not valid;
     end if;
   end if;
 
   if to_regclass('public.reviews') is not null then
-    if not exists (select 1 from pg_constraint where conname = 'reviews_rating_range_chk') then
+    if exists (
+      select 1 from information_schema.columns
+      where table_schema = 'public' and table_name = 'reviews' and column_name = 'rating'
+    ) and not exists (select 1 from pg_constraint where conname = 'reviews_rating_range_chk') then
       alter table public.reviews
-        add constraint reviews_rating_range_chk check (rating between 1 and 5);
+        add constraint reviews_rating_range_chk check (rating between 1 and 5) not valid;
     end if;
   end if;
 
   if to_regclass('public.payments') is not null then
     if not exists (select 1 from pg_constraint where conname = 'payments_amount_positive_chk') then
       alter table public.payments
-        add constraint payments_amount_positive_chk check (amount >= 0);
+        add constraint payments_amount_positive_chk check (amount >= 0) not valid;
     end if;
     if not exists (select 1 from pg_constraint where conname = 'payments_status_chk') then
       alter table public.payments
         add constraint payments_status_chk
-        check (status in ('pending','paid','failed','refunded'));
+        check (status in ('pending','paid','failed','refunded') ) not valid;
     end if;
   end if;
 end $$;

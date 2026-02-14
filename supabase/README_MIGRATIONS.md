@@ -4,9 +4,9 @@ Last updated: February 13, 2026
 
 ## Apply Order
 
-1. `2026-02-13_core_hardening.sql`
-2. `2026-02-13_rls_hardening.sql`
-3. `2026-02-13_indexes.sql`
+1. `20260214030100_core_hardening.sql`
+2. `20260214030200_rls_hardening.sql`
+3. `20260214030300_indexes.sql`
 
 ## Notes
 
