@@ -8,7 +8,8 @@ export async function updateSession(request: NextRequest) {
     })
 
     // Track cookies to ensure they are propagated to redirects
-    const cookiesToSet: { name: string; value: string; options: any }[] = []
+    type CookieSetOptions = Parameters<NextResponse["cookies"]["set"]>[2];
+    const cookiesToSet: { name: string; value: string; options?: CookieSetOptions }[] = []
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,7 +20,7 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookies) {
-                    cookies.forEach(({ name, value, options }) => {
+                    cookies.forEach(({ name, value }) => {
                         request.cookies.set(name, value)
                     })
 
