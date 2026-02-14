@@ -47,6 +47,7 @@ export default function AdminProductForm() {
     const [showAddVariant, setShowAddVariant] = useState(false);
     const [savingVariant, setSavingVariant] = useState<string | null>(null);
     const [newVariant, setNewVariant] = useState({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
+    const [firstVariant, setFirstVariant] = useState({ label: "", price: "", stock: "0", variant_type: "" });
 
     useEffect(() => {
         fetchCategories();
@@ -79,6 +80,11 @@ export default function AdminProductForm() {
         setLoading(true);
 
         try {
+            if (hasVariants && (!firstVariant.label.trim() || !firstVariant.price)) {
+                showNotification("For variable products, first variation label and price are required", true);
+                return;
+            }
+
             const stockNum = Number(stock);
 
             const { data: newProduct, error } = await supabase.from('products').insert({
@@ -102,6 +108,29 @@ export default function AdminProductForm() {
 
             // Set the created product ID to reveal the variations section
             setCreatedProductId(newProduct.id);
+            if (hasVariants) {
+                const res = await fetch("/api/admin/variants", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        product_id: newProduct.id,
+                        label: firstVariant.label.trim(),
+                        price: Number(firstVariant.price),
+                        stock: Number(firstVariant.stock || 0),
+                        sort_order: 0,
+                        ...(firstVariant.variant_type ? { variant_type: firstVariant.variant_type } : {}),
+                    }),
+                });
+                const data = await res.json();
+                if (data.error) {
+                    setShowAddVariant(true);
+                    showNotification(`Product created, but first variation failed: ${data.error}`, true);
+                } else {
+                    setVariants([data.variant]);
+                    setShowAddVariant(false);
+                    setFirstVariant({ label: "", price: "", stock: "0", variant_type: "" });
+                }
+            }
 
         } catch (error: any) {
             console.error(error);
@@ -385,6 +414,66 @@ export default function AdminProductForm() {
                                         </p>
                                     </div>
                                 </>
+                            )}
+                            {hasVariants && (
+                                <div className="md:col-span-2 bg-[#1c222b] border border-purple-500/30 rounded-xl p-4 space-y-4">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-purple-400">First Variation</h3>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            Set the first variation now. You can add more after product creation.
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
+                                            <input
+                                                className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                                value={firstVariant.variant_type}
+                                                disabled={loading || !!createdProductId}
+                                                onChange={e => setFirstVariant(prev => ({ ...prev, variant_type: e.target.value }))}
+                                                placeholder="e.g. Model, Size"
+                                                list="first-variant-type-suggestions"
+                                            />
+                                            <datalist id="first-variant-type-suggestions">
+                                                {VARIANT_TYPE_SUGGESTIONS.map(t => <option key={t} value={t} />)}
+                                            </datalist>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Label *</label>
+                                            <input
+                                                className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                                value={firstVariant.label}
+                                                disabled={loading || !!createdProductId}
+                                                onChange={e => setFirstVariant(prev => ({ ...prev, label: e.target.value }))}
+                                                placeholder="e.g. Light 10-47"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (PHP) *</label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                                value={firstVariant.price}
+                                                disabled={loading || !!createdProductId}
+                                                onChange={e => setFirstVariant(prev => ({ ...prev, price: e.target.value }))}
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Stock</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
+                                                value={firstVariant.stock}
+                                                disabled={loading || !!createdProductId}
+                                                onChange={e => setFirstVariant(prev => ({ ...prev, stock: e.target.value }))}
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>

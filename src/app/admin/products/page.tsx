@@ -9,6 +9,14 @@ import { Plus, Pencil, Trash2, Loader2, AlertTriangle, Save, Layers } from "luci
 import { useRouter } from "next/navigation";
 import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
+type VariantRow = {
+    product_id: string;
+    label: string | null;
+    price: number | null;
+    stock: number | null;
+    is_active: boolean | null;
+};
+
 export default function AdminProductsPage() {
     const router = useRouter();
     const supabase = createClient();
@@ -21,6 +29,7 @@ export default function AdminProductsPage() {
 
     // For handling stock edits directly
     const [editingStock, setEditingStock] = useState<{ [key: string]: number }>({});
+    const [variantMeta, setVariantMeta] = useState<Record<string, { count: number; totalStock: number; minPrice: number; labels: string[] }>>({});
 
     useEffect(() => {
         loadProducts();
@@ -54,6 +63,34 @@ export default function AdminProductsPage() {
             }));
 
             setProducts(mappedProducts);
+
+            const productIds = mappedProducts.map(p => p.id);
+            if (productIds.length > 0) {
+                const { data: variantRows } = await supabase
+                    .from("product_variants")
+                    .select("product_id,label,price,stock,is_active")
+                    .in("product_id", productIds)
+                    .neq("is_active", false);
+
+                const meta: Record<string, { count: number; totalStock: number; minPrice: number; labels: string[] }> = {};
+                (variantRows as VariantRow[] || []).forEach((v) => {
+                    if (!meta[v.product_id]) {
+                        meta[v.product_id] = {
+                            count: 0,
+                            totalStock: 0,
+                            minPrice: Number(v.price || 0),
+                            labels: [],
+                        };
+                    }
+                    meta[v.product_id].count += 1;
+                    meta[v.product_id].totalStock += Number(v.stock || 0);
+                    meta[v.product_id].minPrice = Math.min(meta[v.product_id].minPrice, Number(v.price || 0));
+                    if (v.label) meta[v.product_id].labels.push(v.label);
+                });
+                setVariantMeta(meta);
+            } else {
+                setVariantMeta({});
+            }
         } catch (error: any) {
             console.error("Error loading products:", error);
             alert("Failed to load products: " + error.message);
@@ -318,6 +355,12 @@ export default function AdminProductsPage() {
                                                 <div className="min-w-0">
                                                     <p className="font-bold text-white truncate">{product.name}</p>
                                                     <p className="text-sm text-gray-400">{product.brand}</p>
+                                                    {variantMeta[product.id]?.count > 0 && (
+                                                        <p className="text-xs text-purple-400 mt-1">
+                                                            {variantMeta[product.id].count} variation(s): {variantMeta[product.id].labels.slice(0, 2).join(", ")}
+                                                            {variantMeta[product.id].labels.length > 2 ? "..." : ""}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
@@ -327,23 +370,34 @@ export default function AdminProductsPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <p className="font-bold text-white">{formatPrice(product.price)}</p>
+                                            <p className="font-bold text-white">
+                                                {variantMeta[product.id]?.count > 0
+                                                    ? formatPrice(variantMeta[product.id].minPrice)
+                                                    : formatPrice(product.price)}
+                                            </p>
+                                            {variantMeta[product.id]?.count > 0 && (
+                                                <p className="text-xs text-purple-400 mt-1">From variations</p>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col gap-1">
                                                 <input
                                                     type="number"
                                                     className="w-24 bg-[#1c222b] border border-white/10 rounded px-2 py-1 text-white text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                                                    value={product.stock ?? 0} // Default to 0 if undefined
+                                                    value={variantMeta[product.id]?.count > 0 ? variantMeta[product.id].totalStock : (product.stock ?? 0)}
                                                     onChange={(e) => handleStockChange(product.id, parseInt(e.target.value) || 0)}
+                                                    disabled={variantMeta[product.id]?.count > 0}
                                                     min="0"
                                                 />
-                                                {(product.stock ?? 0) <= 5 && (product.stock ?? 0) > 0 && (
+                                                {variantMeta[product.id]?.count > 0 && (
+                                                    <span className="text-xs text-purple-400 font-bold">Managed by variations</span>
+                                                )}
+                                                {(variantMeta[product.id]?.count > 0 ? variantMeta[product.id].totalStock : (product.stock ?? 0)) <= 5 && (variantMeta[product.id]?.count > 0 ? variantMeta[product.id].totalStock : (product.stock ?? 0)) > 0 && (
                                                     <span className="text-xs text-orange-500 font-bold flex items-center gap-1">
                                                         <AlertTriangle className="size-3" /> Low Stock
                                                     </span>
                                                 )}
-                                                {(product.stock ?? 0) === 0 && (
+                                                {(variantMeta[product.id]?.count > 0 ? variantMeta[product.id].totalStock : (product.stock ?? 0)) === 0 && (
                                                     <span className="text-xs text-red-500 font-bold flex items-center gap-1">
                                                         <AlertTriangle className="size-3" /> Out of Stock
                                                     </span>

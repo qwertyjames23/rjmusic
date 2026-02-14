@@ -8,9 +8,34 @@ import { createClient } from "@/utils/supabase/client";
 import { Address } from "@/types";
 import Image from "next/image";
 
+type DbLikeError = {
+    message?: string;
+    details?: string;
+    hint?: string;
+    code?: string;
+};
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (error && typeof error === "object") {
+        const dbError = error as DbLikeError;
+        const parts = [dbError.message, dbError.details, dbError.hint].filter(Boolean);
+        if (parts.length > 0) return parts.join(" ");
+        if (dbError.code) return `Database error (${dbError.code}).`;
+    }
+    return "Failed to place order. Please try again.";
+}
+
+function isMissingPlaceOrderRpc(error: DbLikeError | null): boolean {
+    if (!error) return false;
+    if (error.code === "PGRST202" || error.code === "42883") return true;
+    const message = (error.message || "").toLowerCase();
+    return message.includes("place_order") && (message.includes("not found") || message.includes("does not exist"));
+}
+
 export default function CheckoutPage() {
     const router = useRouter();
-    const { items, selectedTotal, removeItems, selectedItems, clearCart } = useCart();
+    const { items, selectedTotal, removeItems, selectedItems } = useCart();
 
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -71,7 +96,7 @@ export default function CheckoutPage() {
             }
         };
         fetchAddresses();
-    }, []);
+    }, [router]);
 
     const handlePlaceOrder = async () => {
         if (!selectedAddressId) {
@@ -118,7 +143,7 @@ export default function CheckoutPage() {
                 shipping_fee: shippingFee,
                 tax: tax,
                 total: total,
-                status: "pending",
+                status: "Pending",
                 payment_method: paymentMethod,
                 payment_status: "pending",
                 notes: notes || null,
@@ -134,13 +159,43 @@ export default function CheckoutPage() {
                 subtotal: item.price * item.quantity,
             }));
 
-            // Call RPC function to place order
+            // Call RPC function to place order (preferred path)
             const { data: order, error: rpcError } = await supabase.rpc('place_order', {
                 order_data: orderData,
                 items_data: itemsData
             });
 
             if (rpcError) {
+                if (isMissingPlaceOrderRpc(rpcError)) {
+                    // Fallback path if RPC is not deployed in current DB.
+                    const { data: createdOrder, error: orderInsertError } = await supabase
+                        .from("orders")
+                        .insert(orderData)
+                        .select("id")
+                        .single();
+
+                    if (orderInsertError) throw orderInsertError;
+
+                    const orderId = createdOrder?.id as string | undefined;
+                    if (!orderId) throw new Error("Order was created but no order id was returned.");
+
+                    const itemsWithOrderId = itemsData.map(item => ({ ...item, order_id: orderId }));
+                    const { error: itemsInsertError } = await supabase
+                        .from("order_items")
+                        .insert(itemsWithOrderId);
+
+                    if (itemsInsertError) {
+                        // Best-effort rollback to avoid orphaned orders on partial failure.
+                        await supabase.from("orders").delete().eq("id", orderId);
+                        throw itemsInsertError;
+                    }
+
+                    setIsSuccess(true);
+                    removeItems(selectedItems);
+                    router.push(`/order-confirmation/${orderId}`);
+                    return;
+                }
+
                 if (rpcError.message.includes("Insufficient stock")) {
                     throw new Error("One or more items in your cart are out of stock. Please check your cart.");
                 }
@@ -150,11 +205,14 @@ export default function CheckoutPage() {
             setIsSuccess(true);
             removeItems(selectedItems);
 
-            const newOrderId = (order as any).id;
+            const newOrderId = (order as { id?: string } | null)?.id;
+            if (!newOrderId) {
+                throw new Error("Order placed but no order id was returned.");
+            }
             router.push(`/order-confirmation/${newOrderId}`);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Error placing order:", error);
-            setError(error instanceof Error ? error.message : "Failed to place order. Please try again.");
+            setError(getErrorMessage(error));
             setIsSubmitting(false);
         }
     };
@@ -305,7 +363,7 @@ export default function CheckoutPage() {
                                         name="payment"
                                         value="cod"
                                         checked={paymentMethod === "cod"}
-                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                        onChange={(e) => setPaymentMethod(e.target.value as "cod" | "card" | "gcash" | "paymaya")}
                                     />
                                     <div>
                                         <p className="font-semibold text-foreground">Cash on Delivery</p>

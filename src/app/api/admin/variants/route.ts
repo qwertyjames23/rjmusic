@@ -27,6 +27,33 @@ function isSchemaMissingError(error: { code?: string; message?: string } | null)
     return /does not exist|column .* does not exist/i.test(error.message || "");
 }
 
+async function syncProductFromVariants(
+    db: ReturnType<typeof createAdminClient> | Awaited<ReturnType<typeof createClient>>,
+    productId: string
+) {
+    const { data: variants, error } = await db
+        .from("product_variants")
+        .select("price, stock, is_active")
+        .eq("product_id", productId);
+
+    if (error || !variants) return;
+
+    const activeVariants = variants.filter(v => v.is_active !== false);
+    const hasAny = activeVariants.length > 0;
+    const totalStock = activeVariants.reduce((sum, v) => sum + Number(v.stock || 0), 0);
+    const minPrice = hasAny ? Math.min(...activeVariants.map(v => Number(v.price || 0))) : 0;
+
+    await db
+        .from("products")
+        .update({
+            has_variants: hasAny,
+            price: minPrice,
+            stock: totalStock,
+            in_stock: totalStock > 0,
+        })
+        .eq("id", productId);
+}
+
 export async function GET(req: NextRequest) {
     const auth = await requireAdmin();
     if (auth.errorResponse) return auth.errorResponse;
@@ -103,11 +130,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Update product has_variants flag
-    await db
-        .from("products")
-        .update({ has_variants: true })
-        .eq("id", product_id);
+    await syncProductFromVariants(db, product_id);
 
     return NextResponse.json({ variant: data });
 }
@@ -156,6 +179,8 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    await syncProductFromVariants(db, data.product_id);
+
     return NextResponse.json({ variant: data });
 }
 
@@ -200,8 +225,10 @@ export async function DELETE(req: NextRequest) {
         if (!remaining || remaining.length === 0) {
             await db
                 .from("products")
-                .update({ has_variants: false })
+                .update({ has_variants: false, stock: 0, in_stock: false, price: 0 })
                 .eq("id", productId);
+        } else {
+            await syncProductFromVariants(db, productId);
         }
     }
 

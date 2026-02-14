@@ -107,6 +107,7 @@ If solo ka, ikaw tanan owner by default.
   - `POST /auth/v1/signup` now returns `200` after trigger fix.
 - Remaining for completion:
   - Full authenticated customer/admin role matrix validation.
+  - Current automation blocker: auth requires confirmed emails; unconfirmed test users return `email_not_confirmed`, and repeated signup attempts can return `429 Too Many Requests`.
 
 ## Day 4: Seed + Data Integrity
 
