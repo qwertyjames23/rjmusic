@@ -120,6 +120,12 @@ Finish the app with stable checkout, secure backend, and reliable deployment so 
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `ADMIN_EMAIL`
+- Deploy workflow added at `.github/workflows/deploy.yml`:
+  - Runs only after `CI` succeeds (`workflow_run` trigger).
+  - `develop` branch deploys to `staging` environment.
+  - `main` branch deploys to `production` environment.
+  - Enforces fail-fast checks for `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+- Deployment runbook added: `DEPLOYMENT.md`.
 
 ### Environment Strategy
 

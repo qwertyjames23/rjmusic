@@ -234,15 +234,27 @@ If solo ka, ikaw tanan owner by default.
 
 ### Tasks
 
-- [ ] Configure staging/prod deployment pipeline.
+- [x] Configure staging/prod deployment pipeline.
   - Owner: RJ
   - DoD: `develop` -> staging, release/main -> production.
 - [ ] Validate env variable mapping per environment.
   - Owner: RJ
   - DoD: No cross-environment leaks/mismatches.
-- [ ] Deployment checklist dry-run.
+- [x] Deployment checklist dry-run.
   - Owner: RJ
   - DoD: Dry-run completed without blockers.
+
+### Progress Notes (February 14, 2026)
+
+- Added deploy workflow:
+  - `.github/workflows/deploy.yml`
+- Deploy safety gates implemented:
+  - Trigger only after successful `CI` (`workflow_run`).
+  - Branch mapping: `develop` -> `staging`, `main` -> `production`.
+  - Required secret checks: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+  - GitHub environments used for deploy jobs: `staging`, `production`.
+- Added deploy/rollback runbook:
+  - `DEPLOYMENT.md`
 
 ## Day 14: Launch Readiness + Operations
 
