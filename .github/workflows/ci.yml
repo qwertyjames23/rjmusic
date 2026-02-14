@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Lint (stabilized scope)
-        run: npx eslint src/app/admin/orders --ext .ts,.tsx
+        run: npx eslint src/app/admin/orders src/app/product/[id]/page.tsx src/components/features/BuyBox.tsx --ext .ts,.tsx
 
       - name: Typecheck
         run: npx tsc --noEmit --pretty false
