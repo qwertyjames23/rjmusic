@@ -114,12 +114,13 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
                 <div className="flex items-center gap-2">
                     <span className={cn("size-2.5 rounded-full animate-pulse", isInStock ? "bg-green-500" : "bg-red-500")} />
                     <span className={cn("text-xs font-bold uppercase tracking-wide", isInStock ? "text-green-500" : "text-red-500")}>
-                        {isInStock
-                            ? hasVariants && activeVariant
-                                ? `In Stock (${effectiveStock})`
-                                : "Select a variation"
-                            : (hasVariants && !activeVariant ? "Select a variation" : "Out of Stock")
-                        }
+                        {hasVariants
+                            ? (
+                                isInStock
+                                    ? (activeVariant ? `In Stock (${effectiveStock})` : "Select a variation")
+                                    : (activeVariant ? "Out of Stock" : "Select a variation")
+                            )
+                            : (isInStock ? "In Stock" : "Out of Stock")}
                     </span>
                 </div>
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Free shipping worldwide</span>
@@ -131,20 +132,6 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
                     selectedVariants={selectedVariants}
                     onSelect={handleSelectVariant}
                 />
-            )}
-
-            {!hasVariants && (
-                <div className="mb-8">
-                    <span className="text-xs font-bold text-gray-400 block mb-3 uppercase tracking-wider">Finish</span>
-                    <div className="flex gap-3">
-                        <button
-                            className="size-10 rounded-full border-2 border-primary ring-2 ring-primary/30 ring-offset-2 ring-offset-[#1c222b] transition-all relative"
-                            title="Default"
-                        >
-                            <span className="absolute inset-0.5 rounded-full bg-gradient-to-br from-[#2a2a2a] to-black" />
-                        </button>
-                    </div>
-                </div>
             )}
 
             <div className="flex flex-col gap-4">
