@@ -17,40 +17,40 @@ export default function OrderConfirmationPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const fetchOrder = async () => {
+            try {
+                const supabase = createClient();
+
+                // Fetch order
+                const { data: orderData, error: orderError } = await supabase
+                    .from("orders")
+                    .select("*")
+                    .eq("id", orderId)
+                    .single();
+
+                if (orderError) throw orderError;
+
+                // Fetch order items
+                const { data: itemsData, error: itemsError } = await supabase
+                    .from("order_items")
+                    .select("*")
+                    .eq("order_id", orderId);
+
+                if (itemsError) throw itemsError;
+
+                setOrder(orderData);
+                setOrderItems(itemsData || []);
+            } catch (error) {
+                console.error("Error fetching order:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         if (orderId) {
             fetchOrder();
         }
     }, [orderId]);
-
-    const fetchOrder = async () => {
-        try {
-            const supabase = createClient();
-
-            // Fetch order
-            const { data: orderData, error: orderError } = await supabase
-                .from("orders")
-                .select("*")
-                .eq("id", orderId)
-                .single();
-
-            if (orderError) throw orderError;
-
-            // Fetch order items
-            const { data: itemsData, error: itemsError } = await supabase
-                .from("order_items")
-                .select("*")
-                .eq("order_id", orderId);
-
-            if (itemsError) throw itemsError;
-
-            setOrder(orderData);
-            setOrderItems(itemsData || []);
-        } catch (error) {
-            console.error("Error fetching order:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('en-PH', {
@@ -104,7 +104,7 @@ export default function OrderConfirmationPage() {
                     </div>
                     <h1 className="text-3xl font-bold text-foreground mb-2">Order Placed Successfully!</h1>
                     <p className="text-muted-foreground">
-                        Thank you for your order. We'll send you a confirmation email shortly.
+                        Thank you for your order. We&apos;ll send you a confirmation email shortly.
                     </p>
                 </div>
 
