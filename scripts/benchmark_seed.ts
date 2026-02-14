@@ -17,7 +17,7 @@ class MockSupabase {
 
     from(table: string) {
         return {
-            insert: async (data: any) => {
+            insert: async (data: unknown[] | Record<string, unknown>) => {
                 this.insertCalls++;
                 console.log(`[MockDB] Inserting into ${table}:`, Array.isArray(data) ? `Batch of ${data.length}` : 'Single item');
                 return { error: null };

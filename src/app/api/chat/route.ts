@@ -4,7 +4,8 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
-        const { messages } = await req.json();
+        const body = await req.json() as { messages?: Array<{ role: string; content: string }> };
+        const messages = body.messages || [];
 
         const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
         if (!apiKey) {
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
 
         // Convert messages to Google format
         // Google expects: { role: "user" | "model", parts: [{ text: "..." }] }
-        const history = messages.slice(0, -1).map((m: any) => ({
+        const history = messages.slice(0, -1).map((m) => ({
             role: m.role === 'user' ? 'user' : 'model',
             parts: [{ text: m.content }]
         }));
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
 
         return Response.json({ text });
 
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error("Gemini API Error:", e);
 
         let errorMessage = "Unknown error";

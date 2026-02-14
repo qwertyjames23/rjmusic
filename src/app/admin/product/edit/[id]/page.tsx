@@ -70,7 +70,7 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
     const [batchStock, setBatchStock] = useState("");
 
     // Categories
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
 
     useEffect(() => {
         params.then(unwrappedParams => {
@@ -191,7 +191,7 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
         setBatchStock("");
     };
 
-    const updateVariantField = (index: number, field: keyof VariantItem, value: any) => {
+    const updateVariantField = (index: number, field: keyof VariantItem, value: string | number | boolean | null) => {
         const updated = [...variants];
         updated[index] = { ...updated[index], [field]: value };
         setVariants(updated);
@@ -261,9 +261,9 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
             // Actually, I'll add a simple inline success message state
             alert("Product updated successfully!");
             router.refresh();
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            alert("Error saving: " + e.message);
+            alert("Error saving: " + (e instanceof Error ? e.message : "Unknown error"));
         } finally {
             setSubmitting(false);
         }

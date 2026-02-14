@@ -63,9 +63,9 @@ export function ReviewModal({ isOpen, onClose, product, orderId, onReviewSubmitt
             // Reset form
             setRating(0);
             setComment("");
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error submitting review:", err);
-            setError(err.message || "Failed to submit review. Please try again.");
+            setError(err instanceof Error ? err.message : "Failed to submit review. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
