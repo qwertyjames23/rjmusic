@@ -7,7 +7,7 @@ export default async function AdminDashboardPage() {
     const supabase = await createClient();
 
     // Fetch Stats
-    const { count: orderCount, error: countError } = await supabase
+    const { count: orderCount } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true });
 

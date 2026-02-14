@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Star, User } from "lucide-react";
+import Image from "next/image";
 
 export interface Review {
     id: string;
@@ -113,7 +114,7 @@ export function ProductTabs({ description, specs = [], reviews = [] }: ProductTa
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                                                     {review.profiles?.avatar_url ? (
-                                                        <img src={review.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                        <Image src={review.profiles.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <User className="w-5 h-5 text-gray-400" />
                                                     )}

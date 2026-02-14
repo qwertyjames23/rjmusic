@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, CreditCard, Wallet, Music2 } from "lucide-react";
+import { Facebook, Instagram, Twitter, CreditCard, Wallet } from "lucide-react";
 
 export function Footer() {
     return (
