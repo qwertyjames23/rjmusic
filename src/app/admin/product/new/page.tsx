@@ -48,6 +48,7 @@ export default function AdminProductForm() {
     const [savingVariant, setSavingVariant] = useState<string | null>(null);
     const [newVariant, setNewVariant] = useState({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
     const [firstVariant, setFirstVariant] = useState({ label: "", price: "", stock: "0", variant_type: "" });
+    const lockedVariantType = variants.find((v) => (v.variant_type || "").trim())?.variant_type?.trim() || "";
 
     useEffect(() => {
         fetchCategories();
@@ -153,16 +154,16 @@ export default function AdminProductForm() {
             const res = await fetch("/api/admin/variants", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    product_id: createdProductId,
-                    label: newVariant.label,
-                    price: Number(newVariant.price),
-                    stock: Number(newVariant.stock || 0),
-                    image_url: newVariant.image_url || null,
-                    sort_order: variants.length,
-                    ...(newVariant.variant_type ? { variant_type: newVariant.variant_type } : {}),
-                }),
-            });
+                    body: JSON.stringify({
+                        product_id: createdProductId,
+                        label: newVariant.label,
+                        price: Number(newVariant.price),
+                        stock: Number(newVariant.stock || 0),
+                        image_url: newVariant.image_url || null,
+                        sort_order: variants.length,
+                        variant_type: lockedVariantType || newVariant.variant_type || "Variation",
+                    }),
+                });
             const data = await res.json();
             if (data.error) throw new Error(data.error);
             setVariants(prev => [...prev, data.variant]);
@@ -586,8 +587,9 @@ export default function AdminProductForm() {
                                                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
                                                     <input
                                                         className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
-                                                        value={variant.variant_type || ''}
+                                                        value={lockedVariantType || variant.variant_type || ""}
                                                         onChange={e => handleVariantFieldChange(variant.id, 'variant_type', e.target.value)}
+                                                        disabled={!!lockedVariantType}
                                                         placeholder="e.g. Model"
                                                         list="variant-type-suggestions-new-page"
                                                     />
@@ -675,8 +677,9 @@ export default function AdminProductForm() {
                                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
                                             <input
                                                 className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
-                                                value={newVariant.variant_type}
+                                                value={lockedVariantType || newVariant.variant_type}
                                                 onChange={e => setNewVariant(prev => ({ ...prev, variant_type: e.target.value }))}
+                                                disabled={!!lockedVariantType}
                                                 placeholder="e.g. Model, Size"
                                                 list="variant-type-suggestions-new-form"
                                             />

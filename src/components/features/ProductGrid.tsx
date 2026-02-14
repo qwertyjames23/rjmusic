@@ -30,6 +30,8 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
 
     // Price Range State
     const maxProductPrice = initialProducts.length > 0 ? Math.max(...initialProducts.map(p => p.price)) : 10000;
+    const safeMaxPrice = Math.max(maxProductPrice, 1);
+    const minGap = Math.max(Math.round(safeMaxPrice * 0.02), 1);
     const [priceRange, setPriceRange] = useState<[number, number]>([0, maxProductPrice]);
 
     // Update filter logic to include price range
@@ -73,12 +75,12 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
     }, [initialProducts, selectedCategory, sortBy, searchTerm, priceRange]);
 
     const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = Math.min(Number(e.target.value), priceRange[1] - 500); // Prevent overlapping
+        const val = Math.min(Number(e.target.value), Math.max(0, priceRange[1] - minGap)); // Prevent overlapping
         setPriceRange([val, priceRange[1]]);
     };
 
     const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = Math.max(Number(e.target.value), priceRange[0] + 500); // Prevent overlapping
+        const val = Math.max(Number(e.target.value), Math.min(safeMaxPrice, priceRange[0] + minGap)); // Prevent overlapping
         setPriceRange([priceRange[0], val]);
     };
 
@@ -160,29 +162,29 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
 
 
                             {/* Re-implementing with standard robust CSS dual slider technique */}
-                            <div className="relative h-2 w-full">
+                            <div className="relative h-2 w-full overflow-hidden">
                                 <input
                                     type="range"
                                     min={0}
-                                    max={maxProductPrice}
+                                    max={safeMaxPrice}
                                     value={priceRange[0]}
                                     onChange={handleMinChange}
-                                    className="absolute w-full h-2 bg-transparent appearance-none pointer-events-none z-[11] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
+                                    className="absolute inset-0 w-full h-2 bg-transparent appearance-none pointer-events-none z-[11] [&::-webkit-slider-runnable-track]:bg-transparent [&::-moz-range-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
                                 />
                                 <input
                                     type="range"
                                     min={0}
-                                    max={maxProductPrice}
+                                    max={safeMaxPrice}
                                     value={priceRange[1]}
                                     onChange={handleMaxChange}
-                                    className="absolute w-full h-2 bg-transparent appearance-none pointer-events-none z-[12] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
+                                    className="absolute inset-0 w-full h-2 bg-transparent appearance-none pointer-events-none z-[12] [&::-webkit-slider-runnable-track]:bg-transparent [&::-moz-range-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
                                 />
                                 <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full bg-secondary h-2 z-[10]"></div>
                                 <div
                                     className="absolute top-0 h-2 bg-primary rounded-full z-[10]"
                                     style={{
-                                        left: `${(priceRange[0] / maxProductPrice) * 100}%`,
-                                        right: `${100 - (priceRange[1] / maxProductPrice) * 100}%`
+                                        left: `${(priceRange[0] / safeMaxPrice) * 100}%`,
+                                        right: `${100 - (priceRange[1] / safeMaxPrice) * 100}%`
                                     }}
                                 ></div>
                             </div>
