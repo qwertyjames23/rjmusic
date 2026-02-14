@@ -60,23 +60,27 @@ If solo ka, ikaw tanan owner by default.
 
 ### Tasks
 
-- [ ] Review and finalize DB tables.
+- [x] Review and finalize DB tables.
   - Owner: RJ
   - DoD: Final ERD/tables approved.
-- [ ] Add missing constraints (FK, unique, not null).
+- [x] Add missing constraints (FK, unique, not null).
   - Owner: RJ
   - DoD: Migration files created and applied in staging.
-- [ ] Add critical indexes (orders, products, reviews, payments).
+- [x] Add critical indexes (orders, products, reviews, payments).
   - Owner: RJ
   - DoD: Query paths validated.
 
-### Progress Notes (February 13, 2026)
+### Progress Notes (February 14, 2026)
 
-- Draft migrations created in `supabase/migrations/`:
-  - `2026-02-13_core_hardening.sql`
-  - `2026-02-13_rls_hardening.sql`
-  - `2026-02-13_indexes.sql`
-- Apply + validation in staging is still pending before Day 2 can be checked complete.
+- Migrations executed on remote Supabase:
+  - `20260214030100_core_hardening.sql`
+  - `20260214030200_rls_hardening.sql`
+  - `20260214030300_indexes.sql`
+- Validation pack added:
+  - `supabase/validation/20260214_post_apply_validation.sql`
+  - `supabase/STAGING_APPLY_CHECKLIST.md`
+- Remote migration history confirms all 3 versions are applied.
+- Constraint note: some constraints were added `NOT VALID` to avoid failing on legacy rows; existing data cleanup/validation is tracked for follow-up.
 
 ## Day 3: RLS + Access Control
 
