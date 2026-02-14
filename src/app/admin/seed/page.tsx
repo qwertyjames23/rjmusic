@@ -16,7 +16,7 @@ export default function SeedPage() {
 
         try {
             // 1. Check connection
-            const { data: test, error: testError } = await supabase.from('products').select('count').limit(1);
+            const { error: testError } = await supabase.from('products').select('count').limit(1);
             if (testError) {
                 // If error is 404/relation does not exist, table is missing
                 throw new Error(`Connection failed: ${testError.message}. Did you run the SQL setup?`);

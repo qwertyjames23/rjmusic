@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
 import {
-    ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Sparkles,
-    Loader2, Layers, Plus, Trash2, Save, Eye, EyeOff, CheckCircle2,
-    LayoutGrid, Settings, Box, Truck
+    ArrowLeft, Tag, FileText, Image as ImageIcon,
+    Loader2, Plus, Trash2, LayoutGrid
 } from "lucide-react";
 import Link from "next/link";
 
@@ -72,25 +71,12 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
     // Categories
     const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
 
-    useEffect(() => {
-        params.then(unwrappedParams => {
-            setId(unwrappedParams.id);
-        });
-        fetchCategories();
-    }, [params]);
-
-    useEffect(() => {
-        if (!id) return;
-        fetchProductData();
-        fetchVariants();
-    }, [id]);
-
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         const { data } = await supabase.from('categories').select('*').order('name');
         if (data) setCategories(data);
-    };
+    }, [supabase]);
 
-    const fetchProductData = async () => {
+    const fetchProductData = useCallback(async () => {
         const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
         if (error) {
             console.error(error);
@@ -109,10 +95,10 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
             setHasVariants(data.has_variants || false);
         }
         setLoading(false);
-    };
+    }, [id, router, supabase]);
 
-    const fetchVariants = async () => {
-        const { data, error } = await supabase.from('product_variants').select('*').eq('product_id', id).order('sort_order');
+    const fetchVariants = useCallback(async () => {
+        const { data } = await supabase.from('product_variants').select('*').eq('product_id', id).order('sort_order');
         if (data) {
             setVariants(data);
 
@@ -121,7 +107,20 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
                 setHasVariants(true);
             }
         }
-    };
+    }, [id, supabase]);
+
+    useEffect(() => {
+        params.then(unwrappedParams => {
+            setId(unwrappedParams.id);
+        });
+        fetchCategories();
+    }, [fetchCategories, params]);
+
+    useEffect(() => {
+        if (!id) return;
+        fetchProductData();
+        fetchVariants();
+    }, [fetchProductData, fetchVariants, id]);
 
     // --- Matrix Logic ---
     const addOption = (tier: 1 | 2) => {

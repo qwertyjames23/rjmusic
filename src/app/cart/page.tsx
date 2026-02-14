@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
@@ -157,9 +158,11 @@ export default function CartPage() {
                                         />
                                     </div>
                                     <div className="size-20 md:size-24 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border">
-                                        <img
+                                        <Image
                                             src={item.images[0]}
                                             alt={item.name}
+                                            width={96}
+                                            height={96}
                                             className="w-full h-full object-cover"
                                         />
                                     </div>

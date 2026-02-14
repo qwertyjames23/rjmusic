@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, Package, Truck, MapPin, Calendar, CreditCard, ArrowRight, ShoppingBag, Mail, Check } from "lucide-react";
+import { CheckCircle2, Package, Truck, Calendar, CreditCard, ArrowRight, ShoppingBag, Mail, Check } from "lucide-react";
 import { useEffect } from "react";
 import confetti from "canvas-confetti";
-import { cn } from "@/lib/utils";
 
 export default function CheckoutSuccessPage() {
 

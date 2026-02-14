@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, Search, Pencil, Trash2, X, Loader2, Save, Image as ImageIcon } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X, Loader2, Image as ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface Category {
     id: string;
@@ -66,8 +67,6 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
                 image_url: formData.image_url
             };
 
-            let resultData = null;
-
             if (editingCategory) {
                 // Update
                 const { data, error } = await supabase
@@ -78,7 +77,6 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
                     .single();
 
                 if (error) throw error;
-                resultData = data;
                 setCategories(prev => prev.map(c => c.id === editingCategory.id ? data : c));
             } else {
                 // Check if slug exists to avoid error? Or just let DB fail.
@@ -90,7 +88,6 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
                     .single();
 
                 if (error) throw error;
-                resultData = data;
                 setCategories(prev => [data, ...prev]);
             }
             setIsModalOpen(false);
@@ -151,7 +148,7 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
                             <div className="flex items-center gap-3 overflow-hidden">
                                 <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-[#111827] border border-gray-700 flex items-center justify-center overflow-hidden">
                                     {category.image_url ? (
-                                        <img src={category.image_url} alt={category.name} className="w-full h-full object-cover" />
+                                        <Image src={category.image_url} alt={category.name} width={48} height={48} className="w-full h-full object-cover" />
                                     ) : (
                                         <ImageIcon className="w-5 h-5 text-gray-600" />
                                     )}
@@ -244,7 +241,7 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
                                 />
                                 {formData.image_url && (
                                     <div className="mt-2 h-20 w-full rounded-lg overflow-hidden bg-black/20 border border-gray-700">
-                                        <img src={formData.image_url} alt="Preview" className="h-full w-full object-contain" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                        <Image src={formData.image_url} alt="Preview" width={320} height={80} className="h-full w-full object-contain" />
                                     </div>
                                 )}
                             </div>

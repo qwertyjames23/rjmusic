@@ -65,7 +65,7 @@ async function benchmark() {
         const startBase = performance.now();
         await simulateDelay(MOCK_COUNT); // Simulate fetching 5000 rows
         const allData = [...mockData];
-        const trendingBase = allData.slice(0, 4);
+        allData.slice(0, 4);
         const endBase = performance.now();
         console.log(`   Time: ${(endBase - startBase).toFixed(2)}ms (Simulated download of ${MOCK_COUNT} rows)`);
 
@@ -73,7 +73,7 @@ async function benchmark() {
         console.log("\n[SIMULATION] MEASURING OPTIMIZED (Order + Limit)...");
         const startOpt = performance.now();
         await simulateDelay(4); // Simulate fetching 4 rows
-        const optData = mockData.slice(0, 4);
+        mockData.slice(0, 4);
         const endOpt = performance.now();
         console.log(`   Time: ${(endOpt - startOpt).toFixed(2)}ms (Simulated download of 4 rows)`);
 

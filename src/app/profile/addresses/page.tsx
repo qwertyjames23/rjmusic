@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, MapPin, Phone, Edit, Trash2, Check } from "lucide-react";
+import { Plus, MapPin, Phone, Trash2, Check } from "lucide-react";
 import { AddAddressModal } from "@/components/profile/AddAddressModal";
 import { createClient } from "@/utils/supabase/client";
 import { Address } from "@/types";
