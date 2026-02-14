@@ -1,7 +1,8 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import { ProductDetailClient } from "./ProductDetailClient";
+import { ProductPriceDisplay } from "./ProductPriceDisplay";
 import { ProductTabs } from "@/components/features/ProductTabs";
 import { ProductCard } from "@/components/features/ProductCard";
 import { supabase } from "@/lib/supabase";
@@ -180,8 +181,6 @@ export default async function ProductDetailPage({
 
     const realReviewCount = reviews.length > 0 ? reviews.length : 0;
 
-    const fmt = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' });
-
     return (
         <div className="container mx-auto px-4 py-8 md:py-12">
 
@@ -231,37 +230,7 @@ export default async function ProductDetailPage({
                             {product.name}
                         </h1>
 
-                        {/* Show base price only if no variants */}
-                        {!product.has_variants && (
-                            <div className="flex items-baseline gap-4">
-                                <span className="text-3xl font-bold text-primary">
-                                    {fmt.format(product.price)}
-                                </span>
-                                {product.originalPrice && (
-                                    <span className="text-lg text-muted-foreground line-through decoration-red-500/50">
-                                        {fmt.format(product.originalPrice)}
-                                    </span>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Show price range for variant products */}
-                        {product.has_variants && product.variants && product.variants.length > 0 && (
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-sm text-gray-400">From</span>
-                                <span className="text-3xl font-bold text-primary">
-                                    {fmt.format(Math.min(...product.variants.map(v => v.price)))}
-                                </span>
-                                {product.variants.length > 1 && (
-                                    <>
-                                        <span className="text-gray-400">—</span>
-                                        <span className="text-3xl font-bold text-primary">
-                                            {fmt.format(Math.max(...product.variants.map(v => v.price)))}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                        )}
+                        <ProductPriceDisplay product={product} />
                     </div>
 
                     {/* Short Description */}
@@ -318,3 +287,4 @@ function BuyBoxWrapper({ product }: { product: Product }) {
 
 // Dynamic import of client-side BuyBox
 import { BuyBox as BuyBoxClient } from "@/components/features/BuyBox";
+

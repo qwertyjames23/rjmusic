@@ -54,6 +54,28 @@ async function syncProductFromVariants(
         .eq("id", productId);
 }
 
+function normalizeVariantType(value: unknown) {
+    if (typeof value !== "string") return "";
+    return value.trim();
+}
+
+async function resolveProductVariantType(
+    db: ReturnType<typeof createAdminClient> | Awaited<ReturnType<typeof createClient>>,
+    productId: string,
+    requestedType?: unknown
+) {
+    const requested = normalizeVariantType(requestedType);
+    const { data } = await db
+        .from("product_variants")
+        .select("variant_type")
+        .eq("product_id", productId)
+        .order("created_at", { ascending: true })
+        .limit(1);
+
+    const existing = normalizeVariantType(data?.[0]?.variant_type);
+    return existing || requested || "Variation";
+}
+
 export async function GET(req: NextRequest) {
     const auth = await requireAdmin();
     if (auth.errorResponse) return auth.errorResponse;
@@ -98,6 +120,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { db, usingFallback } = getDbClientOrFallback(auth.supabase);
+    const enforcedType = await resolveProductVariantType(db, product_id, variant_type);
 
     // Insert variant — build object dynamically to handle optional columns
     const insertData: Record<string, unknown> = {
@@ -108,8 +131,7 @@ export async function POST(req: NextRequest) {
         image_url: image_url || null,
         sort_order: sort_order || 0,
     };
-    // Only include variant_type if provided (avoids error if column doesn't exist yet)
-    if (variant_type) insertData.variant_type = variant_type;
+    insertData.variant_type = enforcedType;
 
     const { data, error } = await db
         .from("product_variants")
@@ -148,6 +170,18 @@ export async function PUT(req: NextRequest) {
 
     const { db, usingFallback } = getDbClientOrFallback(auth.supabase);
 
+    const { data: currentVariant, error: currentVariantError } = await db
+        .from("product_variants")
+        .select("product_id")
+        .eq("id", id)
+        .single();
+
+    if (currentVariantError || !currentVariant?.product_id) {
+        return NextResponse.json({ error: "Variant not found" }, { status: 404 });
+    }
+
+    const enforcedType = await resolveProductVariantType(db, currentVariant.product_id, variant_type);
+
     const updateData: Record<string, unknown> = {};
     if (label !== undefined) updateData.label = label;
     if (price !== undefined) updateData.price = Number(price);
@@ -155,8 +189,7 @@ export async function PUT(req: NextRequest) {
     if (image_url !== undefined) updateData.image_url = image_url || null;
     if (sort_order !== undefined) updateData.sort_order = sort_order;
     if (is_active !== undefined) updateData.is_active = is_active;
-    // Only include variant_type if explicitly provided with a value (avoids error if column doesn't exist yet)
-    if (variant_type) updateData.variant_type = variant_type;
+    updateData.variant_type = enforcedType;
     updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await db

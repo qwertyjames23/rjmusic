@@ -47,6 +47,7 @@ export default function EditProductPage() {
     const [showAddVariant, setShowAddVariant] = useState(false);
     const [savingVariant, setSavingVariant] = useState<string | null>(null);
     const [newVariant, setNewVariant] = useState({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
+    const lockedVariantType = variants.find((v) => (v.variant_type || "").trim())?.variant_type?.trim() || "";
 
     useEffect(() => {
         Promise.all([loadProduct(), fetchCategories()]);
@@ -146,7 +147,7 @@ export default function EditProductPage() {
                     stock: Number(newVariant.stock || 0),
                     image_url: newVariant.image_url || null,
                     sort_order: variants.length,
-                    ...(newVariant.variant_type ? { variant_type: newVariant.variant_type } : {}),
+                    variant_type: lockedVariantType || newVariant.variant_type || "Variation",
                 }),
             });
             const data = await res.json();
@@ -491,8 +492,9 @@ export default function EditProductPage() {
                                                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
                                                 <input
                                                     className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
-                                                    value={variant.variant_type || ''}
+                                                    value={lockedVariantType || variant.variant_type || ""}
                                                     onChange={e => handleVariantFieldChange(variant.id, 'variant_type', e.target.value)}
+                                                    disabled={!!lockedVariantType}
                                                     placeholder="e.g. Model"
                                                     list="variant-type-suggestions"
                                                 />
@@ -581,8 +583,9 @@ export default function EditProductPage() {
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
                                         <input
                                             className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
-                                            value={newVariant.variant_type}
+                                            value={lockedVariantType || newVariant.variant_type}
                                             onChange={e => setNewVariant(prev => ({ ...prev, variant_type: e.target.value }))}
+                                            disabled={!!lockedVariantType}
                                             placeholder="e.g. Model, Size"
                                             list="variant-type-suggestions-new"
                                         />

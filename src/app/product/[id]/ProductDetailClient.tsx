@@ -1,33 +1,67 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Product, ProductVariant } from "@/types";
 import { ProductGallery } from "@/components/features/ProductGallery";
+import { getProductFallbackImage } from "@/hooks/useSelectedVariantDisplay";
 
 interface ProductDetailClientProps {
     product: Product;
 }
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
-    const [variantImage, setVariantImage] = useState<string | null>(null);
+    const fallbackImage = getProductFallbackImage(product.images);
 
-    // When a variant is selected that has a custom image, show it
-    const handleVariantChange = useCallback((variant: ProductVariant | null) => {
-        if (variant?.image_url) {
-            setVariantImage(variant.image_url);
-        } else {
-            setVariantImage(null);
+    const baseImages = useMemo(() => {
+        if (product.images.length > 0) return product.images;
+        return [fallbackImage];
+    }, [product.images, fallbackImage]);
+
+    const variantImages = useMemo(() => {
+        const seen = new Set(baseImages);
+        const collected: string[] = [];
+
+        for (const variant of product.variants || []) {
+            const image = variant.image_url || null;
+            if (!image || seen.has(image)) continue;
+            seen.add(image);
+            collected.push(image);
         }
-    }, []);
 
-    // Build images array — if variant has image, prepend it
-    const displayImages = variantImage
-        ? [variantImage, ...product.images.filter(img => img !== variantImage)]
-        : product.images;
+        return collected;
+    }, [baseImages, product.variants]);
+
+    const galleryImages = useMemo(() => [...baseImages, ...variantImages], [baseImages, variantImages]);
+    const [mainImage, setMainImage] = useState(baseImages[0]);
+
+    useEffect(() => {
+        for (const image of galleryImages) {
+            const img = new window.Image();
+            img.src = image;
+        }
+    }, [galleryImages]);
+
+    useEffect(() => {
+        const handleVariantChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ productId?: string; variant?: ProductVariant | null }>;
+            const selectedProductId = customEvent.detail?.productId;
+            if (selectedProductId && selectedProductId !== product.id) return;
+
+            const variant = customEvent.detail?.variant ?? null;
+            setMainImage(variant?.image_url || baseImages[0]);
+        };
+
+        window.addEventListener("rjmusic:variant-change", handleVariantChange as EventListener);
+        return () => {
+            window.removeEventListener("rjmusic:variant-change", handleVariantChange as EventListener);
+        };
+    }, [product.id, baseImages]);
 
     return (
         <ProductGallery
-            images={displayImages}
+            images={galleryImages}
+            mainImage={mainImage}
+            onMainImageChange={setMainImage}
             productName={product.name}
             productTag={product.tags?.[0]}
         />
