@@ -113,7 +113,7 @@ Finish the app with stable checkout, secure backend, and reliable deployment so 
 
 - Baseline CI workflow added at `.github/workflows/ci.yml`.
 - CI now runs on push/PR to `main` with:
-  - `npx eslint src/app/admin/orders src/app/admin/reviews src/app/admin/products/page.tsx src/app/admin/inventory src/app/admin/product/new/page.tsx src/app/admin/product/[id]/edit/page.tsx src/app/admin/product/[id]/variants/page.tsx src/app/product/[id]/page.tsx src/components/features/BuyBox.tsx src/app/order-confirmation/[id]/page.tsx src/app/_brands/page.tsx src/lib/data.ts src/components/ui/image-upload.tsx src/utils/supabase/middleware.ts --ext .ts,.tsx` (temporary stabilized scope, expanded)
+  - `npm run lint` (temporary stabilized scope, expanded)
   - `npx tsc --noEmit --pretty false`
   - `npm run build`
 - Placeholder CI env values added for build-time safety:
@@ -152,5 +152,6 @@ Finish the app with stable checkout, secure backend, and reliable deployment so 
 1. Create GitHub project board with these phases as columns.
 2. Convert each deliverable into tickets with owner and due date.
 3. Start with Phase 1 and 2 before adding any new feature work.
+
 
 

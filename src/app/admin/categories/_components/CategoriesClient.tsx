@@ -95,9 +95,9 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
             }
             setIsModalOpen(false);
             router.refresh();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            alert(`Error saving category: ${error.message}`);
+            alert(`Error saving category: ${error instanceof Error ? error.message : "Unknown error"}`);
         } finally {
             setIsSaving(false);
         }
@@ -112,9 +112,9 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
             if (error) throw error;
             setCategories(prev => prev.filter(c => c.id !== id));
             router.refresh();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            alert(`Error deleting category: ${error.message}`);
+            alert(`Error deleting category: ${error instanceof Error ? error.message : "Unknown error"}`);
         } finally {
             setIsDeleting(null);
         }

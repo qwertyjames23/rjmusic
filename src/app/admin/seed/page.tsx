@@ -51,8 +51,8 @@ export default function SeedPage() {
             addLog("Done!");
             setStatus("Complete");
 
-        } catch (err: any) {
-            addLog(`Error: ${err.message}`);
+        } catch (err: unknown) {
+            addLog(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
             setStatus("Error");
         }
     };
