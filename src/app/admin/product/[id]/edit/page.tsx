@@ -54,6 +54,13 @@ export default function EditProductPage() {
         loadVariants();
     }, [productId]);
 
+    useEffect(() => {
+        // For variable products with no variants yet, open the add form immediately.
+        if (hasVariants && variants.length === 0) {
+            setShowAddVariant(true);
+        }
+    }, [hasVariants, variants.length]);
+
     const fetchCategories = async () => {
         try {
             const { data, error } = await supabase

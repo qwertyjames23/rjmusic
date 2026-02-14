@@ -24,19 +24,18 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ error: "productIds is required" }, { status: 400 });
         }
 
-        // Use admin client (service role) to bypass RLS for cascading deletes
-        let adminSupabase;
-        try {
-            adminSupabase = createAdminClient();
-        } catch {
-            return NextResponse.json(
-                { error: "SUPABASE_SERVICE_ROLE_KEY is required for admin delete operations" },
-                { status: 503 }
-            );
-        }
+        // Prefer service-role client; fallback to authenticated admin session client.
+        // This allows delete to work in dev even when SERVICE_ROLE is not configured.
+        const db = (() => {
+            try {
+                return createAdminClient();
+            } catch {
+                return supabase;
+            }
+        })();
 
         // Delete related reviews first (bypasses RLS)
-        const { error: reviewsError } = await adminSupabase
+        const { error: reviewsError } = await db
             .from("reviews")
             .delete()
             .in("product_id", productIds);
@@ -46,7 +45,7 @@ export async function DELETE(request: NextRequest) {
         }
 
         // Delete related cart items (bypasses RLS)
-        const { error: cartError } = await adminSupabase
+        const { error: cartError } = await db
             .from("cart_items")
             .delete()
             .in("product_id", productIds);
@@ -56,13 +55,19 @@ export async function DELETE(request: NextRequest) {
         }
 
         // Now delete the product(s) (bypasses RLS)
-        const { error: productError } = await adminSupabase
+        const { error: productError } = await db
             .from("products")
             .delete()
             .in("id", productIds);
 
         if (productError) {
             console.error("Error deleting product(s):", productError);
+            if (productError.code === "42501") {
+                return NextResponse.json(
+                    { error: "Delete blocked by RLS. Add SUPABASE_SERVICE_ROLE_KEY or grant admin role in profiles." },
+                    { status: 403 }
+                );
+            }
             return NextResponse.json(
                 { error: productError.message },
                 { status: 500 }

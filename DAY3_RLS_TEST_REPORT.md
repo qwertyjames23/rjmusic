@@ -44,6 +44,9 @@ Environment: Remote Supabase project (`ytgwjbmmnkhcvrmaxrvs`)
 1. Signup pipeline now works after trigger/function hardening.
 2. Remote `orders` table shape differs from local assumptions in older scripts.
 3. Full role matrix still requires authenticated customer/admin sessions or test credentials.
+4. Terminal automation is currently blocked by auth controls:
+   - New signups hit `429 Too Many Requests` intermittently.
+   - Existing test users cannot obtain access tokens until email is confirmed (`email_not_confirmed`).
 
 ## Next Fix Plan
 
