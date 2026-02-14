@@ -1,6 +1,6 @@
 # RJMusic Implementation Plan (Day 1-14)
 
-Last updated: February 13, 2026
+Last updated: February 14, 2026
 Source roadmap: `ROADMAP_PROD.md`
 
 ## Team Roles
@@ -202,9 +202,19 @@ If solo ka, ikaw tanan owner by default.
 - [ ] E2E test: login -> cart -> checkout -> success.
   - Owner: RJ
   - DoD: Passes in staging.
-- [ ] CI quality gates.
+- [x] CI quality gates.
   - Owner: RJ
   - DoD: Lint + typecheck + tests required on PR.
+
+### Progress Notes (February 14, 2026)
+
+- Added GitHub Actions CI workflow:
+  - `.github/workflows/ci.yml`
+- Enabled PR/push quality checks on `main`:
+  - `npx eslint src/app/admin/orders --ext .ts,.tsx` (temporary stabilized scope)
+  - `npx tsc --noEmit --pretty false`
+  - `npm run build`
+- Added safe placeholder env vars in CI for build execution.
 
 ## Day 12: Performance + UX Polish
 

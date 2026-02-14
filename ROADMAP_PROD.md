@@ -1,6 +1,6 @@
 # RJMusic Production Roadmap
 
-Last updated: February 13, 2026
+Last updated: February 14, 2026
 
 ## Goal
 
@@ -108,6 +108,18 @@ Finish the app with stable checkout, secure backend, and reliable deployment so 
 - Staging deploy on `develop`.
 - Production deploy on release tag/main.
 - Deployment checklist documented.
+
+### Progress Notes (February 14, 2026)
+
+- Baseline CI workflow added at `.github/workflows/ci.yml`.
+- CI now runs on push/PR to `main` with:
+  - `npx eslint src/app/admin/orders --ext .ts,.tsx` (temporary stabilized scope)
+  - `npx tsc --noEmit --pretty false`
+  - `npm run build`
+- Placeholder CI env values added for build-time safety:
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `ADMIN_EMAIL`
 
 ### Environment Strategy
 
