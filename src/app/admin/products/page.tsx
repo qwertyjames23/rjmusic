@@ -1,11 +1,11 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client"; // Use authenticated client
 import { Product } from "@/types";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Pencil, Trash2, Loader2, AlertTriangle, Save, Layers, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, AlertTriangle, Layers, ChevronDown, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
@@ -25,6 +25,27 @@ type VariantMetaEntry = {
     labels: string[];
     groups: Record<string, VariantDetail[]>;
 };
+type ProductRow = {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    original_price?: number | null;
+    category: Product["category"];
+    brand: string;
+    images?: string[] | null;
+    in_stock: boolean;
+    stock?: number | null;
+    rating: number;
+    reviews: number;
+    tags?: Product["tags"];
+    features?: string[] | null;
+};
+
+function getErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof Error) return error.message;
+    return fallback;
+}
 
 export default function AdminProductsPage() {
     const router = useRouter();
@@ -37,15 +58,9 @@ export default function AdminProductsPage() {
     const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
     const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
 
-    // For handling stock edits directly
-    const [editingStock, setEditingStock] = useState<{ [key: string]: number }>({});
     const [variantMeta, setVariantMeta] = useState<Record<string, VariantMetaEntry>>({});
 
-    useEffect(() => {
-        loadProducts();
-    }, []);
-
-    const loadProducts = async () => {
+    const loadProducts = useCallback(async () => {
         setLoading(true);
         try {
             const { data, error } = await supabase
@@ -55,7 +70,7 @@ export default function AdminProductsPage() {
 
             if (error) throw error;
 
-            const mappedProducts: Product[] = data.map((item: any) => ({
+            const mappedProducts: Product[] = (data as ProductRow[]).map((item) => ({
                 id: item.id,
                 name: item.name,
                 description: item.description,
@@ -68,7 +83,7 @@ export default function AdminProductsPage() {
                 stock: item.stock || 0, // Ensure stock is mapped
                 rating: item.rating,
                 reviews: item.reviews,
-                tags: (item.tags as any) || [],
+                tags: item.tags || [],
                 features: item.features || []
             }));
 
@@ -111,13 +126,17 @@ export default function AdminProductsPage() {
             } else {
                 setVariantMeta({});
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error loading products:", error);
-            alert("Failed to load products: " + error.message);
+            alert("Failed to load products: " + getErrorMessage(error, "Unknown error"));
         } finally {
             setLoading(false);
         }
-    };
+    }, [supabase]);
+
+    useEffect(() => {
+        loadProducts();
+    }, [loadProducts]);
 
     const handleStockChange = async (id: string, newStock: number) => {
         if (newStock < 0) return;
@@ -171,11 +190,11 @@ export default function AdminProductsPage() {
             // Close modal and refresh list
             setDeleteModal({ isOpen: false, product: null });
             await loadProducts();
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error deleting product:", error);
             const errorDiv = document.createElement('div');
             errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
-            errorDiv.innerHTML = '✗ Failed to delete product: ' + error.message;
+            errorDiv.innerHTML = '✗ Failed to delete product: ' + getErrorMessage(error, 'Unknown error');
             document.body.appendChild(errorDiv);
             setTimeout(() => errorDiv.remove(), 3000);
         } finally {
