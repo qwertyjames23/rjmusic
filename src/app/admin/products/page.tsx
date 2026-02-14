@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client"; // Use authenticated client
 import { Product } from "@/types";
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Pencil, Trash2, Loader2, AlertTriangle, Save, Layers } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, AlertTriangle, Save, Layers, ChevronDown, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteConfirmModal } from "@/components/ui/delete-confirm-modal";
 
@@ -15,6 +15,15 @@ type VariantRow = {
     price: number | null;
     stock: number | null;
     is_active: boolean | null;
+    variant_type: string | null;
+};
+type VariantDetail = { label: string; price: number; stock: number };
+type VariantMetaEntry = {
+    count: number;
+    totalStock: number;
+    minPrice: number;
+    labels: string[];
+    groups: Record<string, VariantDetail[]>;
 };
 
 export default function AdminProductsPage() {
@@ -26,10 +35,11 @@ export default function AdminProductsPage() {
     const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; product: Product | null }>({ isOpen: false, product: null });
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
     const [bulkDeleteModal, setBulkDeleteModal] = useState(false);
+    const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
 
     // For handling stock edits directly
     const [editingStock, setEditingStock] = useState<{ [key: string]: number }>({});
-    const [variantMeta, setVariantMeta] = useState<Record<string, { count: number; totalStock: number; minPrice: number; labels: string[] }>>({});
+    const [variantMeta, setVariantMeta] = useState<Record<string, VariantMetaEntry>>({});
 
     useEffect(() => {
         loadProducts();
@@ -68,11 +78,11 @@ export default function AdminProductsPage() {
             if (productIds.length > 0) {
                 const { data: variantRows } = await supabase
                     .from("product_variants")
-                    .select("product_id,label,price,stock,is_active")
+                    .select("product_id,label,price,stock,is_active,variant_type")
                     .in("product_id", productIds)
                     .neq("is_active", false);
 
-                const meta: Record<string, { count: number; totalStock: number; minPrice: number; labels: string[] }> = {};
+                const meta: Record<string, VariantMetaEntry> = {};
                 (variantRows as VariantRow[] || []).forEach((v) => {
                     if (!meta[v.product_id]) {
                         meta[v.product_id] = {
@@ -80,12 +90,22 @@ export default function AdminProductsPage() {
                             totalStock: 0,
                             minPrice: Number(v.price || 0),
                             labels: [],
+                            groups: {},
                         };
                     }
                     meta[v.product_id].count += 1;
                     meta[v.product_id].totalStock += Number(v.stock || 0);
                     meta[v.product_id].minPrice = Math.min(meta[v.product_id].minPrice, Number(v.price || 0));
                     if (v.label) meta[v.product_id].labels.push(v.label);
+                    const groupName = v.variant_type || "Variation";
+                    if (!meta[v.product_id].groups[groupName]) {
+                        meta[v.product_id].groups[groupName] = [];
+                    }
+                    meta[v.product_id].groups[groupName].push({
+                        label: v.label || "Unnamed",
+                        price: Number(v.price || 0),
+                        stock: Number(v.stock || 0),
+                    });
                 });
                 setVariantMeta(meta);
             } else {
@@ -179,6 +199,18 @@ export default function AdminProductsPage() {
             newSelected.add(productId);
         }
         setSelectedProducts(newSelected);
+    };
+
+    const toggleExpandedProduct = (productId: string) => {
+        setExpandedProducts((prev) => {
+            const next = new Set(prev);
+            if (next.has(productId)) {
+                next.delete(productId);
+            } else {
+                next.add(productId);
+            }
+            return next;
+        });
     };
 
     const handleBulkDelete = async () => {
@@ -324,13 +356,29 @@ export default function AdminProductsPage() {
                                     <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Category</th>
                                     <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Price</th>
                                     <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Stock</th>
+                                    <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Variations</th>
                                     <th className="text-left px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Rating</th>
                                     <th className="text-right px-6 py-4 text-sm font-bold text-gray-300 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {products.map((product) => (
-                                    <tr key={product.id} className={`hover:bg-white/5 transition-colors ${selectedProducts.has(product.id) ? 'bg-primary/5' : ''}`}>
+                                {products.map((product) => {
+                                    const productVariants = variantMeta[product.id];
+                                    const hasVariants = (productVariants?.count ?? 0) > 0;
+                                    const isExpanded = expandedProducts.has(product.id);
+                                    const flattenedVariants = hasVariants
+                                        ? Object.entries(productVariants.groups).flatMap(([group, items]) =>
+                                            items.map((item, idx) => ({
+                                                key: `${group}-${idx}`,
+                                                group,
+                                                ...item,
+                                            }))
+                                        )
+                                        : [];
+
+                                    return (
+                                    <Fragment key={product.id}>
+                                    <tr className={`hover:bg-white/5 transition-colors ${selectedProducts.has(product.id) ? 'bg-primary/5' : ''}`}>
                                         <td className="px-6 py-4">
                                             <input
                                                 type="checkbox"
@@ -355,12 +403,7 @@ export default function AdminProductsPage() {
                                                 <div className="min-w-0">
                                                     <p className="font-bold text-white truncate">{product.name}</p>
                                                     <p className="text-sm text-gray-400">{product.brand}</p>
-                                                    {variantMeta[product.id]?.count > 0 && (
-                                                        <p className="text-xs text-purple-400 mt-1">
-                                                            {variantMeta[product.id].count} variation(s): {variantMeta[product.id].labels.slice(0, 2).join(", ")}
-                                                            {variantMeta[product.id].labels.length > 2 ? "..." : ""}
-                                                        </p>
-                                                    )}
+                                                    {hasVariants && <p className="text-xs text-purple-400 mt-1">{productVariants.count} variation(s)</p>}
                                                 </div>
                                             </div>
                                         </td>
@@ -371,11 +414,11 @@ export default function AdminProductsPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <p className="font-bold text-white">
-                                                {variantMeta[product.id]?.count > 0
-                                                    ? formatPrice(variantMeta[product.id].minPrice)
+                                                {hasVariants
+                                                    ? formatPrice(productVariants.minPrice)
                                                     : formatPrice(product.price)}
                                             </p>
-                                            {variantMeta[product.id]?.count > 0 && (
+                                            {hasVariants && (
                                                 <p className="text-xs text-purple-400 mt-1">From variations</p>
                                             )}
                                         </td>
@@ -384,25 +427,38 @@ export default function AdminProductsPage() {
                                                 <input
                                                     type="number"
                                                     className="w-24 bg-[#1c222b] border border-white/10 rounded px-2 py-1 text-white text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                                                    value={variantMeta[product.id]?.count > 0 ? variantMeta[product.id].totalStock : (product.stock ?? 0)}
+                                                    value={hasVariants ? productVariants.totalStock : (product.stock ?? 0)}
                                                     onChange={(e) => handleStockChange(product.id, parseInt(e.target.value) || 0)}
-                                                    disabled={variantMeta[product.id]?.count > 0}
+                                                    disabled={hasVariants}
                                                     min="0"
                                                 />
-                                                {variantMeta[product.id]?.count > 0 && (
+                                                {hasVariants && (
                                                     <span className="text-xs text-purple-400 font-bold">Managed by variations</span>
                                                 )}
-                                                {(variantMeta[product.id]?.count > 0 ? variantMeta[product.id].totalStock : (product.stock ?? 0)) <= 5 && (variantMeta[product.id]?.count > 0 ? variantMeta[product.id].totalStock : (product.stock ?? 0)) > 0 && (
+                                                {(hasVariants ? productVariants.totalStock : (product.stock ?? 0)) <= 5 && (hasVariants ? productVariants.totalStock : (product.stock ?? 0)) > 0 && (
                                                     <span className="text-xs text-orange-500 font-bold flex items-center gap-1">
                                                         <AlertTriangle className="size-3" /> Low Stock
                                                     </span>
                                                 )}
-                                                {(variantMeta[product.id]?.count > 0 ? variantMeta[product.id].totalStock : (product.stock ?? 0)) === 0 && (
+                                                {(hasVariants ? productVariants.totalStock : (product.stock ?? 0)) === 0 && (
                                                     <span className="text-xs text-red-500 font-bold flex items-center gap-1">
                                                         <AlertTriangle className="size-3" /> Out of Stock
                                                     </span>
                                                 )}
                                             </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {hasVariants ? (
+                                                <button
+                                                    onClick={() => toggleExpandedProduct(product.id)}
+                                                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 transition-colors text-xs font-semibold"
+                                                >
+                                                    {isExpanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                                                    {productVariants.count} variation(s)
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs text-gray-500">No variations</span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
@@ -442,7 +498,56 @@ export default function AdminProductsPage() {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                    {hasVariants && isExpanded && flattenedVariants.map((variant) => (
+                                        <tr key={`${product.id}-variant-${variant.key}`} className="bg-[#0b1016] border-t border-purple-500/10">
+                                            <td className="px-6 py-3" />
+                                            <td className="px-6 py-3">
+                                                <p className="text-sm text-purple-300 font-semibold truncate">{"-> "}{variant.group}: {variant.label}</p>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-medium rounded-full">
+                                                    {product.category}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <p className="font-bold text-white">{formatPrice(variant.price)}</p>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <div className="flex flex-col gap-1">
+                                                    <p className="text-white text-sm font-semibold">{variant.stock}</p>
+                                                    {variant.stock <= 5 && variant.stock > 0 && (
+                                                        <span className="text-xs text-orange-500 font-bold flex items-center gap-1">
+                                                            <AlertTriangle className="size-3" /> Low Stock
+                                                        </span>
+                                                    )}
+                                                    {variant.stock === 0 && (
+                                                        <span className="text-xs text-red-500 font-bold flex items-center gap-1">
+                                                            <AlertTriangle className="size-3" /> Out of Stock
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <span className="text-xs text-purple-300">Child variation</span>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <span className="text-sm text-gray-500">-</span>
+                                            </td>
+                                            <td className="px-6 py-3">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => router.push(`/admin/product/${product.id}/variants`)}
+                                                        className="p-2 text-purple-400 hover:bg-purple-500/10 rounded-lg transition-colors"
+                                                        title="Manage Variants"
+                                                    >
+                                                        <Layers className="size-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    </Fragment>
+                                )})}
                             </tbody>
                         </table>
                     </div>
