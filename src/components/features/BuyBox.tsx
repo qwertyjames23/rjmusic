@@ -123,7 +123,6 @@ export function BuyBox({ product, onVariantChange }: BuyBoxProps) {
                             : (isInStock ? "In Stock" : "Out of Stock")}
                     </span>
                 </div>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Free shipping worldwide</span>
             </div>
 
             {hasVariants && (

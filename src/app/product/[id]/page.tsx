@@ -243,18 +243,6 @@ export default async function ProductDetailPage({
                     {/* Buy Box Component */}
                     <BuyBoxWrapper product={product} />
 
-                    {/* Key Specs Grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-[#1c222b] border border-[#282f39] p-3 rounded-lg">
-                            <span className="text-[10px] uppercase text-gray-500 font-bold block mb-1">Warranty</span>
-                            <span className="font-bold text-sm">3 Years</span>
-                        </div>
-                        <div className="bg-[#1c222b] border border-[#282f39] p-3 rounded-lg">
-                            <span className="text-[10px] uppercase text-gray-500 font-bold block mb-1">Return Policy</span>
-                            <span className="font-bold text-sm">30 Days</span>
-                        </div>
-                    </div>
-
                     {/* Mobile Tabs */}
                     <div className="lg:hidden mt-8">
                         <ProductTabs description={product.description} reviews={reviews} />

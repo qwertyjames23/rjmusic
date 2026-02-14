@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, ChevronDown, ChevronUp, Package, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Loader2, ChevronDown, ChevronUp, Package } from "lucide-react";
+import Image from "next/image";
+
+interface OrderItem {
+    id: string;
+    product_name: string;
+    product_image?: string | null;
+    quantity: number;
+    subtotal: number;
+}
 
 interface Order {
     id: string;
@@ -12,29 +20,39 @@ interface Order {
     total: number;
     status: string;
     created_at: string;
-    order_items: any[];
+    order_items: OrderItem[];
 }
 
 export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
     const router = useRouter();
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const;
+    const showNotification = (message: string, isError = false) => {
+        const div = document.createElement("div");
+        div.className = `fixed top-4 right-4 ${isError ? "bg-red-500" : "bg-green-500"} text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300`;
+        div.textContent = isError ? `✕ ${message}` : `✓ ${message}`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+    };
 
     const handleStatusUpdate = async (orderId: string, newStatus: string) => {
         setUpdatingId(orderId);
-        const supabase = createClient();
         
         try {
-            const { error } = await supabase
-                .from("orders")
-                .update({ status: newStatus })
-                .eq("id", orderId);
+            const res = await fetch("/api/admin/orders/status", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ order_id: orderId, status: newStatus }),
+            });
+            const payload = await res.json();
 
-            if (error) throw error;
+            if (!res.ok) throw new Error(payload.error || "Failed to update status");
+            showNotification(`Order status updated to ${newStatus}`);
             router.refresh();
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Error updating status:", error);
-            alert("Failed to update status");
+            showNotification(error instanceof Error ? error.message : "Failed to update status", true);
         } finally {
             setUpdatingId(null);
         }
@@ -67,8 +85,8 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         {initialOrders.map((order) => (
-                            <>
-                                <tr key={order.id} className="hover:bg-white/5 transition-colors">
+                            <Fragment key={order.id}>
+                                <tr className="hover:bg-white/5 transition-colors">
                                     <td className="p-4 font-mono text-primary">{order.order_number}</td>
                                     <td className="p-4 font-medium text-white">{order.shipping_name}</td>
                                     <td className="p-4 text-gray-400">
@@ -85,15 +103,13 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                                     <td className="p-4 flex items-center gap-2">
                                         <select
                                             disabled={updatingId === order.id}
-                                            value={order.status}
+                                            value={ORDER_STATUSES.find((s) => s.toLowerCase() === order.status.toLowerCase()) || "Pending"}
                                             onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                                             className="bg-[#0a0d11] border border-white/10 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-primary"
                                         >
-                                            <option value="pending">Pending</option>
-                                            <option value="processing">Processing</option>
-                                            <option value="shipped">Shipped</option>
-                                            <option value="delivered">Delivered</option>
-                                            <option value="cancelled">Cancelled</option>
+                                            {ORDER_STATUSES.map((status) => (
+                                                <option key={status} value={status}>{status}</option>
+                                            ))}
                                         </select>
                                         {updatingId === order.id && <Loader2 className="size-4 animate-spin text-primary" />}
                                         
@@ -114,11 +130,19 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                                                     Order Items
                                                 </h4>
                                                 <div className="space-y-2">
-                                                    {order.order_items.map((item: any) => (
+                                                    {order.order_items.map((item) => (
                                                         <div key={item.id} className="flex justify-between items-center text-sm">
                                                             <div className="flex items-center gap-3">
                                                                 <div className="size-8 bg-white/5 rounded overflow-hidden relative">
-                                                                    {item.product_image && <img src={item.product_image} alt="" className="w-full h-full object-cover" />}
+                                                                    {item.product_image && (
+                                                                        <Image
+                                                                            src={item.product_image}
+                                                                            alt={item.product_name}
+                                                                            fill
+                                                                            className="object-cover"
+                                                                            sizes="32px"
+                                                                        />
+                                                                    )}
                                                                 </div>
                                                                 <span className="text-gray-300">{item.product_name} <span className="text-gray-500">x{item.quantity}</span></span>
                                                             </div>
@@ -130,7 +154,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                                         </td>
                                     </tr>
                                 )}
-                            </>
+                            </Fragment>
                         ))}
                     </tbody>
                 </table>
