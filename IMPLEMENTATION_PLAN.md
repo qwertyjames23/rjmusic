@@ -211,7 +211,7 @@ If solo ka, ikaw tanan owner by default.
 - Added GitHub Actions CI workflow:
   - `.github/workflows/ci.yml`
 - Enabled PR/push quality checks on `main`:
-  - `npx eslint src/app/admin/orders --ext .ts,.tsx` (temporary stabilized scope)
+  - `npx eslint src/app/admin/orders src/app/product/[id]/page.tsx src/components/features/BuyBox.tsx --ext .ts,.tsx` (temporary stabilized scope, expanded)
   - `npx tsc --noEmit --pretty false`
   - `npm run build`
 - Added safe placeholder env vars in CI for build execution.

@@ -113,7 +113,7 @@ Finish the app with stable checkout, secure backend, and reliable deployment so 
 
 - Baseline CI workflow added at `.github/workflows/ci.yml`.
 - CI now runs on push/PR to `main` with:
-  - `npx eslint src/app/admin/orders --ext .ts,.tsx` (temporary stabilized scope)
+  - `npx eslint src/app/admin/orders src/app/product/[id]/page.tsx src/components/features/BuyBox.tsx --ext .ts,.tsx` (temporary stabilized scope, expanded)
   - `npx tsc --noEmit --pretty false`
   - `npm run build`
 - Placeholder CI env values added for build-time safety:
