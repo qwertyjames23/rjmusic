@@ -93,6 +93,21 @@ If solo ka, ikaw tanan owner by default.
   - Owner: RJ
   - DoD: Manual role matrix test completed.
 
+### Progress Notes (February 14, 2026)
+
+- RLS policies were deployed via migration:
+  - `supabase/migrations/20260214030200_rls_hardening.sql`
+- Signup-specific RLS follow-up migration applied:
+  - `supabase/migrations/20260214033000_profiles_signup_rls_fix.sql`
+- Auth trigger fix migration applied:
+  - `supabase/migrations/20260214034500_fix_auth_signup_trigger.sql`
+- Test report added:
+  - `DAY3_RLS_TEST_REPORT.md`
+- Resolved:
+  - `POST /auth/v1/signup` now returns `200` after trigger fix.
+- Remaining for completion:
+  - Full authenticated customer/admin role matrix validation.
+
 ## Day 4: Seed + Data Integrity
 
 ### Tasks
