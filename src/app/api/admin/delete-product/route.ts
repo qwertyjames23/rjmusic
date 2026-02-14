@@ -25,7 +25,15 @@ export async function DELETE(request: NextRequest) {
         }
 
         // Use admin client (service role) to bypass RLS for cascading deletes
-        const adminSupabase = createAdminClient();
+        let adminSupabase;
+        try {
+            adminSupabase = createAdminClient();
+        } catch {
+            return NextResponse.json(
+                { error: "SUPABASE_SERVICE_ROLE_KEY is required for admin delete operations" },
+                { status: 503 }
+            );
+        }
 
         // Delete related reviews first (bypasses RLS)
         const { error: reviewsError } = await adminSupabase
