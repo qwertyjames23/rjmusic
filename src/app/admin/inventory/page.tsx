@@ -11,6 +11,10 @@ export default async function AdminInventoryPage() {
         .select("*")
         .order("name");
 
+    if (error) {
+        console.error("Error loading inventory products:", error);
+    }
+
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="mb-8">
