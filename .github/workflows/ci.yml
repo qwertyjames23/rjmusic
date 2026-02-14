@@ -103,7 +103,7 @@ jobs:
         run: npm ci
 
       - name: Lint (stabilized scope)
-        run: npx eslint src/app/admin/orders src/app/product/[id]/page.tsx src/components/features/BuyBox.tsx src/app/order-confirmation/[id]/page.tsx src/app/_brands/page.tsx --ext .ts,.tsx
+        run: npx eslint src/app/admin/orders src/app/admin/reviews src/app/product/[id]/page.tsx src/components/features/BuyBox.tsx src/app/order-confirmation/[id]/page.tsx src/app/_brands/page.tsx --ext .ts,.tsx
 
       - name: Typecheck
         run: npx tsc --noEmit --pretty false
