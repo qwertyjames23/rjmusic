@@ -255,6 +255,10 @@ If solo ka, ikaw tanan owner by default.
   - GitHub environments used for deploy jobs: `staging`, `production`.
 - Added deploy/rollback runbook:
   - `DEPLOYMENT.md`
+- Added Supabase migration CI guard in `.github/workflows/ci.yml`:
+  - Only allows new migration files in `supabase/migrations`.
+  - Rejects edits/deletes of historical migrations.
+  - Enforces timestamped naming and unique migration versions.
 
 ## Day 14: Launch Readiness + Operations
 
