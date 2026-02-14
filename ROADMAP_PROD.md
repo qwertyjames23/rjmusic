@@ -126,6 +126,8 @@ Finish the app with stable checkout, secure backend, and reliable deployment so 
   - `main` branch deploys to `production` environment.
   - Enforces fail-fast checks for `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
 - Deployment runbook added: `DEPLOYMENT.md`.
+- CI trigger updated to include `develop` pushes for staging deploy readiness.
+- Branch setup guide added: `DEVELOP_BRANCH_SETUP.md`.
 - Supabase migration gate added in `.github/workflows/ci.yml`:
   - Detects migration changes in PR/push range.
   - Blocks modification/deletion of historical migration files.

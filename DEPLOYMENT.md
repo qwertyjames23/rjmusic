@@ -4,11 +4,13 @@ Last updated: February 14, 2026
 
 ## Pipeline Overview
 
-- `CI` workflow runs on push/PR to `main`.
+- `CI` workflow runs on push to `main` and `develop`, and PR to `main`.
 - `Deploy` workflow runs only after `CI` completes successfully.
 - Branch mapping:
   - `develop` -> `staging` (Vercel preview deployment)
   - `main` -> `production` (Vercel production deployment)
+- Branch setup + exact verification commands:
+  - `DEVELOP_BRANCH_SETUP.md`
 
 ## Required GitHub Secrets
 
