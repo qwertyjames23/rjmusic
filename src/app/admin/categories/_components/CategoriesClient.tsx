@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, Search, Pencil, Trash2, X, Loader2, Image as ImageIcon } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, X, Loader2, Image as ImageIcon, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -12,6 +12,7 @@ interface Category {
     slug: string;
     description: string | null;
     image_url: string | null;
+    is_visible: boolean;
     created_at: string;
 }
 
@@ -117,6 +118,30 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
         }
     };
 
+    const handleToggleVisibility = async (category: Category) => {
+        const newVisibility = !category.is_visible;
+
+        // Optimistic update
+        setCategories(prev => prev.map(c =>
+            c.id === category.id ? { ...c, is_visible: newVisibility } : c
+        ));
+
+        try {
+            const { error } = await supabase
+                .from('categories')
+                .update({ is_visible: newVisibility })
+                .eq('id', category.id);
+
+            if (error) throw error;
+        } catch (error: unknown) {
+            // Revert on failure
+            setCategories(prev => prev.map(c =>
+                c.id === category.id ? { ...c, is_visible: category.is_visible } : c
+            ));
+            alert(`Error updating visibility: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-6">
             {/* Toolbar */}
@@ -143,7 +168,7 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
             {/* List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredCategories.map(category => (
-                    <div key={category.id} className="bg-[#1f2937] border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-all group relative overflow-hidden">
+                    <div key={category.id} className={`bg-[#1f2937] border rounded-xl p-5 hover:border-gray-700 transition-all group relative overflow-hidden ${category.is_visible ? "border-gray-800" : "border-gray-800 opacity-60"}`}>
                         <div className="flex justify-between items-start mb-4 relative z-10">
                             <div className="flex items-center gap-3 overflow-hidden">
                                 <div className="h-12 w-12 flex-shrink-0 rounded-lg bg-[#111827] border border-gray-700 flex items-center justify-center overflow-hidden">
@@ -155,10 +180,25 @@ export default function CategoriesClient({ initialCategories }: { initialCategor
                                 </div>
                                 <div className="min-w-0">
                                     <h3 className="font-bold text-white text-lg truncate">{category.name}</h3>
-                                    <p className="text-xs text-gray-500 font-mono truncate">/{category.slug}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-xs text-gray-500 font-mono truncate">/{category.slug}</p>
+                                        {!category.is_visible && (
+                                            <span className="text-[10px] font-bold text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 rounded">HIDDEN</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-1">
+                                <button
+                                    onClick={() => handleToggleVisibility(category)}
+                                    title={category.is_visible ? "Hide from store" : "Show on store"}
+                                    className={`p-2 rounded-lg transition-colors ${category.is_visible
+                                        ? "text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                                        : "text-gray-600 hover:text-gray-400 hover:bg-white/5"
+                                    }`}
+                                >
+                                    {category.is_visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                </button>
                                 <button
                                     onClick={() => handleEdit(category)}
                                     className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
