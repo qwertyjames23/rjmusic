@@ -12,10 +12,24 @@ export async function updateProfile(formData: FormData) {
         return { error: 'Not authenticated' }
     }
 
-    const fullName = formData.get('fullName') as string
-    const phone = formData.get('phone') as string
-    const gender = formData.get('gender') as string
-    const birthDate = formData.get('birthDate') as string
+    const fullName = (formData.get('fullName') as string || '').trim()
+    const phone = (formData.get('phone') as string || '').trim()
+    const gender = (formData.get('gender') as string || '').trim()
+    const birthDate = (formData.get('birthDate') as string || '').trim()
+
+    // Validate inputs
+    if (fullName.length > 100) {
+        return { error: 'Name must be 100 characters or less' }
+    }
+    if (phone && !/^[\d\s\-+()]{0,20}$/.test(phone)) {
+        return { error: 'Invalid phone number format' }
+    }
+    if (gender && !['male', 'female', 'other', ''].includes(gender.toLowerCase())) {
+        return { error: 'Invalid gender value' }
+    }
+    if (birthDate && isNaN(Date.parse(birthDate))) {
+        return { error: 'Invalid birth date' }
+    }
 
     // Update user metadata in Supabase Auth
     const { error: metadataError } = await supabase.auth.updateUser({
