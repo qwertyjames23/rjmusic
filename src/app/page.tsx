@@ -69,9 +69,9 @@ export default async function Home() {
           <Mail className="size-12 text-primary mx-auto mb-6" />
           <h2 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Join the Inner Circle</h2>
           <p className="text-gray-400 mb-8">Get early access to drops, exclusive artist interviews, and 10% off your first order.</p>
-          <form className="flex flex-col sm:flex-row gap-4">
+          <form className="flex flex-col sm:flex-row gap-4" action="#">
             <input type="email" required placeholder="Enter your email address" className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors" />
-            <button type="submit" className="bg-primary text-white font-bold px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors">SUBSCRIBE</button>
+            <button type="button" className="bg-primary text-white font-bold px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors">SUBSCRIBE</button>
           </form>
         </div>
       </section>
