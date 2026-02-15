@@ -45,6 +45,12 @@ export default function CheckoutPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [idempotencyKey, setIdempotencyKey] = useState<string>("");
+
+    // Initialize idempotency key once per checkout session
+    useEffect(() => {
+        setIdempotencyKey(crypto.randomUUID());
+    }, []);
 
     // Filter items to show only selected ones
     const checkoutItems = items.filter(item => selectedItems.includes(item.id));
@@ -121,6 +127,20 @@ export default function CheckoutPage() {
                 return;
             }
 
+            // Check for existing order with this idempotency key (prevent duplicates)
+            const { data: existingOrder } = await supabase
+                .from("orders")
+                .select("id")
+                .eq("idempotency_key", idempotencyKey)
+                .maybeSingle();
+
+            if (existingOrder) {
+                setIsSuccess(true);
+                removeItems(selectedItems);
+                router.push(`/order-confirmation/${existingOrder.id}`);
+                return;
+            }
+
             // Get selected address
             const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
             if (!selectedAddress) {
@@ -147,6 +167,7 @@ export default function CheckoutPage() {
                 payment_method: paymentMethod,
                 payment_status: "pending",
                 notes: notes || null,
+                idempotency_key: idempotencyKey,
             };
 
             // Prepare Items Data
@@ -159,7 +180,65 @@ export default function CheckoutPage() {
                 subtotal: item.price * item.quantity,
             }));
 
-            // Call RPC function to place order (preferred path)
+            // Handle PayMongo Payments (GCash / Card)
+            if (paymentMethod !== 'cod') {
+                try {
+                    // 1. Create the Pending Order First
+                    const { data: createdOrder, error: orderInsertError } = await supabase
+                        .from("orders")
+                        .insert(orderData)
+                        .select("id")
+                        .single();
+
+                    if (orderInsertError) {
+                        // Handle duplicate idempotency_key (race condition)
+                        if (orderInsertError.code === '23505') {
+                            const { data: dup } = await supabase.from("orders").select("id").eq("idempotency_key", idempotencyKey).maybeSingle();
+                            if (dup) { setIsSuccess(true); removeItems(selectedItems); router.push(`/order-confirmation/${dup.id}`); return; }
+                        }
+                        throw orderInsertError;
+                    }
+                    
+                    const orderId = createdOrder.id;
+
+                    const itemsWithOrderId = itemsData.map(item => ({ ...item, order_id: orderId }));
+                    const { error: itemsInsertError } = await supabase
+                        .from("order_items")
+                        .insert(itemsWithOrderId);
+
+                    if (itemsInsertError) {
+                        await supabase.from("orders").delete().eq("id", orderId); // Rollback
+                        throw itemsInsertError;
+                    }
+
+                    // 2. Call PayMongo Checkout API
+                    const response = await fetch('/api/paymongo/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            amount: total,
+                            description: `Order #${orderId}`,
+                            paymentMethod
+                        })
+                    });
+
+                    const paymentData = await response.json();
+
+                    if (!response.ok) throw new Error(paymentData.error || 'Payment initialization failed');
+
+                    // 3. Redirect to PayMongo
+                    window.location.href = paymentData.checkoutUrl;
+                    return;
+
+                } catch (err: any) {
+                    console.error('Payment Error:', err);
+                    setError(err.message || "Payment processing failed");
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
+            // Call RPC function to place order (preferred path) for COD
             const { data: order, error: rpcError } = await supabase.rpc('place_order', {
                 order_data: orderData,
                 items_data: itemsData
@@ -174,7 +253,14 @@ export default function CheckoutPage() {
                         .select("id")
                         .single();
 
-                    if (orderInsertError) throw orderInsertError;
+                    if (orderInsertError) {
+                        // Handle duplicate idempotency_key (race condition)
+                        if (orderInsertError.code === '23505') {
+                            const { data: dup } = await supabase.from("orders").select("id").eq("idempotency_key", idempotencyKey).maybeSingle();
+                            if (dup) { setIsSuccess(true); removeItems(selectedItems); router.push(`/order-confirmation/${dup.id}`); return; }
+                        }
+                        throw orderInsertError;
+                    }
 
                     const orderId = createdOrder?.id as string | undefined;
                     if (!orderId) throw new Error("Order was created but no order id was returned.");
@@ -363,7 +449,7 @@ export default function CheckoutPage() {
                                         name="payment"
                                         value="cod"
                                         checked={paymentMethod === "cod"}
-                                        onChange={(e) => setPaymentMethod(e.target.value as "cod" | "card" | "gcash" | "paymaya")}
+                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
                                     />
                                     <div>
                                         <p className="font-semibold text-foreground">Cash on Delivery</p>
@@ -371,17 +457,33 @@ export default function CheckoutPage() {
                                     </div>
                                 </label>
 
-                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all opacity-50 ${paymentMethod === "gcash" ? "border-primary bg-primary/5" : "border-border"
+                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === "gcash" ? "border-primary bg-primary/5" : "border-border"
                                     }`}>
                                     <input
                                         type="radio"
                                         name="payment"
                                         value="gcash"
-                                        disabled
+                                        checked={paymentMethod === "gcash"}
+                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
                                     />
                                     <div>
-                                        <p className="font-semibold text-foreground">GCash</p>
-                                        <p className="text-sm text-muted-foreground">Coming soon</p>
+                                        <p className="font-semibold text-foreground">GCash / PayMaya</p>
+                                        <p className="text-sm text-muted-foreground">Secure e-wallet payment</p>
+                                    </div>
+                                </label>
+
+                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === "card" ? "border-primary bg-primary/5" : "border-border"
+                                    }`}>
+                                    <input
+                                        type="radio"
+                                        name="payment"
+                                        value="card"
+                                        checked={paymentMethod === "card"}
+                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                    />
+                                    <div>
+                                        <p className="font-semibold text-foreground">Credit / Debit Card</p>
+                                        <p className="text-sm text-muted-foreground">Visa, Mastercard via PayMongo</p>
                                     </div>
                                 </label>
                             </div>
@@ -444,11 +546,11 @@ export default function CheckoutPage() {
                                 {isSubmitting ? (
                                     <>
                                         <Loader2 className="size-4 animate-spin" />
-                                        Placing Order...
+                                        {paymentMethod === 'cod' ? 'Placing Order...' : 'Redirecting to Payment...'}
                                     </>
                                 ) : (
                                     <>
-                                        Place Order
+                                        {paymentMethod === 'cod' ? 'Place Order' : `Pay with ${paymentMethod === 'gcash' ? 'GCash' : 'Card'}`}
                                         <ChevronRight className="size-4" />
                                     </>
                                 )}
