@@ -66,11 +66,13 @@ export default function MyPurchasesPage() {
 
     // Real-time subscription for Status Updates
     useEffect(() => {
+        let channel: ReturnType<typeof supabase.channel> | null = null;
+
         const setupRealtime = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const channel = supabase
+            channel = supabase
                 .channel('customer-orders-updates')
                 .on(
                     'postgres_changes',
@@ -80,26 +82,27 @@ export default function MyPurchasesPage() {
                         table: 'orders',
                     },
                     (payload) => {
-                        console.log("Realtime update received:", payload);
                         const updatedOrder = payload.new as Order;
 
                         setOrders((prevOrders) =>
                             prevOrders.map((order) =>
                                 order.id === updatedOrder.id
-                                    ? { ...order, ...updatedOrder } // Merge new status/data
+                                    ? { ...order, ...updatedOrder }
                                     : order
                             )
                         );
                     }
                 )
                 .subscribe();
-
-            return () => {
-                supabase.removeChannel(channel);
-            };
         };
 
         setupRealtime();
+
+        return () => {
+            if (channel) {
+                supabase.removeChannel(channel);
+            }
+        };
     }, [supabase]);
 
     const formatPrice = (price: number) => {

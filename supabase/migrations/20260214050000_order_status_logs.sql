@@ -1,4 +1,4 @@
-﻿-- Order status change audit trail
+-- Order status change audit trail
 create table if not exists public.order_status_logs (
     id uuid primary key default gen_random_uuid(),
     order_id uuid not null references public.orders(id) on delete cascade,
