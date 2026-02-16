@@ -9,7 +9,7 @@ const RATE_LIMIT_WINDOW = 60000; // 1 minute in ms
 export async function updateSession(request: NextRequest) {
     // 0. Rate Limiting Check (Simple IP-based)
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : (request as any).ip || '127.0.0.1';
+    const ip = forwarded ? forwarded.split(',')[0] : (request as unknown as { ip?: string }).ip || '127.0.0.1';
     const now = Date.now();
     const rateData = rateLimitMap.get(ip) || { count: 0, lastReset: now };
 

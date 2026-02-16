@@ -73,7 +73,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
 
                     // Update state
                     setItems(mergedItems);
-                } catch (error) {
+                } catch {
                     // Failed to merge guest cart — non-critical
                 }
             } else if (event === 'SIGNED_OUT') {
@@ -111,7 +111,7 @@ export default function CartProvider({ children }: { children: ReactNode }) {
             if (savedSelected) {
                 setSelectedItems(JSON.parse(savedSelected));
             }
-        } catch (error) {
+        } catch {
             // Failed to load cart from localStorage — non-critical
         } finally {
             setIsLoaded(true);

@@ -24,7 +24,7 @@ interface ReviewFormProps {
 
 export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<ReviewFormInputs>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<ReviewFormInputs>({
     resolver: zodResolver(reviewSchema),
     defaultValues: { rating: 0 }
   });
@@ -52,9 +52,9 @@ export function ReviewForm({ productId, onReviewSubmitted }: ReviewFormProps) {
 
       toast.success("Review submitted successfully!");
       onReviewSubmitted();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting review:", error);
-      toast.error(error.message || "Failed to submit review. You may have already reviewed this product.");
+      toast.error(error instanceof Error ? error.message : "Failed to submit review. You may have already reviewed this product.");
     } finally {
       setIsSubmitting(false);
     }

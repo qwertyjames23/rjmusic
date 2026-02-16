@@ -10,13 +10,6 @@ const updateStatusSchema = z.object({
     status: z.enum(ALLOWED_ORDER_STATUSES),
 });
 
-function normalizeStatus(input: unknown) {
-    if (typeof input !== "string") return "";
-    const value = input.trim().toLowerCase();
-    const matched = ALLOWED_ORDER_STATUSES.find((s) => s.toLowerCase() === value);
-    return matched || "";
-}
-
 async function requireAdmin() {
     if (!(await isAdmin())) {
         return { errorResponse: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
@@ -94,8 +87,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, status: normalizedStatus });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Order status update error:", error);
-        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Internal server error" }, { status: 500 });
     }
 }

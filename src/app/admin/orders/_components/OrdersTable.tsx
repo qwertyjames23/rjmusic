@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, ChevronDown, ChevronUp, Package } from "lucide-react";
+import { ChevronDown, ChevronUp, Package } from "lucide-react";
 import Image from "next/image";
 
 interface OrderItem {

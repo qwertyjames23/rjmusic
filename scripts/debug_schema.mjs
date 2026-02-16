@@ -15,7 +15,7 @@ async function checkSchema() {
   // 1. Check Orders columns
   console.log('Checking orders table columns...');
   // Try to select the 'address' column explicitly
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('orders')
     .select('address, city, region, postal_code')
     .limit(1);

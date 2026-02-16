@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 import { Review } from "@/types";
 import { useRouter } from "next/navigation";
+import { ReviewForm } from "@/components/features/reviews/ReviewForm";
+import { ReviewsList } from "@/components/features/reviews/ReviewsList";
 
 interface ProductTabsProps {
     productId: string;
