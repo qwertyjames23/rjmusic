@@ -190,7 +190,10 @@ async function getReviews(productId: string): Promise<Review[]> {
         const profile = profileMap.get(review.user_id);
         return {
             id: review.id,
+            user_id: review.user_id,
+            product_id: review.product_id,
             rating: Number(review.rating),
+            title: review.title || "",
             comment: review.comment || "",
             created_at: review.created_at,
             profiles: profile
