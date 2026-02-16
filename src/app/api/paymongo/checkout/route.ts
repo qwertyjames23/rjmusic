@@ -65,8 +65,9 @@ export async function POST(req: NextRequest) {
             sessionId: data.data.id
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Checkout API Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const message = error instanceof Error ? error.message : "Checkout failed";
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }
