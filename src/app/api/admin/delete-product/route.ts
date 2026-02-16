@@ -1,28 +1,31 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, isAdmin } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+const deleteSchema = z.object({
+    productIds: z.array(z.string().uuid()).min(1, "At least one product ID is required"),
+});
 
 export async function DELETE(request: NextRequest) {
     try {
-        // Use the regular server client to verify the user's identity
-        const supabase = await createClient();
-
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) {
+        // Verify the user is an admin using our new helper
+        if (!(await isAdmin())) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const adminEmail = process.env.ADMIN_EMAIL;
-        if (user.email !== adminEmail) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
-
         const body = await request.json();
-        const { productIds } = body;
+        const validation = deleteSchema.safeParse(body);
 
-        if (!productIds || !Array.isArray(productIds) || productIds.length === 0) {
-            return NextResponse.json({ error: "productIds is required" }, { status: 400 });
+        if (!validation.success) {
+            return NextResponse.json(
+                { error: "Invalid input", details: validation.error.format() },
+                { status: 400 }
+            );
         }
+
+        const { productIds } = validation.data;
+        const supabase = await createClient();
 
         // Prefer service-role client; fallback to authenticated admin session client.
         // This allows delete to work in dev even when SERVICE_ROLE is not configured.

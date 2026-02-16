@@ -3,10 +3,10 @@ import { notFound } from "next/navigation";
 import { Star } from "lucide-react";
 import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductPriceDisplay } from "./ProductPriceDisplay";
-import { ProductTabs, type Review } from "@/components/features/ProductTabs";
+import { ProductTabs } from "@/components/features/ProductTabs";
 import { ProductCard } from "@/components/features/ProductCard";
 import { supabase } from "@/lib/supabase";
-import { Product, ProductVariant } from "@/types";
+import { Product, ProductVariant, Review } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -218,6 +218,17 @@ export default async function ProductDetailPage({
     const recommendations = await getRecommendations(product.id, product.category);
     const reviews = await getReviews(product.id);
 
+    // Check if the current user has purchased this item
+    const { data: { user } } = await supabase.auth.getUser();
+    let hasPurchased = false;
+    if (user) {
+        const { data } = await supabase.rpc('has_purchased', {
+            p_user_id: user.id,
+            p_product_id: product.id,
+        });
+        hasPurchased = !!data;
+    }
+
     // Calculate real rating if available
     const realRating = reviews.length > 0
         ? reviews.reduce((acc: number, r) => acc + r.rating, 0) / reviews.length
@@ -248,7 +259,12 @@ export default async function ProductDetailPage({
 
                     {/* Tabs Section (Desktop) */}
                     <div className="mt-8 hidden lg:block">
-                        <ProductTabs description={product.description} reviews={reviews} />
+                        <ProductTabs
+                            productId={product.id}
+                            description={product.description}
+                            reviews={reviews}
+                            hasPurchased={hasPurchased}
+                        />
                     </div>
                 </div>
 
@@ -289,7 +305,12 @@ export default async function ProductDetailPage({
 
                     {/* Mobile Tabs */}
                     <div className="lg:hidden mt-8">
-                        <ProductTabs description={product.description} reviews={reviews} />
+                        <ProductTabs
+                            productId={product.id}
+                            description={product.description}
+                            reviews={reviews}
+                            hasPurchased={hasPurchased}
+                        />
                     </div>
                 </div>
             </div>

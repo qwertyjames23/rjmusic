@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, isAdmin } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 async function requireAdmin() {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user || user.email !== process.env.ADMIN_EMAIL) {
-        return { errorResponse: NextResponse.json({ error: "Unauthorized" }, { status: 401 }), supabase };
+    if (!(await isAdmin())) {
+        return { errorResponse: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
     }
+
+    const supabase = await createClient();
 
     return { supabase };
 }

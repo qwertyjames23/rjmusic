@@ -12,6 +12,7 @@ interface Order {
     total_amount?: number;
     total?: number;
     status: string;
+    payment_status: string;
     created_at: string;
 }
 
@@ -25,7 +26,9 @@ interface OrderRowProps {
 
 export function OrderRow({ order, isNew = false, isSelected = false, onSelect, onViewDetails }: OrderRowProps) {
     const [status, setStatus] = useState(order.status);
+    const [paymentStatus, setPaymentStatus] = useState(order.payment_status);
     const [loading, setLoading] = useState(false);
+    const [paymentLoading, setPaymentLoading] = useState(false);
     const supabase = createClient();
 
     const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -49,6 +52,34 @@ export function OrderRow({ order, isNew = false, isSelected = false, onSelect, o
         }
     };
 
+    const handlePaymentStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newPaymentStatus = e.target.value;
+        if (newPaymentStatus === paymentStatus) return;
+        setPaymentLoading(true);
+
+        try {
+            const { error } = await supabase
+                .from('orders')
+                .update({ payment_status: newPaymentStatus })
+                .eq('id', order.id);
+
+            if (error) throw error;
+            setPaymentStatus(newPaymentStatus);
+            
+            // Note: If the trigger we planned is active, the main order status 
+            // will automatically change in the DB when set to 'paid'.
+            // For immediate UI update, we can manually set it if we detect 'paid'.
+            if (newPaymentStatus === 'paid' && status === 'Pending') {
+                setStatus('Processing');
+            }
+        } catch (err) {
+            console.error("Failed to update payment status", err);
+            alert("Failed to update payment status");
+        } finally {
+            setPaymentLoading(false);
+        }
+    };
+
     const amount: number = Number(order.total_amount || order.total || 0);
 
     const getStatusColors = (statusVal: string) => {
@@ -62,6 +93,18 @@ export function OrderRow({ order, isNew = false, isSelected = false, onSelect, o
             case 'Cancelled':
                 return 'bg-red-500/20 text-red-400 border-red-500/20';
             default: // Pending or others
+                return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/20';
+        }
+    };
+
+    const getPaymentStatusColors = (statusVal: string) => {
+        switch (statusVal) {
+            case 'paid':
+                return 'bg-green-500/20 text-green-400 border-green-500/20';
+            case 'failed':
+            case 'refunded':
+                return 'bg-red-500/20 text-red-400 border-red-500/20';
+            default: // pending
                 return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/20';
         }
     };
@@ -110,12 +153,37 @@ export function OrderRow({ order, isNew = false, isSelected = false, onSelect, o
                 </span>
             </td>
 
-            {/* Status (Center with Select) */}
+            {/* Payment Status (Center with Select) */}
+            <td className="px-6 py-4">
+                <div className="flex justify-center">
+                    <div className={`relative inline-flex items-center px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer hover:brightness-110 ${getPaymentStatusColors(paymentStatus)}`}>
+                        {paymentLoading ? (
+                            <span className="opacity-70">...</span>
+                        ) : (
+                            <>
+                                <select
+                                    value={paymentStatus}
+                                    onChange={handlePaymentStatusChange}
+                                    className="appearance-none bg-transparent border-none outline-none text-center cursor-pointer font-bold w-full pr-4 text-inherit"
+                                >
+                                    <option value="pending" className="bg-[#1f2937] text-yellow-400">P. Pending</option>
+                                    <option value="paid" className="bg-[#1f2937] text-green-400">Paid</option>
+                                    <option value="failed" className="bg-[#1f2937] text-red-400">Failed</option>
+                                    <option value="refunded" className="bg-[#1f2937] text-gray-400">Refunded</option>
+                                </select>
+                                <ChevronDown className="size-3 absolute right-2 pointer-events-none opacity-70" />
+                            </>
+                        )}
+                    </div>
+                </div>
+            </td>
+
+            {/* Order Status (Center with Select) */}
             <td className="px-6 py-4">
                 <div className="flex justify-center">
                     <div className={`relative inline-flex items-center px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer hover:brightness-110 ${getStatusColors(status)}`}>
                         {loading ? (
-                            <span className="opacity-70">Updating...</span>
+                            <span className="opacity-70">...</span>
                         ) : (
                             <>
                                 <select
@@ -123,7 +191,7 @@ export function OrderRow({ order, isNew = false, isSelected = false, onSelect, o
                                     onChange={handleStatusChange}
                                     className="appearance-none bg-transparent border-none outline-none text-center cursor-pointer font-bold w-full pr-4 text-inherit"
                                 >
-                                    <option value="Pending" className="bg-[#1f2937] text-yellow-400">Pending</option>
+                                    <option value="Pending" className="bg-[#1f2937] text-yellow-400">O. Pending</option>
                                     <option value="Processing" className="bg-[#1f2937] text-blue-400">Processing</option>
                                     <option value="Shipped" className="bg-[#1f2937] text-purple-400">Shipped</option>
                                     <option value="Delivered" className="bg-[#1f2937] text-green-400">Delivered</option>
