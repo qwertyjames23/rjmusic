@@ -230,9 +230,9 @@ export default function CheckoutPage() {
                     window.location.href = paymentData.checkoutUrl;
                     return;
 
-                } catch (err: any) {
+                } catch (err: unknown) {
                     console.error('Payment Error:', err);
-                    setError(err.message || "Payment processing failed");
+                    setError(err instanceof Error ? err.message : "Payment processing failed");
                     setIsSubmitting(false);
                     return;
                 }
@@ -449,7 +449,7 @@ export default function CheckoutPage() {
                                         name="payment"
                                         value="cod"
                                         checked={paymentMethod === "cod"}
-                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                        onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
                                     />
                                     <div>
                                         <p className="font-semibold text-foreground">Cash on Delivery</p>
@@ -464,7 +464,7 @@ export default function CheckoutPage() {
                                         name="payment"
                                         value="gcash"
                                         checked={paymentMethod === "gcash"}
-                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                        onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
                                     />
                                     <div>
                                         <p className="font-semibold text-foreground">GCash / PayMaya</p>
@@ -479,7 +479,7 @@ export default function CheckoutPage() {
                                         name="payment"
                                         value="card"
                                         checked={paymentMethod === "card"}
-                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                        onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
                                     />
                                     <div>
                                         <p className="font-semibold text-foreground">Credit / Debit Card</p>

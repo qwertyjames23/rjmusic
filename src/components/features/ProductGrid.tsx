@@ -216,7 +216,7 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
                             </div>
                             <h3 className="text-xl font-bold mb-2">No products found</h3>
                             <p className="text-muted-foreground max-w-md mx-auto mb-6">
-                                We couldn't find any products matching your criteria. Try adjusting your filters or search terms.
+                                We couldn&apos;t find any products matching your criteria. Try adjusting your filters or search terms.
                             </p>
                             <button
                                 onClick={() => {

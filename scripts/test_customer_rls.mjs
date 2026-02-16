@@ -40,7 +40,7 @@ async function testCustomer() {
 
   // A. Create User (Admin bypass)
   console.log('✨ Creating new confirmed user...');
-  const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+  const { error: createError } = await supabaseAdmin.auth.admin.createUser({
     email: EMAIL,
     password: PASSWORD,
     email_confirm: true
@@ -70,7 +70,7 @@ async function testCustomer() {
 
   // 1. Read products
   console.log('Testing: Read products...');
-  const { data: products, error: pError } = await supabaseClient.from('products').select('id').limit(1);
+  const { error: pError } = await supabaseClient.from('products').select('id').limit(1);
   if (pError) console.error('❌ Products read failed:', pError.message);
   else console.log('✅ Products read success');
 
@@ -104,7 +104,7 @@ async function testCustomer() {
 
   // 5. Security Check: Self-promotion to admin
   console.log('Testing Security: Attempt self-promotion to admin...');
-  const { error: roleError } = await supabaseClient
+  await supabaseClient
     .from('profiles')
     .update({ role: 'admin' })
     .eq('id', userId);

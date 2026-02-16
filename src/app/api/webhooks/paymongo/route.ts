@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
         console.log(`🔔 PayMongo Webhook Received: ${type}`);
 
         if (type === 'checkout_session.payment.paid') {
-            const checkoutSessionId = resource.id;
             const description = resource.attributes.line_items[0]?.description || ""; 
             // We stored "Order #UUID" in description
             const orderId = description.replace("Order #", "").trim();
@@ -80,8 +79,8 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ received: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Webhook Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Webhook error" }, { status: 500 });
     }
 }
