@@ -21,6 +21,7 @@ interface DashboardContentProps {
         total_amount?: number;
         total?: number;
         status: string;
+        payment_status: string;
         created_at: string;
     }>;
     initialChartData: { name: string; total: number }[];
@@ -65,6 +66,7 @@ export default function DashboardContent({ initialStats, initialRecentOrders, in
                         total_amount: Number(rawOrder.total_amount || 0),
                         total: Number(rawOrder.total || 0),
                         status: rawOrder.status || "Pending",
+                        payment_status: rawOrder.payment_status || "pending",
                         created_at: rawOrder.created_at || new Date().toISOString(),
                     };
                     const newOrderTotal = Number(newOrder.total || newOrder.total_amount || 0);

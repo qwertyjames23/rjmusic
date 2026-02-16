@@ -17,6 +17,8 @@ const notoSans = Noto_Sans({
   weight: ["400", "500", "700"],
 });
 
+import { Toaster } from "@/components/ui/sonner";
+
 export const metadata: Metadata = {
   title: "RJ MUSIC | Musical Accessories and Studio Gear",
   description: "RJ MUSIC - Premium instruments and studio gear for the modern creator.",
@@ -42,6 +44,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </CartProvider>
+        <Toaster />
       </body>
     </html>
   );

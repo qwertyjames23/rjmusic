@@ -2,35 +2,25 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Star, User } from "lucide-react";
-import Image from "next/image";
-
-export interface Review {
-    id: string;
-    rating: number;
-    comment: string;
-    created_at: string;
-    profiles?: {
-        full_name: string;
-        avatar_url?: string;
-    } | null;
-}
+import { Star } from "lucide-react";
+import { Review } from "@/types";
+import { useRouter } from "next/navigation";
 
 interface ProductTabsProps {
+    productId: string;
     description: string;
     specs?: { label: string; value: string }[];
     reviews?: Review[];
+    hasPurchased: boolean;
 }
 
-export function ProductTabs({ description, specs = [], reviews = [] }: ProductTabsProps) {
+export function ProductTabs({ productId, description, specs = [], reviews = [], hasPurchased }: ProductTabsProps) {
     const [activeTab, setActiveTab] = useState<"desc" | "specs" | "reviews">("desc");
+    const router = useRouter();
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+    const handleReviewSubmitted = () => {
+        // Refresh the page to show the new review
+        router.refresh();
     };
 
     return (
@@ -92,62 +82,21 @@ export function ProductTabs({ description, specs = [], reviews = [] }: ProductTa
                     </div>
                 )}
                 {activeTab === "reviews" && (
-                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
-                        {reviews.length === 0 ? (
-                            <div className="text-center py-10 bg-[#1c222b]/50 rounded-xl border border-[#282f39] border-dashed">
-                                <div className="flex justify-center mb-4">
-                                    <Star className="w-10 h-10 text-gray-600" />
-                                </div>
-                                <h3 className="text-white font-bold mb-2">No reviews yet</h3>
-                                <p className="text-sm">Purchased this item? Go to <a href="/profile/purchases" className="text-primary hover:underline">My Purchases</a> to write a review.</p>
-                            </div>
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-8">
+                        {hasPurchased ? (
+                            <ReviewForm productId={productId} onReviewSubmitted={handleReviewSubmitted} />
                         ) : (
-                            <div className="space-y-6">
-                                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-4">
-                                    <p className="text-sm text-primary-foreground/80">
-                                        Verified purchases only. To write a review, visit your <a href="/profile/purchases" className="font-bold underline hover:text-primary">Order History</a>.
-                                    </p>
-                                </div>
-                                {reviews.map((review) => (
-                                    <div key={review.id} className="bg-[#1c222b] p-6 rounded-xl border border-[#282f39]">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                                                    {review.profiles?.avatar_url ? (
-                                                        <Image src={review.profiles.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <User className="w-5 h-5 text-gray-400" />
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <p className="text-white font-bold text-sm">
-                                                        {review.profiles?.full_name || "Verified Customer"}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">{formatDate(review.created_at)}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex text-yellow-500">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        className={cn(
-                                                            "w-4 h-4",
-                                                            i < review.rating ? "fill-current" : "text-gray-700 fill-gray-700"
-                                                        )}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <p className="text-gray-300 leading-relaxed">
-                                            {review.comment || <span className="italic text-gray-600">No comment provided.</span>}
-                                        </p>
-                                    </div>
-                                ))}
+                            <div className="text-center py-10 bg-card border border-border rounded-xl">
+                                <Star className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+                                <h3 className="text-white font-bold mb-2">Want to share your thoughts?</h3>
+                                <p className="text-sm">You must purchase this item to write a review. Check your <a href="/profile/purchases" className="text-primary hover:underline">Order History</a>.</p>
                             </div>
                         )}
+                        <ReviewsList reviews={reviews} />
                     </div>
                 )}
             </div>
         </div>
     );
 }
+

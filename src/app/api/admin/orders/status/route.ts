@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, isAdmin } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { z } from "zod";
 
 const ALLOWED_ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const;
+
+const updateStatusSchema = z.object({
+    order_id: z.string().uuid("Invalid order ID format"),
+    status: z.enum(ALLOWED_ORDER_STATUSES),
+});
 
 function normalizeStatus(input: unknown) {
     if (typeof input !== "string") return "";
@@ -12,14 +18,14 @@ function normalizeStatus(input: unknown) {
 }
 
 async function requireAdmin() {
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user || user.email !== process.env.ADMIN_EMAIL) {
-        return { errorResponse: NextResponse.json({ error: "Unauthorized" }, { status: 401 }), supabase };
+    if (!(await isAdmin())) {
+        return { errorResponse: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
     }
 
-    return { supabase, user };
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    return { supabase, user: user! };
 }
 
 function getDbClientOrFallback(fallbackClient: Awaited<ReturnType<typeof createClient>>) {
@@ -34,15 +40,20 @@ export async function PATCH(req: NextRequest) {
     const auth = await requireAdmin();
     if (auth.errorResponse) return auth.errorResponse;
 
-    const body = await req.json();
-    const orderId = body?.order_id as string | undefined;
-    const normalizedStatus = normalizeStatus(body?.status);
+    try {
+        const body = await req.json();
+        const validation = updateStatusSchema.safeParse(body);
 
-    if (!orderId || !normalizedStatus) {
-        return NextResponse.json({ error: "order_id and valid status are required" }, { status: 400 });
-    }
+        if (!validation.success) {
+            return NextResponse.json(
+                { error: "Invalid input", details: validation.error.format() },
+                { status: 400 }
+            );
+        }
 
-    const { db, usingFallback } = getDbClientOrFallback(auth.supabase);
+        const { order_id: orderId, status: normalizedStatus } = validation.data;
+
+        const { db, usingFallback } = getDbClientOrFallback(auth.supabase);
     const { data: existingOrder, error: existingOrderError } = await db
         .from("orders")
         .select("status")
@@ -83,4 +94,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, status: normalizedStatus });
+    } catch (error: any) {
+        console.error("Order status update error:", error);
+        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+    }
 }

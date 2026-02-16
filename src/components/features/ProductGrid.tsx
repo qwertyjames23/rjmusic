@@ -3,13 +3,14 @@
 import { useState, useMemo } from "react";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/features/ProductCard";
-import { SlidersHorizontal, ChevronDown, Check } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, Check, PackageOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 
 interface ProductGridProps {
     initialProducts: Product[];
 }
+
 
 type SortOption = "featured" | "price-asc" | "price-desc" | "newest";
 
@@ -209,13 +210,22 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
                             ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <p className="text-muted-foreground text-lg mb-2">No products found.</p>
+                        <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95 duration-500">
+                            <div className="bg-secondary/50 rounded-full p-6 mb-4">
+                                <PackageOpen className="size-12 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">No products found</h3>
+                            <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                                We couldn't find any products matching your criteria. Try adjusting your filters or search terms.
+                            </p>
                             <button
-                                onClick={() => setSelectedCategory("All")}
-                                className="text-primary font-medium hover:underline"
+                                onClick={() => {
+                                    setSelectedCategory("All");
+                                    setPriceRange([0, maxProductPrice]);
+                                }}
+                                className="px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors"
                             >
-                                Clear filters
+                                Clear all filters
                             </button>
                         </div>
                     )}

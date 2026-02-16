@@ -92,3 +92,17 @@ export interface OrderItem {
     subtotal: number;
     created_at: string;
 }
+
+export interface Review {
+    id: string;
+    user_id: string;
+    product_id: string;
+    rating: number;
+    title: string;
+    comment: string;
+    created_at: string;
+    profiles?: {
+        full_name: string;
+        avatar_url?: string;
+    } | null;
+}
