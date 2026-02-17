@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp, Package } from "lucide-react";
+import { ChevronDown, ChevronUp, Package, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 interface OrderItem {
@@ -29,6 +29,8 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [deleting, setDeleting] = useState(false);
     const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const;
     const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"] as const;
     
@@ -86,6 +88,53 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
         }
     };
 
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === initialOrders.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(initialOrders.map(o => o.id)));
+        }
+    };
+
+    const handleDelete = async (orderIds: string[]) => {
+        if (orderIds.length === 0) return;
+
+        const confirmMsg = orderIds.length === 1
+            ? "Are you sure you want to delete this order?"
+            : `Are you sure you want to delete ${orderIds.length} orders?`;
+
+        if (!confirm(confirmMsg)) return;
+
+        setDeleting(true);
+        try {
+            const res = await fetch("/api/admin/orders/delete", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ order_ids: orderIds }),
+            });
+            const payload = await res.json();
+
+            if (!res.ok) throw new Error(payload.error || "Failed to delete");
+            showNotification(`Deleted ${orderIds.length} order(s)`);
+            setSelectedIds(new Set());
+            router.refresh();
+        } catch (error: unknown) {
+            console.error("Error deleting orders:", error);
+            showNotification(error instanceof Error ? error.message : "Failed to delete orders", true);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
             case 'pending': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
@@ -108,10 +157,34 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
 
     return (
         <div className="bg-[#0f141a] border border-white/5 rounded-xl overflow-hidden">
+            {/* Bulk Actions Bar */}
+            {selectedIds.size > 0 && (
+                <div className="flex items-center justify-between px-4 py-3 bg-red-500/10 border-b border-red-500/20">
+                    <span className="text-sm text-red-400 font-medium">
+                        {selectedIds.size} order(s) selected
+                    </span>
+                    <button
+                        onClick={() => handleDelete(Array.from(selectedIds))}
+                        disabled={deleting}
+                        className="flex items-center gap-2 px-4 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    >
+                        <Trash2 className="size-3.5" />
+                        {deleting ? "Deleting..." : "Delete Selected"}
+                    </button>
+                </div>
+            )}
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-white/5 text-gray-400 font-medium border-b border-white/5">
                         <tr>
+                            <th className="p-4 w-10">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedIds.size === initialOrders.length && initialOrders.length > 0}
+                                    onChange={toggleSelectAll}
+                                    className="size-4 rounded cursor-pointer accent-primary"
+                                />
+                            </th>
                             <th className="p-4">Order ID</th>
                             <th className="p-4">Customer</th>
                             <th className="p-4">Date</th>
@@ -125,6 +198,14 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                         {initialOrders.map((order) => (
                             <Fragment key={order.id}>
                                 <tr className="hover:bg-white/5 transition-colors">
+                                    <td className="p-4 w-10">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(order.id)}
+                                            onChange={() => toggleSelect(order.id)}
+                                            className="size-4 rounded cursor-pointer accent-primary"
+                                        />
+                                    </td>
                                     <td className="p-4 font-mono text-primary text-xs">{order.order_number || order.id.slice(0,8).toUpperCase()}</td>
                                     <td className="p-4 font-medium text-white">{order.shipping_name}</td>
                                     <td className="p-4 text-gray-400">
@@ -168,17 +249,25 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                                         </div>
                                     </td>
                                     <td className="p-4 flex items-center gap-2">
-                                        <button 
+                                        <button
                                             onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
                                             className="p-1 hover:bg-white/10 rounded text-gray-400 flex items-center gap-1 text-xs"
                                         >
                                             {expandedId === order.id ? <><ChevronUp className="size-4" /> Hide</> : <><ChevronDown className="size-4" /> Items</>}
                                         </button>
+                                        <button
+                                            onClick={() => handleDelete([order.id])}
+                                            disabled={deleting}
+                                            className="p-1 hover:bg-red-500/20 rounded text-gray-500 hover:text-red-400 transition-colors"
+                                            title="Delete order"
+                                        >
+                                            <Trash2 className="size-4" />
+                                        </button>
                                     </td>
                                 </tr>
                                 {expandedId === order.id && (
                                     <tr className="bg-white/[0.02]">
-                                        <td colSpan={6} className="p-4">
+                                        <td colSpan={8} className="p-4">
                                             <div className="bg-[#0a0d11] rounded-lg p-4 border border-white/5">
                                                 <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                                                     <Package className="size-4 text-primary" />
