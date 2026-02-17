@@ -273,7 +273,7 @@ export default function CartPage() {
                                 <span>Total ({selectedItems.length} items):</span>
                                 <span className="font-bold text-2xl text-primary">{formatPrice(selectedTotal)}</span>
                             </div>
-                            <span className="text-xs text-muted-foreground">Taxes included</span>
+                            <span className="text-xs text-muted-foreground">Shipping calculated at checkout</span>
                         </div>
 
                         <Link

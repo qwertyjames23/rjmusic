@@ -457,33 +457,27 @@ export default function CheckoutPage() {
                                     </div>
                                 </label>
 
-                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === "gcash" ? "border-primary bg-primary/5" : "border-border"
-                                    }`}>
+                                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-not-allowed opacity-50 border-border">
                                     <input
                                         type="radio"
                                         name="payment"
-                                        value="gcash"
-                                        checked={paymentMethod === "gcash"}
-                                        onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
+                                        disabled
                                     />
                                     <div>
                                         <p className="font-semibold text-foreground">GCash / PayMaya</p>
-                                        <p className="text-sm text-muted-foreground">Secure e-wallet payment</p>
+                                        <p className="text-sm text-muted-foreground">Coming soon</p>
                                     </div>
                                 </label>
 
-                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === "card" ? "border-primary bg-primary/5" : "border-border"
-                                    }`}>
+                                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-not-allowed opacity-50 border-border">
                                     <input
                                         type="radio"
                                         name="payment"
-                                        value="card"
-                                        checked={paymentMethod === "card"}
-                                        onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
+                                        disabled
                                     />
                                     <div>
                                         <p className="font-semibold text-foreground">Credit / Debit Card</p>
-                                        <p className="text-sm text-muted-foreground">Visa, Mastercard via PayMongo</p>
+                                        <p className="text-sm text-muted-foreground">Coming soon</p>
                                     </div>
                                 </label>
                             </div>
