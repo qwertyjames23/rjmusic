@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { MessageCircle, X, Send, Loader2, ArrowLeft, Check, CheckCheck } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -662,6 +663,14 @@ export function ChatWidget() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const supabaseRef = useRef(createClient());
+    const pathname = usePathname();
+
+    // Pages with a sticky bottom bar — raise the widget above it
+    const hasStickyBar = pathname === "/cart" || pathname === "/checkout";
+    // button: bottom-6 normally, bottom-24 above sticky bar
+    const btnPosition = hasStickyBar ? "bottom-24" : "bottom-6";
+    // chat window (desktop): bottom-24 normally, bottom-[7.5rem] above sticky bar
+    const windowPosition = hasStickyBar ? "md:bottom-[7.5rem]" : "md:bottom-24";
 
     // Auth + role detection
     useEffect(() => {
@@ -715,7 +724,7 @@ export function ChatWidget() {
         <>
             {/* Chat Window */}
             {isOpen && (
-                <div className="fixed inset-0 md:inset-auto md:bottom-24 md:right-6 z-50 w-full md:w-[360px] h-full md:h-auto md:max-h-[520px] bg-[#111827] md:border md:border-white/10 md:rounded-2xl shadow-2xl flex flex-col overflow-hidden md:animate-in md:slide-in-from-bottom-4 md:duration-300">
+                <div className={`fixed inset-0 md:inset-auto ${windowPosition} md:right-6 z-50 w-full md:w-[360px] h-full md:h-auto md:max-h-[520px] bg-[#111827] md:border md:border-white/10 md:rounded-2xl shadow-2xl flex flex-col overflow-hidden md:animate-in md:slide-in-from-bottom-4 md:duration-300`}>
                     {user && isAdmin ? (
                         <AdminWidget adminId={user.id} onClose={() => setIsOpen(false)} />
                     ) : user ? (
@@ -732,7 +741,7 @@ export function ChatWidget() {
                     setIsOpen((prev) => !prev);
                     if (!isOpen) setUnreadCount(0);
                 }}
-                className={`fixed bottom-6 right-6 z-50 size-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg shadow-blue-600/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${isOpen ? "md:flex hidden" : "flex"}`}
+                className={`fixed ${btnPosition} right-6 z-50 size-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg shadow-blue-600/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${isOpen ? "md:flex hidden" : "flex"}`}
             >
                 {isOpen ? (
                     <X className="size-6" />
