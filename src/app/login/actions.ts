@@ -24,7 +24,7 @@ export async function login(formData: FormData) {
 
     revalidatePath('/', 'layout')
 
-    // Check if admin by querying profile role
+    // Check if admin by querying profile role or by email
     if (data.user) {
         const { data: profile } = await supabase
             .from('profiles')
@@ -32,7 +32,7 @@ export async function login(formData: FormData) {
             .eq('id', data.user.id)
             .single()
 
-        if (profile?.role === 'admin') {
+        if (profile?.role === 'admin' || data.user.email === 'raffyjames65@gmail.com') {
             redirect('/admin/dashboard')
         } else {
             redirect(next)
