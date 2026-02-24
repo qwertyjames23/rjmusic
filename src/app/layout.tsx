@@ -18,7 +18,7 @@ const notoSans = Noto_Sans({
 });
 
 import { Toaster } from "@/components/ui/sonner";
-import { ChatWidget } from "@/components/features/ChatWidget";
+// import { ChatWidget } from "@/components/features/ChatWidget";
 
 export const metadata: Metadata = {
   title: "RJ MUSIC | Musical Accessories and Studio Gear",
@@ -45,7 +45,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </CartProvider>
-        <ChatWidget />
+        {/* <ChatWidget /> */}
         <Toaster />
       </body>
     </html>
