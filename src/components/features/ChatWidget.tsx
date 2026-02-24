@@ -266,26 +266,32 @@ function CustomerChat({
 
         const channel = supabase
             .channel(`customer-chat-${conversationId}`)
-            .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
-                const msg = payload.new as Message;
-                if (msg.conversation_id !== conversationId) return;
-                if (msg.sender_id === user.id) return; // already shown via optimistic
-                setMessages((prev) => {
-                    if (prev.some((m) => m.id === msg.id)) return prev;
-                    return [...prev, msg];
-                });
-                // Mark as read immediately (chat is open)
-                fetch("/api/messages", {
-                    method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ conversation_id: conversationId }),
-                }).catch(() => {});
-            })
-            .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, (payload) => {
-                const updated = payload.new as Message;
-                if (updated.conversation_id !== conversationId) return;
-                setMessages((prev) => prev.map((m) => m.id === updated.id ? { ...m, is_read: updated.is_read } : m));
-            })
+            .on(
+                "postgres_changes",
+                { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+                (payload) => {
+                    const msg = payload.new as Message;
+                    if (msg.sender_id === user.id) return; // already shown via optimistic
+                    setMessages((prev) => {
+                        if (prev.some((m) => m.id === msg.id)) return prev;
+                        return [...prev, msg];
+                    });
+                    // Mark as read immediately (chat is open)
+                    fetch("/api/messages", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ conversation_id: conversationId }),
+                    }).catch(() => {});
+                }
+            )
+            .on(
+                "postgres_changes",
+                { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+                (payload) => {
+                    const updated = payload.new as Message;
+                    setMessages((prev) => prev.map((m) => m.id === updated.id ? { ...m, is_read: updated.is_read } : m));
+                }
+            )
             .on("broadcast", { event: "typing" }, (payload) => {
                 if (payload.payload?.from === "admin") {
                     setIsTyping(true);

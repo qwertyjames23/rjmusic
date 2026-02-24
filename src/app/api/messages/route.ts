@@ -14,9 +14,33 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const conversationId = searchParams.get("conversation_id");
 
-    // If conversation_id is provided (admin fetching specific convo)
+    // If conversation_id is provided, verify the requester owns it (or is admin)
     if (conversationId) {
-        const { data: messages, error } = await supabase
+        const adminSupabase = createAdminClient();
+
+        const { data: profile } = await adminSupabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+
+        const isAdmin = profile?.role === "admin";
+
+        if (!isAdmin) {
+            // Non-admins can only fetch their own conversation
+            const { data: ownConvo } = await adminSupabase
+                .from("conversations")
+                .select("id")
+                .eq("id", conversationId)
+                .eq("customer_id", user.id)
+                .maybeSingle();
+
+            if (!ownConvo) {
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            }
+        }
+
+        const { data: messages, error } = await adminSupabase
             .from("messages")
             .select("*")
             .eq("conversation_id", conversationId)
@@ -189,6 +213,28 @@ export async function PATCH(req: NextRequest) {
         }
 
         const adminSupabase = createAdminClient();
+
+        // Verify the requester owns this conversation or is admin
+        const { data: profile } = await adminSupabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+
+        const isAdmin = profile?.role === "admin";
+
+        if (!isAdmin) {
+            const { data: ownConvo } = await adminSupabase
+                .from("conversations")
+                .select("id")
+                .eq("id", conversation_id)
+                .eq("customer_id", user.id)
+                .maybeSingle();
+
+            if (!ownConvo) {
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            }
+        }
 
         // Mark all messages NOT sent by me as read
         await adminSupabase
