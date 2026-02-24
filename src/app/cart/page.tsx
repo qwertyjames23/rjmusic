@@ -238,58 +238,75 @@ export default function CartPage() {
 
             {/* Shopee-style Sticky Bottom Bar */}
             <div className="fixed bottom-0 left-0 w-full z-40 bg-card border-t border-border shadow-[0_-5px_20px_rgba(0,0,0,0.2)] animate-in slide-in-from-bottom-4 duration-300">
-                <div className="container mx-auto px-4 py-4 md:py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="container mx-auto px-4 py-3 sm:py-5">
+                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
 
-                    {/* Left Side: Select All & Delete */}
-                    <div className="flex items-center gap-4 w-full sm:w-auto">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={selectedItems.length === items.length && items.length > 0}
-                                onChange={toggleSelectAll}
-                                className="size-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 cursor-pointer"
-                            />
-                            <span className="text-sm text-muted-foreground">
-                                Select All ({selectedItems.length}/{items.length})
-                            </span>
-                        </label>
+                        {/* Row 1 (mobile) / Left (desktop): Select All, Delete, and mobile total */}
+                        <div className="flex items-center justify-between sm:gap-4 sm:w-auto">
+                            <div className="flex items-center gap-3">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedItems.length === items.length && items.length > 0}
+                                        onChange={toggleSelectAll}
+                                        className="size-4 rounded border-border bg-background text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 cursor-pointer"
+                                    />
+                                    <span className="text-sm text-muted-foreground">
+                                        Select All ({selectedItems.length}/{items.length})
+                                    </span>
+                                </label>
 
-                        {selectedItems.length > 0 && (
-                            <button
-                                onClick={handleBulkDelete}
-                                className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                            >
-                                <Trash2 className="size-4" />
-                                <span className="hidden sm:inline">Delete ({selectedItems.length})</span>
-                                <span className="sm:hidden">Delete</span>
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Right Side: Total & Checkout */}
-                    <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
-                        <div className="flex flex-col items-end">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span>Total ({selectedItems.length} items):</span>
-                                <span className="font-bold text-2xl text-primary">{formatPrice(selectedTotal)}</span>
+                                {selectedItems.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={handleBulkDelete}
+                                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="size-4" />
+                                        <span className="hidden sm:inline">Delete ({selectedItems.length})</span>
+                                        <span className="sm:hidden">Delete</span>
+                                    </button>
+                                )}
                             </div>
-                            <span className="text-xs text-muted-foreground">Shipping calculated at checkout</span>
+
+                            {/* Mobile-only: total price inline */}
+                            <div className="flex flex-col items-end sm:hidden">
+                                <span className="font-bold text-xl text-primary leading-tight">
+                                    {formatPrice(selectedTotal)}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">
+                                    {selectedItems.length} item{selectedItems.length !== 1 ? "s" : ""}
+                                </span>
+                            </div>
                         </div>
 
-                        <Link
-                            href="/checkout"
-                            className={`h-12 px-8 md:px-12 rounded-lg font-bold text-lg flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] ${selectedItems.length === 0
-                                ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                                : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20'
-                                }`}
-                            onClick={(e) => {
-                                if (selectedItems.length === 0) {
-                                    e.preventDefault();
-                                }
-                            }}
-                        >
-                            Check Out
-                        </Link>
+                        {/* Row 2 (mobile) / Right (desktop): Total label + Checkout button */}
+                        <div className="flex items-center gap-6 sm:w-auto">
+                            {/* Desktop-only: full total label */}
+                            <div className="hidden sm:flex flex-col items-end">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <span>Total ({selectedItems.length} items):</span>
+                                    <span className="font-bold text-2xl text-primary">{formatPrice(selectedTotal)}</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground">Shipping calculated at checkout</span>
+                            </div>
+
+                            <Link
+                                href="/checkout"
+                                className={`w-full sm:w-auto h-11 sm:h-12 px-8 sm:px-12 rounded-lg font-bold text-base sm:text-lg flex items-center justify-center gap-2 shadow-lg transition-all active:scale-[0.98] ${selectedItems.length === 0
+                                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                    : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20'
+                                    }`}
+                                onClick={(e) => {
+                                    if (selectedItems.length === 0) {
+                                        e.preventDefault();
+                                    }
+                                }}
+                            >
+                                Check Out
+                            </Link>
+                        </div>
+
                     </div>
                 </div>
             </div>
