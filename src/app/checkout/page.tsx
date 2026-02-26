@@ -55,7 +55,9 @@ export default function CheckoutPage() {
     // Filter items to show only selected ones
     const checkoutItems = items.filter(item => selectedItems.includes(item.id));
 
-    const shippingFee = 100; // Fixed shipping fee
+    const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+    const isLocalDelivery = selectedAddress?.city?.toLowerCase().includes('balingasag') ?? false;
+    const shippingFee = isLocalDelivery ? 0 : 100;
     // const tax = selectedTotal * 0.12; // 12% tax - Disabled temporarily per request
     const tax = 0;
     const total = selectedTotal + shippingFee + tax;
@@ -510,8 +512,15 @@ export default function CheckoutPage() {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Shipping</span>
-                                    <span className="text-foreground">{formatPrice(shippingFee)}</span>
+                                    {isLocalDelivery ? (
+                                        <span className="text-green-500 font-medium">Free</span>
+                                    ) : (
+                                        <span className="text-foreground">{formatPrice(shippingFee)}</span>
+                                    )}
                                 </div>
+                                {isLocalDelivery && (
+                                    <p className="text-xs text-green-500">Free local delivery (Balingasag)</p>
+                                )}
                                 {/* Tax Removed as requested */}
                                 {/* <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Tax (12%)</span>
