@@ -84,7 +84,7 @@ export default function ContactPage() {
                     {/* Right Column - Contact Form */}
                     <div className="flex flex-col gap-6">
                         <ContactForm />
-                    </div>
+                      </div>
                 </div>
             </div>
         </div>
