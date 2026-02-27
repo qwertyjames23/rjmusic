@@ -255,7 +255,7 @@ export default function CheckoutSuccessPage() {
 
                         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                             <Mail className="size-4" />
-                            <span>Check your email for the official receipt.</span>
+                            <span>We will reach out to confirm your order and delivery schedule.</span>
                         </div>
                     </div>
                 </div>
