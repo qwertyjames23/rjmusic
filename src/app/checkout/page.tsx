@@ -57,6 +57,7 @@ export default function CheckoutPage() {
 
     const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
     const isLocalDelivery = selectedAddress?.city?.toLowerCase().includes('balingasag') ?? false;
+    const isOutsideDeliveryArea = selectedAddressId !== "" && !isLocalDelivery;
     const shippingFee = isLocalDelivery ? 0 : 100;
     // const tax = selectedTotal * 0.12; // 12% tax - Disabled temporarily per request
     const tax = 0;
@@ -351,6 +352,21 @@ export default function CheckoutPage() {
                                 <h2 className="text-xl font-bold text-foreground">Shipping Address</h2>
                             </div>
 
+                            {isOutsideDeliveryArea && (
+                                <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm text-yellow-400 flex flex-col gap-2">
+                                    <p className="font-medium">Delivery is only available within Balingasag.</p>
+                                    <p>For orders outside Balingasag, please message us on Facebook to arrange your order.</p>
+                                    <a
+                                        href="https://www.facebook.com/profile.php?id=61584616634834"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
+                                    >
+                                        Message us on Facebook →
+                                    </a>
+                                </div>
+                            )}
+
                             {addresses.length === 0 ? (
                                 <div className="text-center py-8">
                                     <p className="text-muted-foreground mb-4">No addresses found</p>
@@ -543,7 +559,7 @@ export default function CheckoutPage() {
                             {/* Place Order Button */}
                             <button
                                 onClick={handlePlaceOrder}
-                                disabled={isSubmitting || !selectedAddressId || checkoutItems.length === 0}
+                                disabled={isSubmitting || !selectedAddressId || checkoutItems.length === 0 || isOutsideDeliveryArea}
                                 className="w-full mt-6 px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isSubmitting ? (

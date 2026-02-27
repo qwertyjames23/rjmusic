@@ -289,6 +289,18 @@ export default function CartPage() {
                                     <span className="font-bold text-2xl text-primary">{formatPrice(selectedTotal)}</span>
                                 </div>
                                 <span className="text-xs text-muted-foreground">Shipping calculated at checkout</span>
+                                <span className="text-xs text-muted-foreground">
+                                    Delivery available in Balingasag only.{" "}
+                                    <a
+                                        href="https://www.facebook.com/profile.php?id=61584616634834"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:underline"
+                                    >
+                                        Order via Facebook
+                                    </a>{" "}
+                                    for other areas.
+                                </span>
                             </div>
 
                             <Link
