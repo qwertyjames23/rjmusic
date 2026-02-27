@@ -107,6 +107,43 @@ export default function CheckoutPage() {
         fetchAddresses();
     }, [router]);
 
+    const sendOrderConfirmationEmail = (
+        orderId: string,
+        orderNumber: string | undefined,
+        userEmail: string,
+        addr: typeof addresses[0],
+        items: typeof checkoutItems,
+    ) => {
+        const addressStr = [
+            addr.name,
+            addr.address_line1,
+            addr.address_line2,
+            `${addr.city}, ${addr.state} ${addr.postal_code}`,
+            addr.country,
+        ].filter(Boolean).join(", ");
+
+        fetch("/api/email/order-confirmation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                orderNumber: orderNumber || orderId.slice(0, 8).toUpperCase(),
+                customerName: addr.name,
+                customerEmail: userEmail,
+                items: items.map(i => ({
+                    product_name: i.name,
+                    quantity: i.quantity,
+                    product_price: i.price,
+                    subtotal: i.price * i.quantity,
+                })),
+                subtotal: selectedTotal,
+                shippingFee,
+                total,
+                shippingAddress: addressStr,
+                paymentMethod,
+            }),
+        }).catch(() => { /* fire-and-forget, don't block order flow */ });
+    };
+
     const handlePlaceOrder = async () => {
         if (!selectedAddressId) {
             setError("Please select a shipping address");
@@ -279,6 +316,7 @@ export default function CheckoutPage() {
                         throw itemsInsertError;
                     }
 
+                    sendOrderConfirmationEmail(orderId, undefined, user.email!, selectedAddress, checkoutItems);
                     setIsSuccess(true);
                     removeItems(selectedItems);
                     router.push(`/order-confirmation/${orderId}`);
@@ -291,13 +329,14 @@ export default function CheckoutPage() {
                 throw rpcError;
             }
 
-            setIsSuccess(true);
-            removeItems(selectedItems);
-
-            const newOrderId = (order as { id?: string } | null)?.id;
+            const newOrderId = (order as { id?: string; order_number?: string } | null)?.id;
+            const newOrderNumber = (order as { id?: string; order_number?: string } | null)?.order_number;
             if (!newOrderId) {
                 throw new Error("Order placed but no order id was returned.");
             }
+            sendOrderConfirmationEmail(newOrderId, newOrderNumber, user.email!, selectedAddress, checkoutItems);
+            setIsSuccess(true);
+            removeItems(selectedItems);
             router.push(`/order-confirmation/${newOrderId}`);
         } catch (error: unknown) {
             console.error("Error placing order:", error);
