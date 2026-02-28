@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: customerEmail,
-      reply_to: "rjmusicshop@gmail.com",
+      replyTo: "rjmusicshop@gmail.com",
       subject: `Order Confirmed - #${orderNumber} | RJ Music`,
       html,
     });

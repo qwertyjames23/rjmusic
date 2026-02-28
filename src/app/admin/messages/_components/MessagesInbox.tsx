@@ -54,7 +54,7 @@ export function MessagesInbox() {
     // Fetch conversations
     useEffect(() => {
         fetchConversations();
-    }, []);
+    }, [fetchConversations]);
 
     // Realtime: listen for new messages across ALL conversations
     useEffect(() => {
@@ -125,7 +125,7 @@ export function MessagesInbox() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, []);
+    }, [fetchConversations]);
 
     // Scroll to bottom on new messages
     useEffect(() => {
