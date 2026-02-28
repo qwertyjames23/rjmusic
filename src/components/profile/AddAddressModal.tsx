@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { PROVINCES, CITIES_BY_PROVINCE } from "@/lib/ph-locations";
 
 interface AddAddressModalProps {
     isOpen: boolean;
@@ -34,6 +35,10 @@ export function AddAddressModal({ isOpen, onClose, onSuccess }: AddAddressModalP
             ...prev,
             [name]: type === "checkbox" ? checked : value
         }));
+    };
+
+    const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setFormData(prev => ({ ...prev, state: e.target.value, city: "" }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -179,35 +184,42 @@ export function AddAddressModal({ isOpen, onClose, onSuccess }: AddAddressModalP
                     {/* City, State, Postal Code */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-2">
-                                City *
+                            <label htmlFor="state" className="block text-sm font-medium text-gray-300 mb-2">
+                                Province *
                             </label>
-                            <input
-                                type="text"
+                            <select
+                                id="state"
+                                name="state"
+                                value={formData.state}
+                                onChange={handleProvinceChange}
+                                required
+                                className="w-full px-4 py-3 bg-[#0f1419] border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                            >
+                                <option value="">Select province</option>
+                                {PROVINCES.map(p => (
+                                    <option key={p} value={p}>{p}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-2">
+                                City / Municipality *
+                            </label>
+                            <select
                                 id="city"
                                 name="city"
                                 value={formData.city}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-3 bg-[#0f1419] border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                                placeholder="Cebu City"
-                            />
-                        </div>
-
-                        <div>
-                            <label htmlFor="state" className="block text-sm font-medium text-gray-300 mb-2">
-                                State/Province *
-                            </label>
-                            <input
-                                type="text"
-                                id="state"
-                                name="state"
-                                value={formData.state}
-                                onChange={handleChange}
-                                required
-                                className="w-full px-4 py-3 bg-[#0f1419] border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                                placeholder="Cebu"
-                            />
+                                disabled={!formData.state}
+                                className="w-full px-4 py-3 bg-[#0f1419] border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <option value="">{formData.state ? "Select city" : "Select province first"}</option>
+                                {(CITIES_BY_PROVINCE[formData.state] ?? []).map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>
@@ -269,6 +281,7 @@ export function AddAddressModal({ isOpen, onClose, onSuccess }: AddAddressModalP
                             type="button"
                             onClick={onClose}
                             className="flex-1 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-lg font-medium transition-colors"
+                            aria-label="Cancel"
                         >
                             Cancel
                         </button>
