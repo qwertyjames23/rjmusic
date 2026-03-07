@@ -17,6 +17,13 @@ interface Order {
     id: string;
     order_number: string;
     shipping_name: string;
+    shipping_phone?: string | null;
+    shipping_address_line1?: string | null;
+    shipping_address_line2?: string | null;
+    shipping_city?: string | null;
+    shipping_state?: string | null;
+    shipping_postal_code?: string | null;
+    payment_method?: string | null;
     total: number;
     status: string;
     payment_status: string;
@@ -268,31 +275,64 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                                 {expandedId === order.id && (
                                     <tr className="bg-white/[0.02]">
                                         <td colSpan={8} className="p-4">
-                                            <div className="bg-[#0a0d11] rounded-lg p-4 border border-white/5">
-                                                <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                                                    <Package className="size-4 text-primary" />
-                                                    Order Items
-                                                </h4>
-                                                <div className="space-y-2">
-                                                    {order.order_items.map((item) => (
-                                                        <div key={item.id} className="flex justify-between items-center text-sm">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="size-8 bg-white/5 rounded overflow-hidden relative">
-                                                                    {item.product_image && (
-                                                                        <Image
-                                                                            src={item.product_image}
-                                                                            alt={item.product_name}
-                                                                            fill
-                                                                            className="object-cover"
-                                                                            sizes="32px"
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                                <span className="text-gray-300">{item.product_name} <span className="text-gray-500">x{item.quantity}</span></span>
-                                                            </div>
-                                                            <span className="text-white">₱{item.subtotal.toLocaleString()}</span>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {/* Customer Details */}
+                                                <div className="bg-[#0a0d11] rounded-lg p-4 border border-white/5">
+                                                    <h4 className="text-sm font-bold text-white mb-3">Customer Details</h4>
+                                                    <div className="space-y-1.5 text-sm">
+                                                        <div className="flex gap-2">
+                                                            <span className="text-gray-500 w-16 shrink-0">Name</span>
+                                                            <span className="text-gray-200">{order.shipping_name || "—"}</span>
                                                         </div>
-                                                    ))}
+                                                        <div className="flex gap-2">
+                                                            <span className="text-gray-500 w-16 shrink-0">Phone</span>
+                                                            <span className="text-gray-200">{order.shipping_phone || "—"}</span>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <span className="text-gray-500 w-16 shrink-0">Address</span>
+                                                            <span className="text-gray-200">
+                                                                {[
+                                                                    order.shipping_address_line1,
+                                                                    order.shipping_address_line2,
+                                                                    order.shipping_city,
+                                                                    order.shipping_state,
+                                                                    order.shipping_postal_code,
+                                                                ].filter(Boolean).join(", ") || "—"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <span className="text-gray-500 w-16 shrink-0">Payment</span>
+                                                            <span className="text-gray-200 uppercase">{order.payment_method || "—"}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {/* Order Items */}
+                                                <div className="bg-[#0a0d11] rounded-lg p-4 border border-white/5">
+                                                    <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                                                        <Package className="size-4 text-primary" />
+                                                        Order Items
+                                                    </h4>
+                                                    <div className="space-y-2">
+                                                        {order.order_items.map((item) => (
+                                                            <div key={item.id} className="flex justify-between items-center text-sm">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="size-8 bg-white/5 rounded overflow-hidden relative">
+                                                                        {item.product_image && (
+                                                                            <Image
+                                                                                src={item.product_image}
+                                                                                alt={item.product_name}
+                                                                                fill
+                                                                                className="object-cover"
+                                                                                sizes="32px"
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                    <span className="text-gray-300">{item.product_name} <span className="text-gray-500">x{item.quantity}</span></span>
+                                                                </div>
+                                                                <span className="text-white">₱{item.subtotal.toLocaleString()}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
