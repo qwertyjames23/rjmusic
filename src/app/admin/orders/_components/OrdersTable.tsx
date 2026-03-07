@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ChevronUp, Package, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Package, Trash2, MessageCircle, Globe } from "lucide-react";
 import Image from "next/image";
 
 interface OrderItem {
@@ -24,6 +24,7 @@ interface Order {
     shipping_state?: string | null;
     shipping_postal_code?: string | null;
     payment_method?: string | null;
+    notes?: string | null;
     total: number;
     status: string;
     payment_status: string;
@@ -31,8 +32,11 @@ interface Order {
     order_items: OrderItem[];
 }
 
+type TabType = "all" | "website" | "messenger";
+
 export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
     const router = useRouter();
+    const [activeTab, setActiveTab] = useState<TabType>("all");
     const [updatingId, setUpdatingId] = useState<string | null>(null);
     const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -40,6 +44,16 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
     const [deleting, setDeleting] = useState(false);
     const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const;
     const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"] as const;
+
+    const isMessenger = (o: Order) => o.notes === "Order via Facebook Messenger";
+    const filteredOrders = initialOrders.filter((o) => {
+        if (activeTab === "messenger") return isMessenger(o);
+        if (activeTab === "website") return !isMessenger(o);
+        return true;
+    });
+
+    const messengerCount = initialOrders.filter(isMessenger).length;
+    const websiteCount = initialOrders.length - messengerCount;
     
     const showNotification = (message: string, isError = false) => {
         const div = document.createElement("div");
@@ -105,10 +119,10 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
     };
 
     const toggleSelectAll = () => {
-        if (selectedIds.size === initialOrders.length) {
+        if (selectedIds.size === filteredOrders.length) {
             setSelectedIds(new Set());
         } else {
-            setSelectedIds(new Set(initialOrders.map(o => o.id)));
+            setSelectedIds(new Set(filteredOrders.map(o => o.id)));
         }
     };
 
@@ -163,6 +177,34 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
     };
 
     return (
+        <div className="space-y-4">
+            {/* Tabs */}
+            <div className="flex gap-2">
+                <button
+                    onClick={() => { setActiveTab("all"); setSelectedIds(new Set()); }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "all" ? "bg-white/10 text-white" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+                >
+                    All
+                    <span className="text-xs bg-white/10 px-1.5 py-0.5 rounded-full">{initialOrders.length}</span>
+                </button>
+                <button
+                    onClick={() => { setActiveTab("website"); setSelectedIds(new Set()); }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "website" ? "bg-blue-500/20 text-blue-400" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+                >
+                    <Globe className="size-3.5" />
+                    Website
+                    <span className="text-xs bg-white/10 px-1.5 py-0.5 rounded-full">{websiteCount}</span>
+                </button>
+                <button
+                    onClick={() => { setActiveTab("messenger"); setSelectedIds(new Set()); }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "messenger" ? "bg-blue-600/20 text-blue-300" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+                >
+                    <MessageCircle className="size-3.5" />
+                    Messenger
+                    <span className="text-xs bg-white/10 px-1.5 py-0.5 rounded-full">{messengerCount}</span>
+                </button>
+            </div>
+
         <div className="bg-[#0f141a] border border-white/5 rounded-xl overflow-hidden">
             {/* Bulk Actions Bar */}
             {selectedIds.size > 0 && (
@@ -187,7 +229,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                             <th className="p-4 w-10">
                                 <input
                                     type="checkbox"
-                                    checked={selectedIds.size === initialOrders.length && initialOrders.length > 0}
+                                    checked={selectedIds.size === filteredOrders.length && filteredOrders.length > 0}
                                     onChange={toggleSelectAll}
                                     className="size-4 rounded cursor-pointer accent-primary"
                                 />
@@ -202,7 +244,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {initialOrders.map((order) => (
+                        {filteredOrders.map((order) => (
                             <Fragment key={order.id}>
                                 <tr className="hover:bg-white/5 transition-colors">
                                     <td className="p-4 w-10">
@@ -343,6 +385,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                     </tbody>
                 </table>
             </div>
+        </div>
         </div>
     );
 }
