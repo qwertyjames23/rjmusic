@@ -9,7 +9,11 @@ export default async function AdminOrdersPage() {
     const { data: orders, error } = await supabase
         .from("orders")
         .select(`
-            *,
+            id, order_number, shipping_name, shipping_phone,
+            shipping_address_line1, shipping_address_line2,
+            shipping_city, shipping_state, shipping_postal_code,
+            payment_method, total, status, payment_status,
+            created_at, notes,
             order_items (*)
         `)
         .order("created_at", { ascending: false });
