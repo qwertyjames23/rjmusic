@@ -38,6 +38,21 @@ export function MessagesInbox() {
     const selectedConvoRef = useRef<Conversation | null>(null);
     const supabaseRef = useRef(createClient());
 
+    const fetchConversations = useCallback(async () => {
+        setLoadingConvos(true);
+        try {
+            const res = await fetch("/api/admin/messages");
+            const data = await res.json();
+            if (data.conversations) {
+                setConversations(data.conversations);
+            }
+        } catch (err) {
+            console.error("Failed to fetch conversations:", err);
+        } finally {
+            setLoadingConvos(false);
+        }
+    }, []);
+
     // Get current user ID
     useEffect(() => {
         const supabase = supabaseRef.current;
@@ -138,21 +153,6 @@ export function MessagesInbox() {
             setTimeout(() => inputRef.current?.focus(), 100);
         }
     }, [selectedConvo]);
-
-    const fetchConversations = useCallback(async () => {
-        setLoadingConvos(true);
-        try {
-            const res = await fetch("/api/admin/messages");
-            const data = await res.json();
-            if (data.conversations) {
-                setConversations(data.conversations);
-            }
-        } catch (err) {
-            console.error("Failed to fetch conversations:", err);
-        } finally {
-            setLoadingConvos(false);
-        }
-    }, []);
 
     const selectConversation = async (convo: Conversation) => {
         setSelectedConvo(convo);
