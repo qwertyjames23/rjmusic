@@ -25,6 +25,8 @@ interface Order {
     shipping_postal_code?: string | null;
     payment_method?: string | null;
     notes?: string | null;
+    subtotal?: number | null;
+    shipping_fee?: number | null;
     total: number;
     status: string;
     payment_status: string;
@@ -345,6 +347,24 @@ export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
                                                         <div className="flex gap-2">
                                                             <span className="text-gray-500 w-16 shrink-0">Payment</span>
                                                             <span className="text-gray-200 uppercase">{order.payment_method || "—"}</span>
+                                                        </div>
+                                                        <div className="border-t border-white/5 mt-2 pt-2 space-y-1">
+                                                            <div className="flex justify-between text-xs">
+                                                                <span className="text-gray-500">Subtotal</span>
+                                                                <span className="text-gray-300">₱{(order.subtotal || 0).toLocaleString()}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-xs">
+                                                                <span className="text-gray-500">Shipping</span>
+                                                                <span className="text-gray-300">₱{(order.shipping_fee || 0).toLocaleString()}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm font-bold border-t border-white/10 pt-1 mt-1">
+                                                                <span className={order.payment_method === "cod" ? "text-yellow-400" : "text-green-400"}>
+                                                                    {order.payment_method === "cod" ? "💰 Amount to Collect" : "Total Paid"}
+                                                                </span>
+                                                                <span className={order.payment_method === "cod" ? "text-yellow-400" : "text-green-400"}>
+                                                                    ₱{order.total.toLocaleString()}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
