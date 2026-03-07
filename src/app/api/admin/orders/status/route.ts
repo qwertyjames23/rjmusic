@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest) {
         // Fetch current order status, items, and messenger sender id
         const { data: existingOrder, error: existingOrderError } = await db
             .from("orders")
-            .select("status, order_number, shipping_name, fb_sender_id, order_items(product_id, quantity)")
+            .select("status, order_items(product_id, quantity)")
             .eq("id", orderId)
             .single();
 
@@ -95,44 +95,7 @@ export async function PATCH(req: NextRequest) {
             }
         }
 
-        // Send Messenger notification if this is a messenger order
-        const fbSenderId = existingOrder?.fb_sender_id;
-        if (fbSenderId) {
-            const orderNum = existingOrder?.order_number || orderId.slice(0, 8).toUpperCase();
-            const customerName = existingOrder?.shipping_name || "Customer";
-            const messengerMessages: Partial<Record<typeof normalizedStatus, string>> = {
-                Processing: `Hi ${customerName}! ✅ Your order #${orderNum} is now being processed and prepared for shipping. We'll notify you once it's on the way!`,
-                Shipped: `Hi ${customerName}! 🚚 Your order #${orderNum} has been shipped! Antayon lang ang delivery. Salamat sa inyong order!`,
-                Delivered: `Hi ${customerName}! 📦 Your order #${orderNum} has been delivered. Salamat! If you have any concerns, feel free to message us.`,
-                Cancelled: `Hi ${customerName}. ❌ Your order #${orderNum} has been cancelled. If you have questions, please message us. Salamat!`,
-            };
-            const message = messengerMessages[normalizedStatus];
-            if (message) {
-                const pageToken = process.env.FB_PAGE_ACCESS_TOKEN;
-                if (pageToken) {
-                    try {
-                        const fbRes = await fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${pageToken}`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                recipient: { id: fbSenderId },
-                                messaging_type: "MESSAGE_TAG",
-                                tag: "POST_PURCHASE_UPDATE",
-                                message: { text: message },
-                            }),
-                        });
-                        if (!fbRes.ok) {
-                            const fbErr = await fbRes.json();
-                            console.error("FB Messenger API error:", JSON.stringify(fbErr));
-                        }
-                    } catch (err) {
-                        console.error("Failed to send Messenger notification:", err);
-                    }
-                } else {
-                    console.error("FB_PAGE_ACCESS_TOKEN is not set");
-                }
-            }
-        }
+        // Messenger notification is handled by the bot via Supabase Realtime
 
         const { error: logError } = await db
             .from("order_status_logs")
