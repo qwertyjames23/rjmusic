@@ -117,7 +117,7 @@ export async function PATCH(req: NextRequest) {
                             body: JSON.stringify({
                                 recipient: { id: fbSenderId },
                                 messaging_type: "MESSAGE_TAG",
-                                tag: "ORDER_UPDATE",
+                                tag: "POST_PURCHASE_UPDATE",
                                 message: { text: message },
                             }),
                         });
