@@ -47,46 +47,69 @@ export async function PATCH(req: NextRequest) {
         const { order_id: orderId, status: normalizedStatus } = validation.data;
 
         const { db, usingFallback } = getDbClientOrFallback(auth.supabase);
-    const { data: existingOrder, error: existingOrderError } = await db
-        .from("orders")
-        .select("status")
-        .eq("id", orderId)
-        .single();
 
-    if (existingOrderError) {
-        return NextResponse.json({ error: existingOrderError.message }, { status: 500 });
-    }
+        // Fetch current order status and items
+        const { data: existingOrder, error: existingOrderError } = await db
+            .from("orders")
+            .select("status, order_items(product_id, quantity)")
+            .eq("id", orderId)
+            .single();
 
-    const { error } = await db
-        .from("orders")
-        .update({ status: normalizedStatus })
-        .eq("id", orderId);
-
-    if (error) {
-        if (usingFallback) {
-            return NextResponse.json(
-                { error: "Order update failed. Set SUPABASE_SERVICE_ROLE_KEY for full admin access." },
-                { status: 503 }
-            );
+        if (existingOrderError) {
+            return NextResponse.json({ error: existingOrderError.message }, { status: 500 });
         }
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
 
-    const { error: logError } = await db
-        .from("order_status_logs")
-        .insert({
-            order_id: orderId,
-            old_status: existingOrder?.status || null,
-            new_status: normalizedStatus,
-            changed_by_user_id: auth.user.id,
-            changed_by_email: auth.user.email || null,
-        });
+        const oldStatus = existingOrder?.status || "";
+        const STOCK_DEDUCTED_STATUSES = ["Processing", "Shipped", "Delivered"];
 
-    if (logError) {
-        console.error("Failed to write order status log:", logError);
-    }
+        // Update order status
+        const { error } = await db
+            .from("orders")
+            .update({ status: normalizedStatus })
+            .eq("id", orderId);
 
-    return NextResponse.json({ success: true, status: normalizedStatus });
+        if (error) {
+            if (usingFallback) {
+                return NextResponse.json(
+                    { error: "Order update failed. Set SUPABASE_SERVICE_ROLE_KEY for full admin access." },
+                    { status: 503 }
+                );
+            }
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        // Stock management
+        const items = (existingOrder?.order_items as { product_id: string; quantity: number }[]) || [];
+        const wasStockDeducted = STOCK_DEDUCTED_STATUSES.includes(oldStatus);
+        const shouldDeductNow = normalizedStatus === "Processing" && !wasStockDeducted;
+        const shouldRestoreNow = normalizedStatus === "Cancelled" && wasStockDeducted;
+
+        if ((shouldDeductNow || shouldRestoreNow) && items.length > 0) {
+            const stockDelta = shouldDeductNow ? -1 : 1;
+            for (const item of items) {
+                if (!item.product_id) continue;
+                await db.rpc("adjust_product_stock", {
+                    p_product_id: item.product_id,
+                    p_delta: stockDelta * item.quantity,
+                });
+            }
+        }
+
+        const { error: logError } = await db
+            .from("order_status_logs")
+            .insert({
+                order_id: orderId,
+                old_status: oldStatus || null,
+                new_status: normalizedStatus,
+                changed_by_user_id: auth.user.id,
+                changed_by_email: auth.user.email || null,
+            });
+
+        if (logError) {
+            console.error("Failed to write order status log:", logError);
+        }
+
+        return NextResponse.json({ success: true, status: normalizedStatus });
     } catch (error: unknown) {
         console.error("Order status update error:", error);
         return NextResponse.json({ error: error instanceof Error ? error.message : "Internal server error" }, { status: 500 });
