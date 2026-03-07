@@ -110,11 +110,17 @@ export async function PATCH(req: NextRequest) {
             if (message) {
                 const pageToken = process.env.FB_PAGE_ACCESS_TOKEN;
                 if (pageToken) {
-                    fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${pageToken}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ recipient: { id: fbSenderId }, message: { text: message } }),
-                    }).catch((err) => console.error("Failed to send Messenger notification:", err));
+                    try {
+                        await fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${pageToken}`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ recipient: { id: fbSenderId }, message: { text: message } }),
+                        });
+                    } catch (err) {
+                        console.error("Failed to send Messenger notification:", err);
+                    }
+                } else {
+                    console.error("FB_PAGE_ACCESS_TOKEN is not set");
                 }
             }
         }
