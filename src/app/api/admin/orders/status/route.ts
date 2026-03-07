@@ -111,11 +111,20 @@ export async function PATCH(req: NextRequest) {
                 const pageToken = process.env.FB_PAGE_ACCESS_TOKEN;
                 if (pageToken) {
                     try {
-                        await fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${pageToken}`, {
+                        const fbRes = await fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${pageToken}`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ recipient: { id: fbSenderId }, message: { text: message } }),
+                            body: JSON.stringify({
+                                recipient: { id: fbSenderId },
+                                messaging_type: "MESSAGE_TAG",
+                                tag: "ORDER_UPDATE",
+                                message: { text: message },
+                            }),
                         });
+                        if (!fbRes.ok) {
+                            const fbErr = await fbRes.json();
+                            console.error("FB Messenger API error:", JSON.stringify(fbErr));
+                        }
                     } catch (err) {
                         console.error("Failed to send Messenger notification:", err);
                     }
