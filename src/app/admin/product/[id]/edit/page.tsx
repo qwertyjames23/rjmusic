@@ -240,8 +240,8 @@ export default function EditProductPage() {
             document.body.appendChild(successDiv);
             setTimeout(() => successDiv.remove(), 3000);
 
-            // Redirect to products page
-            setTimeout(() => router.push('/admin/products'), 1500);
+            // Redirect to products page (refresh to force re-fetch)
+            setTimeout(() => { router.refresh(); router.push('/admin/products'); }, 1500);
 
         } catch (error: unknown) {
             console.error(error);
