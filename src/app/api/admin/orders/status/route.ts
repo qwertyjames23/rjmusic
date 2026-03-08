@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest) {
         // Fetch current order status, items, and messenger sender id
         const { data: existingOrder, error: existingOrderError } = await db
             .from("orders")
-            .select("status, order_items(product_id, quantity)")
+            .select("status, shipping_name, order_number, fb_sender_id, order_items(product_id, quantity)")
             .eq("id", orderId)
             .single();
 
@@ -95,7 +95,27 @@ export async function PATCH(req: NextRequest) {
             }
         }
 
-        // Messenger notification is handled by the bot via Supabase Realtime
+        // Send Messenger notification directly if this is a Messenger order
+        const fbSenderId = existingOrder?.fb_sender_id;
+        const pageAccessToken = process.env.PAGE_ACCESS_TOKEN;
+        if (fbSenderId && pageAccessToken && normalizedStatus !== oldStatus) {
+            const name = existingOrder?.shipping_name || "Customer";
+            const orderNum = existingOrder?.order_number || orderId.slice(0, 8).toUpperCase();
+            const STATUS_MESSAGES: Record<string, string> = {
+                Processing: `Hi ${name}! Your order #${orderNum} is now being processed. We will notify you once it has been shipped. Thank you for ordering from RJ Music Shop!`,
+                Shipped:    `Hi ${name}! Your order #${orderNum} has been shipped and is now on the way. Please wait for updates from the courier.`,
+                Delivered:  `Hi ${name}! Your order #${orderNum} has been delivered. Thank you for purchasing from RJ Music Shop!`,
+                Cancelled:  `Hi ${name}. Your order #${orderNum} has been cancelled. Please message us if you need assistance.`,
+            };
+            const message = STATUS_MESSAGES[normalizedStatus];
+            if (message) {
+                fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${pageAccessToken}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ recipient: { id: fbSenderId }, message: { text: message } }),
+                }).catch((err) => console.error("Failed to send Messenger notification:", err));
+            }
+        }
 
         const { error: logError } = await db
             .from("order_status_logs")
