@@ -109,11 +109,15 @@ export async function PATCH(req: NextRequest) {
             };
             const message = STATUS_MESSAGES[normalizedStatus];
             if (message) {
-                fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${pageAccessToken}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ recipient: { id: fbSenderId }, message: { text: message } }),
-                }).catch((err) => console.error("Failed to send Messenger notification:", err));
+                try {
+                    await fetch(`https://graph.facebook.com/v19.0/me/messages?access_token=${pageAccessToken}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ recipient: { id: fbSenderId }, message: { text: message } }),
+                    });
+                } catch (err) {
+                    console.error("Failed to send Messenger notification:", err);
+                }
             }
         }
 
