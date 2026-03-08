@@ -376,7 +376,7 @@ export default function EditProductPage() {
                             </div>
                         </div>
 
-                        {hasVariants ? (
+                        {(hasVariants || showAddVariant || variants.length > 0) ? (
                             <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
                                 <div className="text-blue-400 font-medium">
                                     Product has variations. Pricing and stock are managed individually below.
