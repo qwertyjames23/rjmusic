@@ -207,11 +207,13 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
                 category,
                 brand,
                 images,
-                price: hasVariants ? 0 : Number(price),
-                stock: hasVariants ? 0 : Number(stock),
-                in_stock: hasVariants ? false : Number(stock) > 0,
                 has_variants: hasVariants,
                 original_price: originalPrice ? Number(originalPrice) : null,
+                ...(hasVariants ? {} : {
+                    price: Number(price),
+                    stock: Number(stock),
+                    in_stock: Number(stock) > 0,
+                }),
             }).eq('id', id);
 
             if (prodError) throw prodError;
@@ -252,6 +254,18 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
                     // If user disabled variations, we disable/delete them
                     await supabase.from('product_variants').delete().eq('product_id', id);
                 }
+            }
+
+            // Sync price/stock/in_stock from variants after saving
+            if (hasVariants) {
+                const activeVars = variants.filter(v => v.is_active !== false);
+                const totalStock = activeVars.reduce((sum, v) => sum + Number(v.stock || 0), 0);
+                const minPrice = activeVars.length > 0 ? Math.min(...activeVars.map(v => Number(v.price || 0))) : 0;
+                await supabase.from('products').update({
+                    price: minPrice,
+                    stock: totalStock,
+                    in_stock: totalStock > 0,
+                }).eq('id', id);
             }
 
             // Show success notification properly (no alert)

@@ -220,14 +220,16 @@ export default function EditProductPage() {
                 .update({
                     name,
                     description,
-                    price: hasVariants ? 0 : Number(price),
-                    original_price: hasVariants ? null : (originalPrice ? Number(originalPrice) : null),
                     category,
                     brand: brand || null,
                     images,
-                    stock: hasVariants ? 0 : stockNum,
-                    in_stock: hasVariants ? false : stockNum > 0, // Auto-sync
                     has_variants: hasVariants,
+                    ...(hasVariants ? {} : {
+                        price: Number(price),
+                        original_price: originalPrice ? Number(originalPrice) : null,
+                        stock: stockNum,
+                        in_stock: stockNum > 0,
+                    }),
                 })
                 .eq('id', productId);
 
