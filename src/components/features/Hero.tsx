@@ -29,7 +29,7 @@ export function Hero() {
                                 UNLEASH<br />YOUR SOUND.
                             </h1>
                             <p className="text-gray-400 text-lg md:text-xl font-light mt-4 max-w-md leading-relaxed font-body">
-                                Discover musical accessories and studio gear curated for the modern creator.
+                                Explore musical accessories and studio gear built for creators.
                             </p>
                         </div>
 
