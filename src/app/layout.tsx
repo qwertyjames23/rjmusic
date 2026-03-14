@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import CartProvider from "@/context/CartContext";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -70,6 +71,7 @@ export default function RootLayout({
         {/* <ChatWidget /> */}
         <Toaster />
       </body>
+      <GoogleAnalytics gaId="G-F3D0F5G564" />
     </html>
   );
 }
