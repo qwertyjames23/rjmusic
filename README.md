@@ -59,6 +59,14 @@ PAGE_ACCESS_TOKEN=
 GOOGLE_GENERATIVE_AI_API_KEY=
 ```
 
+## Screenshots
+
+![Homepage](screenshots/homepage.png)
+
+![Products](screenshots/products.png)
+
+![Product Detail](screenshots/product-detail.png)
+
 ## Local Development
 
 ```bash
