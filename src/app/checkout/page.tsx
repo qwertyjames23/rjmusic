@@ -8,9 +8,34 @@ import { createClient } from "@/utils/supabase/client";
 import { Address } from "@/types";
 import Image from "next/image";
 
+type DbLikeError = {
+    message?: string;
+    details?: string;
+    hint?: string;
+    code?: string;
+};
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (error && typeof error === "object") {
+        const dbError = error as DbLikeError;
+        const parts = [dbError.message, dbError.details, dbError.hint].filter(Boolean);
+        if (parts.length > 0) return parts.join(" ");
+        if (dbError.code) return `Database error (${dbError.code}).`;
+    }
+    return "Failed to place order. Please try again.";
+}
+
+function isMissingPlaceOrderRpc(error: DbLikeError | null): boolean {
+    if (!error) return false;
+    if (error.code === "PGRST202" || error.code === "42883") return true;
+    const message = (error.message || "").toLowerCase();
+    return message.includes("place_order") && (message.includes("not found") || message.includes("does not exist"));
+}
+
 export default function CheckoutPage() {
     const router = useRouter();
-    const { items, selectedTotal, removeItems, selectedItems, clearCart } = useCart();
+    const { items, selectedTotal, removeItems, selectedItems } = useCart();
 
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<string>("");
@@ -20,11 +45,20 @@ export default function CheckoutPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [idempotencyKey, setIdempotencyKey] = useState<string>("");
+
+    // Initialize idempotency key once per checkout session
+    useEffect(() => {
+        setIdempotencyKey(crypto.randomUUID());
+    }, []);
 
     // Filter items to show only selected ones
     const checkoutItems = items.filter(item => selectedItems.includes(item.id));
 
-    const shippingFee = 100; // Fixed shipping fee
+    const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+    const isLocalDelivery = selectedAddress?.city?.toLowerCase().includes('balingasag') ?? false;
+    const isOutsideDeliveryArea = selectedAddressId !== "" && !isLocalDelivery;
+    const shippingFee = isLocalDelivery ? 0 : 100;
     // const tax = selectedTotal * 0.12; // 12% tax - Disabled temporarily per request
     const tax = 0;
     const total = selectedTotal + shippingFee + tax;
@@ -71,7 +105,44 @@ export default function CheckoutPage() {
             }
         };
         fetchAddresses();
-    }, []);
+    }, [router]);
+
+    const sendOrderConfirmationEmail = (
+        orderId: string,
+        orderNumber: string | undefined,
+        userEmail: string,
+        addr: typeof addresses[0],
+        items: typeof checkoutItems,
+    ) => {
+        const addressStr = [
+            addr.name,
+            addr.address_line1,
+            addr.address_line2,
+            `${addr.city}, ${addr.state} ${addr.postal_code}`,
+            addr.country,
+        ].filter(Boolean).join(", ");
+
+        fetch("/api/email/order-confirmation", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                orderNumber: orderNumber || orderId.slice(0, 8).toUpperCase(),
+                customerName: addr.name,
+                customerEmail: userEmail,
+                items: items.map(i => ({
+                    product_name: i.name,
+                    quantity: i.quantity,
+                    product_price: i.price,
+                    subtotal: i.price * i.quantity,
+                })),
+                subtotal: selectedTotal,
+                shippingFee,
+                total,
+                shippingAddress: addressStr,
+                paymentMethod,
+            }),
+        }).catch(() => { /* fire-and-forget, don't block order flow */ });
+    };
 
     const handlePlaceOrder = async () => {
         if (!selectedAddressId) {
@@ -93,6 +164,20 @@ export default function CheckoutPage() {
 
             if (!user) {
                 router.push("/login?next=/checkout");
+                return;
+            }
+
+            // Check for existing order with this idempotency key (prevent duplicates)
+            const { data: existingOrder } = await supabase
+                .from("orders")
+                .select("id")
+                .eq("idempotency_key", idempotencyKey)
+                .maybeSingle();
+
+            if (existingOrder) {
+                setIsSuccess(true);
+                removeItems(selectedItems);
+                router.push(`/order-confirmation/${existingOrder.id}`);
                 return;
             }
 
@@ -118,10 +203,11 @@ export default function CheckoutPage() {
                 shipping_fee: shippingFee,
                 tax: tax,
                 total: total,
-                status: "pending",
+                status: "Pending",
                 payment_method: paymentMethod,
                 payment_status: "pending",
                 notes: notes || null,
+                idempotency_key: idempotencyKey,
             };
 
             // Prepare Items Data
@@ -134,27 +220,127 @@ export default function CheckoutPage() {
                 subtotal: item.price * item.quantity,
             }));
 
-            // Call RPC function to place order
+            // Handle PayMongo Payments (GCash / Card)
+            if (paymentMethod !== 'cod') {
+                try {
+                    // 1. Create the Pending Order First
+                    const { data: createdOrder, error: orderInsertError } = await supabase
+                        .from("orders")
+                        .insert(orderData)
+                        .select("id")
+                        .single();
+
+                    if (orderInsertError) {
+                        // Handle duplicate idempotency_key (race condition)
+                        if (orderInsertError.code === '23505') {
+                            const { data: dup } = await supabase.from("orders").select("id").eq("idempotency_key", idempotencyKey).maybeSingle();
+                            if (dup) { setIsSuccess(true); removeItems(selectedItems); router.push(`/order-confirmation/${dup.id}`); return; }
+                        }
+                        throw orderInsertError;
+                    }
+                    
+                    const orderId = createdOrder.id;
+
+                    const itemsWithOrderId = itemsData.map(item => ({ ...item, order_id: orderId }));
+                    const { error: itemsInsertError } = await supabase
+                        .from("order_items")
+                        .insert(itemsWithOrderId);
+
+                    if (itemsInsertError) {
+                        await supabase.from("orders").delete().eq("id", orderId); // Rollback
+                        throw itemsInsertError;
+                    }
+
+                    // 2. Call PayMongo Checkout API
+                    const response = await fetch('/api/paymongo/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            amount: total,
+                            description: `Order #${orderId}`,
+                            paymentMethod
+                        })
+                    });
+
+                    const paymentData = await response.json();
+
+                    if (!response.ok) throw new Error(paymentData.error || 'Payment initialization failed');
+
+                    // 3. Redirect to PayMongo
+                    window.location.href = paymentData.checkoutUrl;
+                    return;
+
+                } catch (err: unknown) {
+                    console.error('Payment Error:', err);
+                    setError(err instanceof Error ? err.message : "Payment processing failed");
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
+            // Call RPC function to place order (preferred path) for COD
             const { data: order, error: rpcError } = await supabase.rpc('place_order', {
                 order_data: orderData,
                 items_data: itemsData
             });
 
             if (rpcError) {
+                if (isMissingPlaceOrderRpc(rpcError)) {
+                    // Fallback path if RPC is not deployed in current DB.
+                    const { data: createdOrder, error: orderInsertError } = await supabase
+                        .from("orders")
+                        .insert(orderData)
+                        .select("id")
+                        .single();
+
+                    if (orderInsertError) {
+                        // Handle duplicate idempotency_key (race condition)
+                        if (orderInsertError.code === '23505') {
+                            const { data: dup } = await supabase.from("orders").select("id").eq("idempotency_key", idempotencyKey).maybeSingle();
+                            if (dup) { setIsSuccess(true); removeItems(selectedItems); router.push(`/order-confirmation/${dup.id}`); return; }
+                        }
+                        throw orderInsertError;
+                    }
+
+                    const orderId = createdOrder?.id as string | undefined;
+                    if (!orderId) throw new Error("Order was created but no order id was returned.");
+
+                    const itemsWithOrderId = itemsData.map(item => ({ ...item, order_id: orderId }));
+                    const { error: itemsInsertError } = await supabase
+                        .from("order_items")
+                        .insert(itemsWithOrderId);
+
+                    if (itemsInsertError) {
+                        // Best-effort rollback to avoid orphaned orders on partial failure.
+                        await supabase.from("orders").delete().eq("id", orderId);
+                        throw itemsInsertError;
+                    }
+
+                    sendOrderConfirmationEmail(orderId, undefined, user.email!, selectedAddress, checkoutItems);
+                    setIsSuccess(true);
+                    removeItems(selectedItems);
+                    router.push(`/order-confirmation/${orderId}`);
+                    return;
+                }
+
                 if (rpcError.message.includes("Insufficient stock")) {
                     throw new Error("One or more items in your cart are out of stock. Please check your cart.");
                 }
                 throw rpcError;
             }
 
+            const newOrderId = (order as { id?: string; order_number?: string } | null)?.id;
+            const newOrderNumber = (order as { id?: string; order_number?: string } | null)?.order_number;
+            if (!newOrderId) {
+                throw new Error("Order placed but no order id was returned.");
+            }
+            sendOrderConfirmationEmail(newOrderId, newOrderNumber, user.email!, selectedAddress, checkoutItems);
             setIsSuccess(true);
             removeItems(selectedItems);
-
-            const newOrderId = (order as any).id;
             router.push(`/order-confirmation/${newOrderId}`);
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Error placing order:", error);
-            setError(error instanceof Error ? error.message : "Failed to place order. Please try again.");
+            setError(getErrorMessage(error));
             setIsSubmitting(false);
         }
     };
@@ -204,6 +390,21 @@ export default function CheckoutPage() {
                                 <MapPin className="size-5 text-primary" />
                                 <h2 className="text-xl font-bold text-foreground">Shipping Address</h2>
                             </div>
+
+                            {isOutsideDeliveryArea && (
+                                <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm text-yellow-400 flex flex-col gap-2">
+                                    <p className="font-medium">Delivery is only available within Balingasag.</p>
+                                    <p>For orders outside Balingasag, please message us on Facebook to arrange your order.</p>
+                                    <a
+                                        href="https://www.facebook.com/profile.php?id=61584616634834"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
+                                    >
+                                        Message us on Facebook →
+                                    </a>
+                                </div>
+                            )}
 
                             {addresses.length === 0 ? (
                                 <div className="text-center py-8">
@@ -305,7 +506,7 @@ export default function CheckoutPage() {
                                         name="payment"
                                         value="cod"
                                         checked={paymentMethod === "cod"}
-                                        onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                        onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
                                     />
                                     <div>
                                         <p className="font-semibold text-foreground">Cash on Delivery</p>
@@ -313,16 +514,26 @@ export default function CheckoutPage() {
                                     </div>
                                 </label>
 
-                                <label className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-all opacity-50 ${paymentMethod === "gcash" ? "border-primary bg-primary/5" : "border-border"
-                                    }`}>
+                                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-not-allowed opacity-50 border-border">
                                     <input
                                         type="radio"
                                         name="payment"
-                                        value="gcash"
                                         disabled
                                     />
                                     <div>
-                                        <p className="font-semibold text-foreground">GCash</p>
+                                        <p className="font-semibold text-foreground">GCash / PayMaya</p>
+                                        <p className="text-sm text-muted-foreground">Coming soon</p>
+                                    </div>
+                                </label>
+
+                                <label className="flex items-center gap-3 p-4 border rounded-lg cursor-not-allowed opacity-50 border-border">
+                                    <input
+                                        type="radio"
+                                        name="payment"
+                                        disabled
+                                    />
+                                    <div>
+                                        <p className="font-semibold text-foreground">Credit / Debit Card</p>
                                         <p className="text-sm text-muted-foreground">Coming soon</p>
                                     </div>
                                 </label>
@@ -356,8 +567,15 @@ export default function CheckoutPage() {
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Shipping</span>
-                                    <span className="text-foreground">{formatPrice(shippingFee)}</span>
+                                    {isLocalDelivery ? (
+                                        <span className="text-green-500 font-medium">Free</span>
+                                    ) : (
+                                        <span className="text-foreground">{formatPrice(shippingFee)}</span>
+                                    )}
                                 </div>
+                                {isLocalDelivery && (
+                                    <p className="text-xs text-green-500">Free local delivery (Balingasag)</p>
+                                )}
                                 {/* Tax Removed as requested */}
                                 {/* <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Tax (12%)</span>
@@ -380,17 +598,17 @@ export default function CheckoutPage() {
                             {/* Place Order Button */}
                             <button
                                 onClick={handlePlaceOrder}
-                                disabled={isSubmitting || !selectedAddressId || checkoutItems.length === 0}
+                                disabled={isSubmitting || !selectedAddressId || checkoutItems.length === 0 || isOutsideDeliveryArea}
                                 className="w-full mt-6 px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isSubmitting ? (
                                     <>
                                         <Loader2 className="size-4 animate-spin" />
-                                        Placing Order...
+                                        {paymentMethod === 'cod' ? 'Placing Order...' : 'Redirecting to Payment...'}
                                     </>
                                 ) : (
                                     <>
-                                        Place Order
+                                        {paymentMethod === 'cod' ? 'Place Order' : `Pay with ${paymentMethod === 'gcash' ? 'GCash' : 'Card'}`}
                                         <ChevronRight className="size-4" />
                                     </>
                                 )}

@@ -1,13 +1,16 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Hero() {
     return (
         <section className="relative w-full min-h-[600px] md:min-h-[700px] flex items-center justify-center overflow-hidden bg-background">
             {/* Background Image & Overlay */}
             <div className="absolute inset-0 z-0 bg-surface-dark">
-                <img
+                <Image
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxO-MGXJmT0qSByrgOAUiOMqesh8GN4mX2e8TCi8PjV7gV3sy7fWmBESZRM9gcQvnoHY5wOFHOtP4OYWgHRrpsbVI92ZD1iYCTF6UkfFhiOArg_L0xHhxRAP59TRTdGlxKI9f_rfrcyXEfVwcokQdyx-7xPiHVwWyM2caYLwi22A1shTjVJR9VekNSOo-AI-XFb7mQa-aZgWf-L3NxAVwrTRBasLaj8xeuStrczHl1mYhnkCNckm69nF3XttRxcRIdPYlrSUprnsk"
                     alt="Studio Background"
+                    fill
+                    sizes="100vw"
                     className="w-full h-full object-cover opacity-60 mix-blend-overlay"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent" />
@@ -26,7 +29,7 @@ export function Hero() {
                                 UNLEASH<br />YOUR SOUND.
                             </h1>
                             <p className="text-gray-400 text-lg md:text-xl font-light mt-4 max-w-md leading-relaxed font-body">
-                                Discover musical accessories and studio gear curated for the modern creator.
+                                Explore musical accessories and studio gear built for creators.
                             </p>
                         </div>
 

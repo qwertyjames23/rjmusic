@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
 import {
-    ArrowLeft, Package, DollarSign, Tag, FileText, Image as ImageIcon, Sparkles,
-    Loader2, Layers, Plus, Trash2, Save, Eye, EyeOff, CheckCircle2,
-    LayoutGrid, Settings, Box, Truck
+    ArrowLeft, Tag, FileText, Image as ImageIcon,
+    Loader2, Plus, Trash2, LayoutGrid
 } from "lucide-react";
 import Link from "next/link";
 
@@ -70,27 +69,14 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
     const [batchStock, setBatchStock] = useState("");
 
     // Categories
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
 
-    useEffect(() => {
-        params.then(unwrappedParams => {
-            setId(unwrappedParams.id);
-        });
-        fetchCategories();
-    }, [params]);
-
-    useEffect(() => {
-        if (!id) return;
-        fetchProductData();
-        fetchVariants();
-    }, [id]);
-
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         const { data } = await supabase.from('categories').select('*').order('name');
         if (data) setCategories(data);
-    };
+    }, [supabase]);
 
-    const fetchProductData = async () => {
+    const fetchProductData = useCallback(async () => {
         const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
         if (error) {
             console.error(error);
@@ -109,10 +95,10 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
             setHasVariants(data.has_variants || false);
         }
         setLoading(false);
-    };
+    }, [id, router, supabase]);
 
-    const fetchVariants = async () => {
-        const { data, error } = await supabase.from('product_variants').select('*').eq('product_id', id).order('sort_order');
+    const fetchVariants = useCallback(async () => {
+        const { data } = await supabase.from('product_variants').select('*').eq('product_id', id).order('sort_order');
         if (data) {
             setVariants(data);
 
@@ -121,7 +107,20 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
                 setHasVariants(true);
             }
         }
-    };
+    }, [id, supabase]);
+
+    useEffect(() => {
+        params.then(unwrappedParams => {
+            setId(unwrappedParams.id);
+        });
+        fetchCategories();
+    }, [fetchCategories, params]);
+
+    useEffect(() => {
+        if (!id) return;
+        fetchProductData();
+        fetchVariants();
+    }, [fetchProductData, fetchVariants, id]);
 
     // --- Matrix Logic ---
     const addOption = (tier: 1 | 2) => {
@@ -191,7 +190,7 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
         setBatchStock("");
     };
 
-    const updateVariantField = (index: number, field: keyof VariantItem, value: any) => {
+    const updateVariantField = (index: number, field: keyof VariantItem, value: string | number | boolean | null) => {
         const updated = [...variants];
         updated[index] = { ...updated[index], [field]: value };
         setVariants(updated);
@@ -208,11 +207,13 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
                 category,
                 brand,
                 images,
-                price: hasVariants ? 0 : Number(price),
-                stock: hasVariants ? 0 : Number(stock),
-                in_stock: hasVariants ? false : Number(stock) > 0,
                 has_variants: hasVariants,
                 original_price: originalPrice ? Number(originalPrice) : null,
+                ...(hasVariants ? {} : {
+                    price: Number(price),
+                    stock: Number(stock),
+                    in_stock: Number(stock) > 0,
+                }),
             }).eq('id', id);
 
             if (prodError) throw prodError;
@@ -255,15 +256,27 @@ export default function AdminEditProductPage({ params }: { params: Promise<{ id:
                 }
             }
 
+            // Sync price/stock/in_stock from variants after saving
+            if (hasVariants) {
+                const activeVars = variants.filter(v => v.is_active !== false);
+                const totalStock = activeVars.reduce((sum, v) => sum + Number(v.stock || 0), 0);
+                const minPrice = activeVars.length > 0 ? Math.min(...activeVars.map(v => Number(v.price || 0))) : 0;
+                await supabase.from('products').update({
+                    price: minPrice,
+                    stock: totalStock,
+                    in_stock: totalStock > 0,
+                }).eq('id', id);
+            }
+
             // Show success notification properly (no alert)
             // Ideally use your toast system, but currently defaulting to alert for simplicity in this file
             // Let's create a custom temporary banner instead of alert if possible, but alert is fine for now as requested by user ("suggestion lang")
             // Actually, I'll add a simple inline success message state
             alert("Product updated successfully!");
             router.refresh();
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
-            alert("Error saving: " + e.message);
+            alert("Error saving: " + (e instanceof Error ? e.message : "Unknown error"));
         } finally {
             setSubmitting(false);
         }

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(source .env.local)",
+      "Bash(npx netlify --version)",
+      "Bash(netlify --version)",
+      "Bash(npm install -g netlify-cli)",
+      "Read(//tmp/**)",
+      "Bash(NETLIFY_AUTH_TOKEN=$NETLIFY netlify sites:update --name rjmusicshop)",
+      "Bash(NETLIFY_AUTH_TOKEN=$NETLIFY netlify sites --help)",
+      "Bash(NETLIFY_AUTH_TOKEN=$NETLIFY netlify deploy --help)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(node --stack-trace-limit=50 node_modules/.bin/next build)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=\"--enable-source-maps\" npm run build)",
+      "Bash(npm show next@15 version)",
+      "Bash(npm show next@latest version)",
+      "Bash(npm install)",
+      "Bash(NETLIFY_AUTH_TOKEN=$NETLIFY netlify watch)",
+      "Bash(NETLIFY_AUTH_TOKEN=$NETLIFY netlify deploy --trigger)"
+    ]
+  }
+}

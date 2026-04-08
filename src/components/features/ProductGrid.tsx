@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/features/ProductCard";
-import { SlidersHorizontal, ChevronDown, Check } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, Check, PackageOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearchParams } from "next/navigation";
 
 interface ProductGridProps {
     initialProducts: Product[];
 }
+
 
 type SortOption = "featured" | "price-asc" | "price-desc" | "newest";
 
@@ -30,7 +31,38 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
 
     // Price Range State
     const maxProductPrice = initialProducts.length > 0 ? Math.max(...initialProducts.map(p => p.price)) : 10000;
+    const safeMaxPrice = Math.max(maxProductPrice, 1);
+    const minGap = Math.max(Math.round(safeMaxPrice * 0.02), 1);
     const [priceRange, setPriceRange] = useState<[number, number]>([0, maxProductPrice]);
+    const trackRef = useRef<HTMLDivElement>(null);
+
+    const handlePointerDown = (thumb: 'min' | 'max') => (e: React.PointerEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const el = e.currentTarget;
+        el.setPointerCapture(e.pointerId);
+
+        const handleMove = (moveEvent: PointerEvent) => {
+            if (!trackRef.current) return;
+            const rect = trackRef.current.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (moveEvent.clientX - rect.left) / rect.width));
+            const val = Math.round(ratio * safeMaxPrice);
+            setPriceRange(prev => {
+                if (thumb === 'min') {
+                    return [Math.max(0, Math.min(val, prev[1] - minGap)), prev[1]];
+                } else {
+                    return [prev[0], Math.min(safeMaxPrice, Math.max(val, prev[0] + minGap))];
+                }
+            });
+        };
+
+        const handleUp = () => {
+            el.removeEventListener('pointermove', handleMove);
+            el.removeEventListener('pointerup', handleUp);
+        };
+
+        el.addEventListener('pointermove', handleMove);
+        el.addEventListener('pointerup', handleUp);
+    };
 
     // Update filter logic to include price range
     const filteredProducts = useMemo(() => {
@@ -71,16 +103,6 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
 
         return result;
     }, [initialProducts, selectedCategory, sortBy, searchTerm, priceRange]);
-
-    const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = Math.min(Number(e.target.value), priceRange[1] - 500); // Prevent overlapping
-        setPriceRange([val, priceRange[1]]);
-    };
-
-    const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = Math.max(Number(e.target.value), priceRange[0] + 500); // Prevent overlapping
-        setPriceRange([priceRange[0], val]);
-    };
 
     // Format currency
     const formatPrice = (price: number) => {
@@ -156,38 +178,39 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
                     {/* Price Range */}
                     <div className="pt-6 border-t border-border">
                         <h3 className="font-bold mb-4">Price Range</h3>
-                        <div className="space-y-6">
+                        <div className="space-y-4">
 
-
-                            {/* Re-implementing with standard robust CSS dual slider technique */}
-                            <div className="relative h-2 w-full">
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={maxProductPrice}
-                                    value={priceRange[0]}
-                                    onChange={handleMinChange}
-                                    className="absolute w-full h-2 bg-transparent appearance-none pointer-events-none z-[11] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
-                                />
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={maxProductPrice}
-                                    value={priceRange[1]}
-                                    onChange={handleMaxChange}
-                                    className="absolute w-full h-2 bg-transparent appearance-none pointer-events-none z-[12] [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
-                                />
-                                <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full bg-secondary h-2 z-[10]"></div>
+                            {/* Dual range slider */}
+                            <div
+                                ref={trackRef}
+                                className="relative h-6 flex items-center mx-2.5"
+                            >
+                                {/* Track background */}
+                                <div className="absolute inset-x-0 h-1.5 rounded-full bg-secondary" />
+                                {/* Active range fill */}
                                 <div
-                                    className="absolute top-0 h-2 bg-primary rounded-full z-[10]"
+                                    className="absolute h-1.5 rounded-full bg-primary pointer-events-none"
                                     style={{
-                                        left: `${(priceRange[0] / maxProductPrice) * 100}%`,
-                                        right: `${100 - (priceRange[1] / maxProductPrice) * 100}%`
+                                        left: `${(priceRange[0] / safeMaxPrice) * 100}%`,
+                                        right: `${100 - (priceRange[1] / safeMaxPrice) * 100}%`
                                     }}
-                                ></div>
+                                />
+                                {/* Min thumb */}
+                                <div
+                                    className="absolute w-5 h-5 rounded-full bg-white border-2 border-primary shadow-md cursor-grab active:cursor-grabbing z-10 -translate-x-1/2 touch-none select-none hover:scale-110 transition-transform"
+                                    style={{ left: `${(priceRange[0] / safeMaxPrice) * 100}%` }}
+                                    onPointerDown={handlePointerDown('min')}
+                                />
+                                {/* Max thumb */}
+                                <div
+                                    className="absolute w-5 h-5 rounded-full bg-white border-2 border-primary shadow-md cursor-grab active:cursor-grabbing z-10 -translate-x-1/2 touch-none select-none hover:scale-110 transition-transform"
+                                    style={{ left: `${(priceRange[1] / safeMaxPrice) * 100}%` }}
+                                    onPointerDown={handlePointerDown('max')}
+                                />
                             </div>
 
-                            <div className="flex items-center justify-between font-mono text-xs font-bold text-muted-foreground">
+                            {/* Price labels */}
+                            <div className="flex items-center justify-between text-xs font-bold font-mono text-muted-foreground">
                                 <span>{formatPrice(priceRange[0])}</span>
                                 <span>{formatPrice(priceRange[1])}</span>
                             </div>
@@ -207,13 +230,22 @@ export function ProductGrid({ initialProducts }: ProductGridProps) {
                             ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <p className="text-muted-foreground text-lg mb-2">No products found.</p>
+                        <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95 duration-500">
+                            <div className="bg-secondary/50 rounded-full p-6 mb-4">
+                                <PackageOpen className="size-12 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">No products found</h3>
+                            <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                                We couldn&apos;t find any products matching your criteria. Try adjusting your filters or search terms.
+                            </p>
                             <button
-                                onClick={() => setSelectedCategory("All")}
-                                className="text-primary font-medium hover:underline"
+                                onClick={() => {
+                                    setSelectedCategory("All");
+                                    setPriceRange([0, maxProductPrice]);
+                                }}
+                                className="px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 transition-colors"
                             >
-                                Clear filters
+                                Clear all filters
                             </button>
                         </div>
                     )}

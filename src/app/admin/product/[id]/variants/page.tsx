@@ -16,6 +16,7 @@ import {
     EyeOff,
     Image as ImageIcon,
 } from "lucide-react";
+import ImageUpload from "@/components/ui/image-upload";
 
 interface Variant {
     id: string;
@@ -55,6 +56,7 @@ export default function ManageVariantsPage() {
         image_url: "",
         variant_type: "",
     });
+    const lockedVariantType = variants.find((v) => (v.variant_type || "").trim())?.variant_type?.trim() || "";
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -109,7 +111,7 @@ export default function ManageVariantsPage() {
                     stock: Number(newVariant.stock || 0),
                     image_url: newVariant.image_url || null,
                     sort_order: variants.length,
-                    ...(newVariant.variant_type ? { variant_type: newVariant.variant_type } : {}),
+                    variant_type: lockedVariantType || newVariant.variant_type || "Variation",
                 }),
             });
 
@@ -120,8 +122,8 @@ export default function ManageVariantsPage() {
             setNewVariant({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
             setShowAddForm(false);
             showNotification("Variant added successfully");
-        } catch (error: any) {
-            showNotification(error.message || "Failed to add variant", true);
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to add variant", true);
         } finally {
             setSaving(null);
         }
@@ -149,8 +151,8 @@ export default function ManageVariantsPage() {
             if (data.error) throw new Error(data.error);
 
             showNotification("Variant updated");
-        } catch (error: any) {
-            showNotification(error.message || "Failed to update variant", true);
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to update variant", true);
         } finally {
             setSaving(null);
         }
@@ -171,8 +173,8 @@ export default function ManageVariantsPage() {
 
             setVariants(prev => prev.filter(v => v.id !== variantId));
             showNotification("Variant deleted");
-        } catch (error: any) {
-            showNotification(error.message || "Failed to delete variant", true);
+        } catch (error: unknown) {
+            showNotification(error instanceof Error ? error.message : "Failed to delete variant", true);
         } finally {
             setSaving(null);
         }
@@ -263,7 +265,7 @@ export default function ManageVariantsPage() {
                                 </div>
 
                                 {/* Fields */}
-                                <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4">
                                     {/* Type */}
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -271,8 +273,9 @@ export default function ManageVariantsPage() {
                                         </label>
                                         <input
                                             className="w-full bg-[#1c222b] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
-                                            value={variant.variant_type || ""}
+                                            value={lockedVariantType || variant.variant_type || ""}
                                             onChange={e => handleFieldChange(variant.id, "variant_type", e.target.value)}
+                                            disabled={!!lockedVariantType}
                                             placeholder="e.g. Model"
                                             list="variant-type-list"
                                         />
@@ -332,6 +335,18 @@ export default function ManageVariantsPage() {
                                             placeholder="https://..."
                                         />
                                     </div>
+                                    <div className="md:col-span-1">
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                            Upload
+                                        </label>
+                                        <ImageUpload
+                                            value={variant.image_url ? [variant.image_url] : []}
+                                            maxImages={1}
+                                            compact={true}
+                                            onChange={(url) => handleFieldChange(variant.id, "image_url", url)}
+                                            onRemove={() => handleFieldChange(variant.id, "image_url", "")}
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Actions */}
@@ -382,15 +397,16 @@ export default function ManageVariantsPage() {
                             <Plus className="size-5 text-primary" />
                             Add New Variation
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
                                     Type
                                 </label>
                                 <input
                                     className="w-full bg-[#1c222b] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
-                                    value={newVariant.variant_type}
+                                    value={lockedVariantType || newVariant.variant_type}
                                     onChange={e => setNewVariant(prev => ({ ...prev, variant_type: e.target.value }))}
+                                    disabled={!!lockedVariantType}
                                     placeholder="e.g. Model, Size"
                                     list="variant-type-list-new"
                                 />
@@ -445,6 +461,18 @@ export default function ManageVariantsPage() {
                                     value={newVariant.image_url}
                                     onChange={e => setNewVariant(prev => ({ ...prev, image_url: e.target.value }))}
                                     placeholder="https://..."
+                                />
+                            </div>
+                            <div className="md:col-span-1">
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                    Upload
+                                </label>
+                                <ImageUpload
+                                    value={newVariant.image_url ? [newVariant.image_url] : []}
+                                    maxImages={1}
+                                    compact={true}
+                                    onChange={(url) => setNewVariant(prev => ({ ...prev, image_url: url }))}
+                                    onRemove={() => setNewVariant(prev => ({ ...prev, image_url: "" }))}
                                 />
                             </div>
                         </div>

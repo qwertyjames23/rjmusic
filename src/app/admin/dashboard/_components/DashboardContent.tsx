@@ -13,9 +13,20 @@ interface DashboardContentProps {
         orders: number;
         products: number;
     };
-    initialRecentOrders: any[];
+    initialRecentOrders: Array<{
+        id: string;
+        order_number?: string;
+        shipping_name?: string;
+        shipping_phone?: string;
+        total_amount?: number;
+        total?: number;
+        status: string;
+        payment_status: string;
+        created_at: string;
+    }>;
     initialChartData: { name: string; total: number }[];
 }
+type RecentOrder = DashboardContentProps["initialRecentOrders"][number];
 
 export default function DashboardContent({ initialStats, initialRecentOrders, initialChartData }: DashboardContentProps) {
     const [stats, setStats] = useState(initialStats);
@@ -46,13 +57,25 @@ export default function DashboardContent({ initialStats, initialRecentOrders, in
                 },
                 (payload) => {
                     console.log('New order received:', payload);
-                    const newOrder = payload.new;
+                    const rawOrder = payload.new as Partial<RecentOrder> & { id?: string };
+                    const newOrder: RecentOrder = {
+                        id: rawOrder.id || crypto.randomUUID(),
+                        order_number: rawOrder.order_number,
+                        shipping_name: rawOrder.shipping_name,
+                        shipping_phone: rawOrder.shipping_phone,
+                        total_amount: Number(rawOrder.total_amount || 0),
+                        total: Number(rawOrder.total || 0),
+                        status: rawOrder.status || "Pending",
+                        payment_status: rawOrder.payment_status || "pending",
+                        created_at: rawOrder.created_at || new Date().toISOString(),
+                    };
+                    const newOrderTotal = Number(newOrder.total || newOrder.total_amount || 0);
 
                     // Update stats
                     setStats((prev) => ({
                         ...prev,
                         orders: prev.orders + 1,
-                        revenue: prev.revenue + (newOrder.total || newOrder.total_amount || 0)
+                        revenue: prev.revenue + newOrderTotal
                     }));
 
                     // Add to recent orders list
@@ -62,7 +85,7 @@ export default function DashboardContent({ initialStats, initialRecentOrders, in
                     const today = new Date().toLocaleDateString('en-US', { weekday: 'short' });
                     setChartData(prev => prev.map(item =>
                         item.name === today
-                            ? { ...item, total: item.total + newOrder.total }
+                            ? { ...item, total: item.total + newOrderTotal }
                             : item
                     ));
 

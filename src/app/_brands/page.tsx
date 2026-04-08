@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 
 // Mock Brands Data
 const brands = [
@@ -78,7 +77,7 @@ export default function BrandsPage() {
             <div className="flex flex-col gap-4 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <h1 className="text-3xl md:text-5xl font-black tracking-tight">Our Brands</h1>
                 <p className="text-muted-foreground text-lg max-w-2xl">
-                    We partner with the world's most trusted manufacturers to bring you professional-grade equipment.
+                    We partner with the world&apos;s most trusted manufacturers to bring you professional-grade equipment.
                 </p>
             </div>
 

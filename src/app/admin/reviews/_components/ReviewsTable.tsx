@@ -6,7 +6,19 @@ import { useRouter } from "next/navigation";
 import { Loader2, Trash2, Star } from "lucide-react";
 import Image from "next/image";
 
-export function ReviewsTable({ initialReviews }: { initialReviews: any[] }) {
+interface ReviewRow {
+    id: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+    user_name: string; // Add user_name
+    product?: {
+        name?: string;
+        images?: string[];
+    } | null;
+}
+
+export function ReviewsTable({ initialReviews }: { initialReviews: ReviewRow[] }) {
     const router = useRouter();
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -38,11 +50,7 @@ export function ReviewsTable({ initialReviews }: { initialReviews: any[] }) {
                 <table className="w-full text-left text-sm">
                     <thead className="bg-white/5 text-gray-400 font-medium border-b border-white/5">
                         <tr>
-                            <th className="p-4">Product</th>
-                            <th className="p-4">Rating</th>
-                            <th className="p-4 w-1/2">Comment</th>
-                            <th className="p-4">Date</th>
-                            <th className="p-4">Action</th>
+                            <th className="p-4">Product</th><th className="p-4">Customer</th><th className="p-4">Rating</th><th className="p-4 w-1/2">Comment</th><th className="p-4">Date</th><th className="p-4">Action</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -59,17 +67,13 @@ export function ReviewsTable({ initialReviews }: { initialReviews: any[] }) {
                                         </div>
                                         <span className="font-medium text-white line-clamp-1">{review.product?.name || "Unknown Product"}</span>
                                     </div>
-                                </td>
-                                <td className="p-4">
+                                </td><td className="p-4 text-white font-medium">{review.user_name}</td><td className="p-4">
                                     <div className="flex text-yellow-500">
                                         {Array.from({ length: review.rating }).map((_, i) => (
                                             <Star key={i} className="size-3 fill-current" />
                                         ))}
                                     </div>
-                                </td>
-                                <td className="p-4 text-gray-300 italic">"{review.comment}"</td>
-                                <td className="p-4 text-gray-400 text-xs">{new Date(review.created_at).toLocaleDateString()}</td>
-                                <td className="p-4">
+                                </td><td className="p-4 text-gray-300 italic">&ldquo;{review.comment}&rdquo;</td><td className="p-4 text-gray-400 text-xs">{new Date(review.created_at).toLocaleDateString()}</td><td className="p-4">
                                     <button 
                                         onClick={() => handleDelete(review.id)}
                                         disabled={deletingId === review.id}
@@ -82,7 +86,7 @@ export function ReviewsTable({ initialReviews }: { initialReviews: any[] }) {
                         ))}
                         {initialReviews.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="p-8 text-center text-gray-500">No reviews found.</td>
+                                <td colSpan={6} className="p-8 text-center text-gray-500">No reviews found.</td>
                             </tr>
                         )}
                     </tbody>

@@ -11,6 +11,11 @@ import { Product } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import type { User as AuthUser } from "@supabase/supabase-js";
 
+// Module-level cache to avoid refetching products on every Navbar mount
+let cachedProducts: Product[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // Wrapper to conditionally render based on path
 export function Navbar() {
     const pathname = usePathname();
@@ -55,10 +60,17 @@ function NavbarContent() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Load products on mount
+    // Load products on mount (cached to avoid refetching on every navigation)
     useEffect(() => {
         const loadProducts = async () => {
+            const now = Date.now();
+            if (cachedProducts && (now - cacheTimestamp) < CACHE_TTL) {
+                setAllProducts(cachedProducts);
+                return;
+            }
             const products = await getProducts();
+            cachedProducts = products;
+            cacheTimestamp = now;
             setAllProducts(products);
         };
         loadProducts();
@@ -75,15 +87,13 @@ function NavbarContent() {
                 const { data: { session }, error } = await supabase.auth.getSession();
                 if (mounted) {
                     if (error) {
-                        console.log('Session error:', error.message);
                         setUser(null);
                     } else {
                         setUser(session?.user ?? null);
                     }
                     setIsAuthLoading(false);
                 }
-            } catch (err) {
-                console.log('Auth init error:', err);
+            } catch {
                 if (mounted) {
                     setUser(null);
                     setIsAuthLoading(false);
@@ -95,8 +105,6 @@ function NavbarContent() {
 
         // Listen for auth state changes (login, logout, token refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log('Auth state changed:', event, session?.user?.email);
-
             if (mounted) {
                 setUser(session?.user ?? null);
                 setIsAuthLoading(false);

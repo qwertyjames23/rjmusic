@@ -1,12 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, Package, Truck, MapPin, Calendar, CreditCard, ArrowRight, ShoppingBag, Mail, Check } from "lucide-react";
-import { useEffect } from "react";
+import { CheckCircle2, Package, Truck, Calendar, CreditCard, ArrowRight, ShoppingBag, Mail, Check, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
-import { cn } from "@/lib/utils";
+import { createClient } from "@/utils/supabase/client";
+
+interface OrderData {
+    id: string;
+    order_number: string;
+    shipping_name: string;
+    shipping_address_line1: string;
+    shipping_address_line2: string | null;
+    shipping_city: string;
+    shipping_state: string;
+    shipping_postal_code: string;
+    shipping_country: string;
+    payment_method: string;
+    status: string;
+    created_at: string;
+    total: number;
+}
 
 export default function CheckoutSuccessPage() {
+    const [order, setOrder] = useState<OrderData | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchOrder = async () => {
+            try {
+                const supabase = createClient();
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                // Get the most recent order for this user
+                const { data } = await supabase
+                    .from("orders")
+                    .select("id, order_number, shipping_name, shipping_address_line1, shipping_address_line2, shipping_city, shipping_state, shipping_postal_code, shipping_country, payment_method, status, created_at, total")
+                    .eq("user_id", user.id)
+                    .order("created_at", { ascending: false })
+                    .limit(1)
+                    .single();
+
+                if (data) setOrder(data);
+            } catch {
+                // Silently fail — page still works with fallback text
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchOrder();
+    }, []);
 
     useEffect(() => {
         // Trigger confetti on mount
@@ -31,6 +76,34 @@ export default function CheckoutSuccessPage() {
         return () => clearInterval(interval);
     }, []);
 
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    };
+
+    const getEstimatedDelivery = (dateString: string) => {
+        const date = new Date(dateString);
+        const start = new Date(date);
+        start.setDate(start.getDate() + 3);
+        const end = new Date(date);
+        end.setDate(end.getDate() + 5);
+        const fmt = (d: Date) => d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+        return `${fmt(start)} - ${fmt(end)}`;
+    };
+
+    const formatPaymentMethod = (method: string) => {
+        switch (method) {
+            case 'cod': return 'Cash on Delivery';
+            case 'gcash': return 'GCash';
+            case 'card': return 'Credit/Debit Card';
+            case 'paymaya': return 'PayMaya';
+            default: return method;
+        }
+    };
+
+    const orderNumber = order?.order_number || order?.id?.slice(0, 8) || '---';
+    const orderDate = order ? formatDate(order.created_at) : '---';
+
     return (
         <div className="min-h-screen bg-background relative overflow-x-hidden font-sans text-foreground">
             {/* Background Effects */}
@@ -54,7 +127,11 @@ export default function CheckoutSuccessPage() {
 
                         <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight">Thank You for Your Purchase!</h1>
                         <p className="text-muted-foreground text-lg mb-10">
-                            Your order <span className="font-mono font-bold bg-secondary px-2 py-0.5 rounded border border-border">#RJ-88291</span> has been placed successfully.
+                            {loading ? (
+                                <span className="inline-flex items-center gap-2"><Loader2 className="size-4 animate-spin" /> Loading order details...</span>
+                            ) : (
+                                <>Your order <span className="font-mono font-bold bg-secondary px-2 py-0.5 rounded border border-border">#{orderNumber}</span> has been placed successfully.</>
+                            )}
                         </p>
 
                         {/* Order Timeline */}
@@ -70,7 +147,7 @@ export default function CheckoutSuccessPage() {
                                     </div>
                                     <div className="text-left sm:text-center">
                                         <p className="text-sm font-bold">Order Placed</p>
-                                        <p className="text-xs text-muted-foreground">Oct 24, 2:30 PM</p>
+                                        <p className="text-xs text-muted-foreground">{orderDate}</p>
                                     </div>
                                 </div>
 
@@ -121,12 +198,21 @@ export default function CheckoutSuccessPage() {
                                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <Truck className="size-4" /> Delivery Address
                                 </h3>
-                                <p className="font-medium">Alex Producer</p>
-                                <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
-                                    128 Synth Avenue, Studio B<br />
-                                    Makati City, Metro Manila 1200<br />
-                                    Philippines
-                                </p>
+                                {order ? (
+                                    <>
+                                        <p className="font-medium">{order.shipping_name}</p>
+                                        <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
+                                            {order.shipping_address_line1}
+                                            {order.shipping_address_line2 && <><br />{order.shipping_address_line2}</>}
+                                            <br />
+                                            {order.shipping_city}, {order.shipping_state} {order.shipping_postal_code}
+                                            <br />
+                                            {order.shipping_country}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <p className="text-muted-foreground text-sm">---</p>
+                                )}
                             </div>
 
                             {/* Estimated Delivery */}
@@ -134,14 +220,16 @@ export default function CheckoutSuccessPage() {
                                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <Calendar className="size-4" /> Estimated Delivery
                                 </h3>
-                                <p className="font-medium text-lg">Oct 26 - Oct 28</p>
+                                <p className="font-medium text-lg">
+                                    {order ? getEstimatedDelivery(order.created_at) : '---'}
+                                </p>
                                 <p className="text-muted-foreground text-sm mt-1">
-                                    Standard Shipping (LBC Express)
+                                    Standard Shipping
                                 </p>
                                 <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
                                     <span className="text-xs text-muted-foreground">Payment Method</span>
                                     <span className="text-xs font-bold flex items-center gap-1">
-                                        <CreditCard className="size-4" /> Visa ending in 4242
+                                        <CreditCard className="size-4" /> {order ? formatPaymentMethod(order.payment_method) : '---'}
                                     </span>
                                 </div>
                             </div>
@@ -167,7 +255,7 @@ export default function CheckoutSuccessPage() {
 
                         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                             <Mail className="size-4" />
-                            <span>Check your email for the official receipt.</span>
+                            <span>We will reach out to confirm your order and delivery schedule.</span>
                         </div>
                     </div>
                 </div>

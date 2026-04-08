@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutDashboard, ShoppingBag, List, ShoppingCart, Users, BarChart3, Settings, Bell, Search, Plus, ClipboardList, Star } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, List, ShoppingCart, Users, BarChart3, Settings, Bell, Search, Plus, ClipboardList, Star, MessageCircle, Newspaper } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { LogoutButton } from "@/components/admin/LogoutButton";
 import { redirect } from "next/navigation";
@@ -12,10 +12,26 @@ export default async function AdminLayout({
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (!user || user.email !== adminEmail) {
+    if (!user) {
         redirect("/");
     }
+
+    // Check admin role from database (consistent with middleware and API routes)
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+    if (!profile || profile.role !== 'admin') {
+        redirect("/");
+    }
+
+    // Fetch unread message count
+    const { data: unreadData } = await supabase
+        .from('conversations')
+        .select('unread_count');
+    const totalUnread = (unreadData || []).reduce((sum: number, c: { unread_count: number }) => sum + (c.unread_count || 0), 0);
 
     return (
         <div className="flex min-h-screen w-full bg-[#111827] text-white font-sans antialiased overflow-hidden">
@@ -66,9 +82,22 @@ export default async function AdminLayout({
                             <ShoppingCart className="w-5 h-5 group-hover:text-white transition-colors" />
                             <span className="text-sm font-medium">Orders</span>
                         </Link>
+                        <Link href="/admin/messages" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group relative">
+                            <MessageCircle className="w-5 h-5 group-hover:text-white transition-colors" />
+                            <span className="text-sm font-medium">Messages</span>
+                            {totalUnread > 0 && (
+                                <span className="ml-auto px-2 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full">
+                                    {totalUnread}
+                                </span>
+                            )}
+                        </Link>
                         <Link href="/admin/customers" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
                             <Users className="w-5 h-5 group-hover:text-white transition-colors" />
                             <span className="text-sm font-medium">Customers</span>
+                        </Link>
+                        <Link href="/admin/newsletter" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
+                            <Newspaper className="w-5 h-5 group-hover:text-white transition-colors" />
+                            <span className="text-sm font-medium">Newsletter</span>
                         </Link>
                         <Link href="/admin/analytics" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-[#1f2937] hover:text-white transition-colors group">
                             <BarChart3 className="w-5 h-5 group-hover:text-white transition-colors" />

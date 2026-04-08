@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { X, MapPin, User, FileText, CreditCard, Package, Loader2, Truck, Calendar, Printer, Check, Clock, AlertCircle } from "lucide-react";
+import { X, MapPin, FileText, CreditCard, Package, Loader2, Printer, Check, AlertCircle } from "lucide-react";
 import Image from "next/image";
 
 interface OrderDetailsModalProps {
@@ -49,6 +49,34 @@ export function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDetailsModa
     const supabase = createClient();
 
     useEffect(() => {
+        const fetchDetails = async () => {
+            if (!orderId) return;
+            setLoading(true);
+            try {
+                const { data: orderData, error: orderError } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('id', orderId)
+                    .single();
+
+                if (orderError) throw orderError;
+                setOrder(orderData);
+
+                const { data: itemsData, error: itemsError } = await supabase
+                    .from('order_items')
+                    .select('*')
+                    .eq('order_id', orderId);
+
+                if (itemsError) throw itemsError;
+                setItems(itemsData || []);
+
+            } catch (error) {
+                console.error("Error fetching details:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         if (isOpen && orderId) {
             fetchDetails();
             document.body.style.overflow = 'hidden';
@@ -59,35 +87,7 @@ export function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDetailsModa
             setLoading(true);
         }
         return () => { document.body.style.overflow = 'unset'; };
-    }, [isOpen, orderId]);
-
-    const fetchDetails = async () => {
-        if (!orderId) return;
-        setLoading(true);
-        try {
-            const { data: orderData, error: orderError } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('id', orderId)
-                .single();
-
-            if (orderError) throw orderError;
-            setOrder(orderData);
-
-            const { data: itemsData, error: itemsError } = await supabase
-                .from('order_items')
-                .select('*')
-                .eq('order_id', orderId);
-
-            if (itemsError) throw itemsError;
-            setItems(itemsData || []);
-
-        } catch (error) {
-            console.error("Error fetching details:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [isOpen, orderId, supabase]);
 
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat('en-PH', {
@@ -361,7 +361,7 @@ export function OrderDetailsModal({ isOpen, onClose, orderId }: OrderDetailsModa
                                                 <FileText className="size-4" /> Order Notes
                                             </h3>
                                             <p className="text-gray-300 italic text-sm bg-black/20 p-3 rounded-lg print:text-black print:bg-transparent print:p-0 print:border print:border-gray-200 print:not-italic">
-                                                "{order.notes}"
+                                                &ldquo;{order.notes}&rdquo;
                                             </p>
                                         </div>
                                     )}

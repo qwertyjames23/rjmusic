@@ -1,23 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface ProductGalleryProps {
     images: string[];
+    mainImage: string;
+    onMainImageChange: (image: string) => void;
     productName: string;
-    productTag?: string; // Optional tag like "SALE" or "NEW"
+    productTag?: string;
 }
 
-export function ProductGallery({ images, productName, productTag }: ProductGalleryProps) {
-    // Default to first image
-    const [mainImage, setMainImage] = useState(images[0] || '/placeholder.png'); // Fallback placeholder
-    const [selectedIndex, setSelectedIndex] = useState(0);
+export function ProductGallery({ images, mainImage, onMainImageChange, productName, productTag }: ProductGalleryProps) {
+    const selectedIndex = Math.max(0, images.indexOf(mainImage));
 
     return (
         <div className="flex flex-col gap-4">
-            {/* Main Image View */}
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#282f39] bg-[#1a1f26] group">
                 <Image
                     src={mainImage}
@@ -27,7 +25,6 @@ export function ProductGallery({ images, productName, productTag }: ProductGalle
                     priority
                 />
 
-                {/* Optional Tag Overlay */}
                 {productTag && (
                     <span className="absolute top-4 left-4 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full z-10 shadow-lg shadow-black/20">
                         {productTag}
@@ -35,16 +32,12 @@ export function ProductGallery({ images, productName, productTag }: ProductGalle
                 )}
             </div>
 
-            {/* Thumbnails Grid */}
             {images.length > 1 && (
                 <div className="grid grid-cols-5 gap-3">
                     {images.map((img, idx) => (
                         <button
-                            key={idx}
-                            onClick={() => {
-                                setMainImage(img);
-                                setSelectedIndex(idx);
-                            }}
+                            key={`${img}-${idx}`}
+                            onClick={() => onMainImageChange(img)}
                             className={cn(
                                 "relative aspect-square rounded-lg border bg-[#1a1f26] overflow-hidden transition-all",
                                 selectedIndex === idx

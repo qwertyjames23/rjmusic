@@ -11,22 +11,21 @@ export async function GET(request: Request) {
     if (code) {
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
+        
         if (!error) {
             const { data: { user } } = await supabase.auth.getUser()
             const finalNext = user?.email === 'raffyjames65@gmail.com' ? '/admin/dashboard' : next
 
-            const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
-            const isLocalEnv = process.env.NODE_ENV === 'development'
-            if (isLocalEnv) {
-                // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-                return NextResponse.redirect(`${origin}${finalNext}`)
-            } else if (forwardedHost) {
-                return NextResponse.redirect(`https://${forwardedHost}${finalNext}`)
-            } else {
-                return NextResponse.redirect(`${origin}${finalNext}`)
+            // Force redirect to the correct production domain if on Vercel
+            const host = request.headers.get('host')
+            if (host && host.includes('vercel.app')) {
+                return NextResponse.redirect(`https://www.rjmusic.shop${finalNext}`)
             }
+
+            return NextResponse.redirect(`${origin}${finalNext}`)
         }
-        // If there is an error, redirect with the error message
+        
+        console.error('Auth callback error:', error.message)
         return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error.message)}`)
     }
 

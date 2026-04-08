@@ -1,7 +1,23 @@
 import Link from "next/link";
-import { Facebook, Instagram, Twitter, CreditCard, Wallet, Music2 } from "lucide-react";
+import { Facebook, Instagram, Twitter, CreditCard, Wallet } from "lucide-react";
+import { createClient } from "@/utils/supabase/server";
+import { NewsletterForm } from "@/components/features/NewsletterForm";
 
-export function Footer() {
+async function getFooterCategories() {
+    const supabase = await createClient();
+    const { data } = await supabase
+        .from("categories")
+        .select("name, slug")
+        .eq("is_visible", true)
+        .order("name")
+        .limit(6);
+
+    return data || [];
+}
+
+export async function Footer() {
+    const categories = await getFooterCategories();
+
     return (
         <footer className="border-t border-border bg-card py-12 text-card-foreground">
             <div className="container mx-auto px-4 md:px-6">
@@ -9,10 +25,19 @@ export function Footer() {
                     {/* Shop Column */}
                     <div className="flex flex-col gap-4">
                         <h4 className="font-bold mb-2">Shop</h4>
-                        <Link href="/products?category=guitars" className="text-sm text-muted-foreground hover:text-primary transition-colors">Guitars</Link>
-                        <Link href="/products?category=percussion" className="text-sm text-muted-foreground hover:text-primary transition-colors">Percussion</Link>
-                        <Link href="/products?category=keyboards" className="text-sm text-muted-foreground hover:text-primary transition-colors">Keyboards</Link>
-                        <Link href="/products?category=studio" className="text-sm text-muted-foreground hover:text-primary transition-colors">Studio Gear</Link>
+                        {categories.length > 0 ? (
+                            categories.map((cat) => (
+                                <Link
+                                    key={cat.slug}
+                                    href={`/products?category=${cat.slug}`}
+                                    className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                    {cat.name}
+                                </Link>
+                            ))
+                        ) : (
+                            <Link href="/products" className="text-sm text-muted-foreground hover:text-primary transition-colors">All Products</Link>
+                        )}
                     </div>
 
                     {/* Support Column */}
@@ -33,28 +58,29 @@ export function Footer() {
                         <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>
                     </div>
 
-                    {/* Follow Us Column */}
-                    <div className="flex flex-col gap-4">
-                        <h4 className="font-bold mb-2">Follow Us</h4>
-                        <div className="flex gap-4">
-                            <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                                <Facebook className="size-6" />
-                            </Link>
-                            <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                                <Instagram className="size-6" />
-                            </Link>
-                            <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                                <Twitter className="size-6" />
-                            </Link>
-                        </div>
-                    </div>
+                    {/* Newsletter Column */}
+                    <NewsletterForm />
                 </div>
 
                 <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-muted-foreground">© 2024 RJ MUSIC. All rights reserved.</p>
-                    <div className="flex gap-6">
-                        <CreditCard className="size-6 text-muted-foreground" />
-                        <Wallet className="size-6 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">© 2026 RJ MUSIC. All rights reserved.</p>
+                    <div className="flex items-center gap-6">
+                        <div className="flex gap-3">
+                            <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                                <Facebook className="size-5" />
+                            </Link>
+                            <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                                <Instagram className="size-5" />
+                            </Link>
+                            <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+                                <Twitter className="size-5" />
+                            </Link>
+                        </div>
+                        <div className="h-4 w-px bg-border"></div>
+                        <div className="flex gap-4">
+                            <CreditCard className="size-5 text-muted-foreground" />
+                            <Wallet className="size-5 text-muted-foreground" />
+                        </div>
                     </div>
                 </div>
             </div>

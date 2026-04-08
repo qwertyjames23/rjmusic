@@ -20,6 +20,21 @@ interface DBProduct {
     created_at: string;
 }
 
+const CATEGORIES: Product["category"][] = ["Guitars", "Keys", "Percussion", "Studio", "Accessories"];
+type ProductTag = NonNullable<Product["tags"]>[number];
+const PRODUCT_TAGS: ProductTag[] = ["NEW", "SALE", "BESTSELLER"];
+
+function normalizeCategory(value: string): Product["category"] {
+    return CATEGORIES.includes(value as Product["category"])
+        ? (value as Product["category"])
+        : "Accessories";
+}
+
+function normalizeTags(tags?: string[] | null): Product["tags"] {
+    if (!tags) return [];
+    return tags.filter((tag): tag is ProductTag => PRODUCT_TAGS.includes(tag as ProductTag));
+}
+
 export async function getProducts(): Promise<Product[]> {
     try {
         const { data, error } = await supabase
@@ -42,18 +57,18 @@ export async function getProducts(): Promise<Product[]> {
             description: item.description,
             price: item.price,
             originalPrice: item.original_price ?? undefined,
-            category: item.category as any,
+            category: normalizeCategory(item.category),
             brand: item.brand,
             images: item.images || [],
             inStock: item.in_stock,
             rating: item.rating,
             reviews: item.reviews,
-            tags: (item.tags as any) || [],
+            tags: normalizeTags(item.tags),
             features: item.features || []
         }));
-    } catch (err: any) {
+    } catch (err: unknown) {
         // Suppress AbortError in development (React Strict Mode)
-        if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('aborted'))) {
             return [];
         }
         console.error("Error fetching products:", err);
@@ -84,18 +99,18 @@ export async function getProduct(id: string): Promise<Product | null> {
             description: data.description,
             price: data.price,
             originalPrice: data.original_price ?? undefined,
-            category: data.category as any,
+            category: normalizeCategory(data.category),
             brand: data.brand,
             images: data.images || [],
             inStock: data.in_stock,
             rating: data.rating,
             reviews: data.reviews,
-            tags: (data.tags as any) || [],
+            tags: normalizeTags(data.tags),
             features: data.features || []
         };
-    } catch (err: any) {
+    } catch (err: unknown) {
         // Suppress AbortError in development (React Strict Mode)
-        if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+        if (err instanceof Error && (err.name === 'AbortError' || err.message?.includes('aborted'))) {
             return null;
         }
         console.error(`Error fetching product ${id}:`, err);

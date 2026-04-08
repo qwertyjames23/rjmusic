@@ -1,6 +1,6 @@
 "use client";
 
-import { CldUploadWidget } from 'next-cloudinary';
+import { CldUploadWidget, type CloudinaryUploadWidgetResults } from 'next-cloudinary';
 import { ImagePlus, Trash, Upload, Star } from 'lucide-react';
 import Image from 'next/image';
 
@@ -21,14 +21,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     maxImages = 5,
     compact = false
 }) => {
-    const onUpload = (result: any) => {
+    const onUpload = (result: CloudinaryUploadWidgetResults) => {
         console.log('Upload result:', result);
-        if (result?.info?.secure_url) {
+        if (result.info && typeof result.info === "object" && "secure_url" in result.info && typeof result.info.secure_url === "string") {
             onChange(result.info.secure_url);
         }
     };
 
-    const onError = (error: any) => {
+    const onError = (error: unknown) => {
         console.error('Upload error:', error);
         alert('Failed to upload image. Please check your Cloudinary configuration.');
     };

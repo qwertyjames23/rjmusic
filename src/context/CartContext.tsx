@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Product, CartItem } from "@/types";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner";
 
 interface CartContextType {
     items: CartItem[];
@@ -72,8 +73,8 @@ export default function CartProvider({ children }: { children: ReactNode }) {
 
                     // Update state
                     setItems(mergedItems);
-                } catch (error) {
-                    console.error('Failed to merge guest cart:', error);
+                } catch {
+                    // Failed to merge guest cart — non-critical
                 }
             } else if (event === 'SIGNED_OUT') {
                 setItems([]);
@@ -110,8 +111,8 @@ export default function CartProvider({ children }: { children: ReactNode }) {
             if (savedSelected) {
                 setSelectedItems(JSON.parse(savedSelected));
             }
-        } catch (error) {
-            console.error("Failed to load cart from localStorage", error);
+        } catch {
+            // Failed to load cart from localStorage — non-critical
         } finally {
             setIsLoaded(true);
         }
@@ -137,12 +138,14 @@ export default function CartProvider({ children }: { children: ReactNode }) {
         setItems(prev => {
             const existing = prev.find(item => item.id === product.id);
             if (existing) {
+                toast.success(`Updated ${product.name} quantity in cart`);
                 return prev.map(item =>
                     item.id === product.id
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
             }
+            toast.success(`Added ${product.name} to cart`);
             // Auto-select new items
             setSelectedItems(prev => [...prev, product.id]);
             return [...prev, { ...product, quantity }];
@@ -177,7 +180,6 @@ export default function CartProvider({ children }: { children: ReactNode }) {
     };
 
     const cartCount = items.reduce((acc, item) => acc + item.quantity, 0);
-    console.log('🛒 Cart Count:', cartCount, 'Items:', items.length);
 
     const cartTotal = items.reduce((acc, item) => {
         // Use declared price or fallback to 0 if something is wrong

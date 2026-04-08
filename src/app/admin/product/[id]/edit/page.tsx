@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import ImageUpload from "@/components/ui/image-upload";
@@ -27,7 +27,7 @@ export default function EditProductPage() {
     const [stock, setStock] = useState("0");
 
     // Categories State
-    const [categories, setCategories] = useState<any[]>([]);
+    const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
     const [hasVariants, setHasVariants] = useState(false);
 
     // Variants State
@@ -47,14 +47,9 @@ export default function EditProductPage() {
     const [showAddVariant, setShowAddVariant] = useState(false);
     const [savingVariant, setSavingVariant] = useState<string | null>(null);
     const [newVariant, setNewVariant] = useState({ label: "", price: "", stock: "0", image_url: "", variant_type: "" });
+    const lockedVariantType = variants.find((v) => (v.variant_type || "").trim())?.variant_type?.trim() || "";
 
-    useEffect(() => {
-        Promise.all([loadProduct(), fetchCategories()]);
-        // Load variants separately so it doesn't block the page
-        loadVariants();
-    }, [productId]);
-
-    const fetchCategories = async () => {
+    const fetchCategories = useCallback(async () => {
         try {
             const { data, error } = await supabase
                 .from('categories')
@@ -62,13 +57,13 @@ export default function EditProductPage() {
                 .order('name');
 
             if (error) throw error;
-            if (data) setCategories(data);
+            if (data) setCategories(data as Array<{ id: string; name: string }>);
         } catch (error) {
             console.error("Error fetching categories:", error);
         }
-    };
+    }, [supabase]);
 
-    const loadProduct = async () => {
+    const loadProduct = useCallback(async () => {
         setLoading(true);
         try {
             const { data, error } = await supabase
@@ -90,16 +85,16 @@ export default function EditProductPage() {
                 setStock(data.stock ? data.stock.toString() : "0");
                 setHasVariants(data.has_variants || false);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Error loading product:", error);
-            alert("Failed to load product: " + error.message);
+            alert("Failed to load product: " + (error instanceof Error ? error.message : "Unknown error"));
             router.push('/admin/products');
         } finally {
             setLoading(false);
         }
-    };
+    }, [productId, router, supabase]);
 
-    const loadVariants = async () => {
+    const loadVariants = useCallback(async () => {
         try {
             const res = await fetch(`/api/admin/variants?product_id=${productId}`);
             if (!res.ok) {
@@ -112,7 +107,20 @@ export default function EditProductPage() {
             // Silently fail - variants table may not exist yet
             console.warn("Could not load variants:", error);
         }
-    };
+    }, [productId]);
+
+    useEffect(() => {
+        Promise.all([loadProduct(), fetchCategories()]);
+        // Load variants separately so it doesn't block the page
+        loadVariants();
+    }, [fetchCategories, loadProduct, loadVariants]);
+
+    useEffect(() => {
+        // For variable products with no variants yet, open the add form immediately.
+        if (hasVariants && variants.length === 0) {
+            setShowAddVariant(true);
+        }
+    }, [hasVariants, variants.length]);
 
     const showNotification = (message: string, isError = false) => {
         const div = document.createElement("div");
@@ -139,7 +147,7 @@ export default function EditProductPage() {
                     stock: Number(newVariant.stock || 0),
                     image_url: newVariant.image_url || null,
                     sort_order: variants.length,
-                    ...(newVariant.variant_type ? { variant_type: newVariant.variant_type } : {}),
+                    variant_type: lockedVariantType || newVariant.variant_type || "Variation",
                 }),
             });
             const data = await res.json();
@@ -212,14 +220,16 @@ export default function EditProductPage() {
                 .update({
                     name,
                     description,
-                    price: hasVariants ? 0 : Number(price),
-                    original_price: hasVariants ? null : (originalPrice ? Number(originalPrice) : null),
                     category,
                     brand: brand || null,
                     images,
-                    stock: hasVariants ? 0 : stockNum,
-                    in_stock: hasVariants ? false : stockNum > 0, // Auto-sync
                     has_variants: hasVariants,
+                    ...(hasVariants ? {} : {
+                        price: Number(price),
+                        original_price: originalPrice ? Number(originalPrice) : null,
+                        stock: stockNum,
+                        in_stock: stockNum > 0,
+                    }),
                 })
                 .eq('id', productId);
 
@@ -232,14 +242,14 @@ export default function EditProductPage() {
             document.body.appendChild(successDiv);
             setTimeout(() => successDiv.remove(), 3000);
 
-            // Redirect to products page
-            setTimeout(() => router.push('/admin/products'), 1500);
+            // Redirect to products page (refresh to force re-fetch)
+            setTimeout(() => { router.refresh(); router.push('/admin/products'); }, 1500);
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
             const errorDiv = document.createElement('div');
             errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 animate-in slide-in-from-top-4 duration-300';
-            errorDiv.innerHTML = '✗ Error: ' + error.message;
+            errorDiv.innerHTML = '✗ Error: ' + (error instanceof Error ? error.message : 'Unknown error');
             document.body.appendChild(errorDiv);
             setTimeout(() => errorDiv.remove(), 3000);
         } finally {
@@ -368,7 +378,7 @@ export default function EditProductPage() {
                             </div>
                         </div>
 
-                        {hasVariants ? (
+                        {(hasVariants || showAddVariant || variants.length > 0) ? (
                             <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
                                 <div className="text-blue-400 font-medium">
                                     Product has variations. Pricing and stock are managed individually below.
@@ -484,8 +494,9 @@ export default function EditProductPage() {
                                                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
                                                 <input
                                                     className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
-                                                    value={variant.variant_type || ''}
+                                                    value={lockedVariantType || variant.variant_type || ""}
                                                     onChange={e => handleVariantFieldChange(variant.id, 'variant_type', e.target.value)}
+                                                    disabled={!!lockedVariantType}
                                                     placeholder="e.g. Model"
                                                     list="variant-type-suggestions"
                                                 />
@@ -574,8 +585,9 @@ export default function EditProductPage() {
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
                                         <input
                                             className="w-full bg-[#13171d] border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all outline-none"
-                                            value={newVariant.variant_type}
+                                            value={lockedVariantType || newVariant.variant_type}
                                             onChange={e => setNewVariant(prev => ({ ...prev, variant_type: e.target.value }))}
+                                            disabled={!!lockedVariantType}
                                             placeholder="e.g. Model, Size"
                                             list="variant-type-suggestions-new"
                                         />
@@ -675,3 +687,4 @@ export default function EditProductPage() {
         </div>
     );
 }
+
