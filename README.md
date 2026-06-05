@@ -31,7 +31,7 @@ A fully operational music accessories e-commerce store built from scratch and de
 
 | Layer | Tech |
 |-------|------|
-| Frontend | Next.js 14 (App Router), TypeScript, Tailwind CSS |
+| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS |
 | Backend | Next.js API Routes (serverless) |
 | Database | Supabase (PostgreSQL + Row Level Security) |
 | Auth | Supabase Auth |
@@ -69,8 +69,14 @@ GOOGLE_GENERATIVE_AI_API_KEY=
 
 ## Local Development
 
+**Prerequisites:** Node.js 20+, a Supabase project, and a Cloudinary account.
+
 ```bash
 npm install
-cp .env.local.example .env.local  # fill in credentials
-npm run dev
+cp .env.local.example .env.local   # then fill in your credentials
+npm run dev                          # → http://localhost:3000
 ```
+
+Full database setup (Supabase schema, RLS policies, Cloudinary) is documented in
+[`docs/DATABASE_SETUP.md`](docs/DATABASE_SETUP.md); deployment notes are in
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
