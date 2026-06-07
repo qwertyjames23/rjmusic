@@ -16,9 +16,11 @@ export async function GET(request: Request) {
             const { data: { user } } = await supabase.auth.getUser()
             const finalNext = user?.email === 'raffyjames65@gmail.com' ? '/admin/dashboard' : next
 
-            // Force redirect to the correct production domain if on Vercel
+            // Force the canonical production domain when served from the raw
+            // Netlify subdomain. Exact match so deploy previews
+            // (deploy-preview-N--rjmusicshop.netlify.app) are left alone.
             const host = request.headers.get('host')
-            if (host && host.includes('vercel.app')) {
+            if (host === 'rjmusicshop.netlify.app') {
                 return NextResponse.redirect(`https://www.rjmusic.shop${finalNext}`)
             }
 

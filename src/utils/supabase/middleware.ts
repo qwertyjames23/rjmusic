@@ -43,9 +43,11 @@ export async function updateSession(request: NextRequest) {
     type CookieSetOptions = Parameters<NextResponse["cookies"]["set"]>[2];
     const cookiesToSet: { name: string; value: string; options?: CookieSetOptions }[] = []
 
-    // Redirect to main domain if on vercel sub-domain
+    // Redirect to the canonical production domain when served from the raw
+    // Netlify subdomain. Exact match so deploy previews
+    // (deploy-preview-N--rjmusicshop.netlify.app) are left alone.
     const host = request.headers.get('host')
-    if (host && host.includes('vercel.app') && !host.includes('localhost')) {
+    if (host === 'rjmusicshop.netlify.app') {
         const url = request.nextUrl.clone()
         url.host = 'www.rjmusic.shop'
         url.protocol = 'https'
