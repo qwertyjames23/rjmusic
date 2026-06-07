@@ -221,7 +221,7 @@ Once setup is complete:
 1. **Test the application**: Go through the entire user flow (browse → add to cart → checkout)
 2. **Add real products**: Use `/admin/product/new` to add your actual inventory
 3. **Customize seed data**: Edit `database_init.sql` to match your products
-4. **Deploy**: When ready, deploy to Vercel and update OAuth redirect URLs
+4. **Deploy**: When ready, deploy to Netlify and update OAuth redirect URLs
 
 ---
 

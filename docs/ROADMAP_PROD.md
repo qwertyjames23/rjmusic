@@ -134,6 +134,13 @@ Finish the app with stable checkout, secure backend, and reliable deployment so 
   - Enforces filename format: `YYYYMMDDHHMMSS_description.sql`.
   - Fails on duplicate migration version prefixes.
 
+> **Update (June 7, 2026):** The Vercel `Deploy` workflow (`deploy.yml`) and the
+> `develop` → `staging` / `main` → `production` mapping described above were
+> **removed** — they were never wired up (no `VERCEL_*` secrets). rjmusic deploys
+> on **Netlify** via its GitHub integration (PR deploy previews + production on
+> merge to `main`). The `CI` workflow remains and now also runs the test suite.
+> See `DEPLOYMENT.md`.
+
 ### Environment Strategy
 
 - `local`
