@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resend, FROM_EMAIL, buildOrderConfirmationHtml } from "@/lib/resend";
+import { getResend, FROM_EMAIL, buildOrderConfirmationHtml } from "@/lib/resend";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       paymentMethod,
     });
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: FROM_EMAIL,
       to: customerEmail,
       replyTo: "rjmusicshop@gmail.com",
