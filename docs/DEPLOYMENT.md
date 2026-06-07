@@ -1,52 +1,48 @@
 # Deployment Runbook
 
-Last updated: February 14, 2026
+Last updated: June 7, 2026
 
-## Pipeline Overview
+## Overview
 
-- `CI` workflow runs on push to `main` and `develop`, and PR to `main`.
-- `Deploy` workflow runs only after `CI` completes successfully.
-- Branch mapping:
-  - `develop` -> `staging` (Vercel preview deployment)
-  - `main` -> `production` (Vercel production deployment)
-- Branch setup + exact verification commands:
-  - `DEVELOP_BRANCH_SETUP.md`
+rjmusic is deployed on **Netlify** (site `rjmusicshop`, domain `rjmusic.shop`)
+via Netlify's GitHub integration. GitHub Actions handles continuous
+integration; Netlify handles building and hosting.
 
-## Required GitHub Secrets
+- **CI (`.github/workflows/ci.yml`)** runs on push to `main` and on PRs to
+  `main`: Supabase migration guard → `npm run lint` → `npx tsc --noEmit` →
+  `npm test` → `npm run build`.
+- **Netlify** builds and deploys automatically:
+  - Every PR gets a **Deploy Preview** (`deploy-preview-<n>--rjmusicshop.netlify.app`).
+  - Merging to `main` triggers a **production** deploy to `rjmusic.shop`.
 
-Set these secrets in the repository:
+Build settings live in [`netlify.toml`](../netlify.toml): build command
+`npm run build`, publish directory `.next`, Node 22.
 
-- `VERCEL_TOKEN`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
+## Environment Variables (Netlify)
 
-If any secret is missing, deploy jobs fail fast before deployment starts.
+Set these in **Netlify → Site settings → Environment variables**:
 
-## Required GitHub Environments
-
-Create these environments in GitHub repo settings:
-
-- `staging`
-- `production`
-
-Recommended:
-
-- Add required reviewers for `production`.
-- Add environment-scoped secrets if you split staging/prod Vercel projects later.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
+- `ADMIN_EMAIL`
+- `PAGE_ACCESS_TOKEN`
+- `GOOGLE_GENERATIVE_AI_API_KEY`
+- `RESEND_API_KEY`
 
 ## Safe Deploy Checklist
 
-1. Confirm latest `CI` workflow is green.
-2. Confirm required secrets are configured.
-3. Merge to `develop` for staging verification.
-4. Validate staging checkout/cart/order flows.
-5. Merge to `main` for production deploy.
-6. Verify production health (home, product, cart, checkout, admin login).
+1. Open a PR to `main`; confirm the `CI` check is green.
+2. Review the Netlify **Deploy Preview** (home, product, cart, checkout, admin login).
+3. Merge to `main`.
+4. Confirm the production deploy succeeds in the Netlify dashboard.
+5. Verify production health on `rjmusic.shop` (home, product, cart, checkout, admin login).
 
 ## Rollback Procedure
 
-1. Open Vercel dashboard and identify the last healthy deployment.
-2. Promote that deployment to production.
-3. Revert problematic commit in `main`.
-4. Push revert commit and confirm `CI` and `Deploy` pass.
-5. Document incident cause and fix in project notes.
+1. Open the **Netlify dashboard → Deploys**.
+2. Find the last healthy deploy and **Publish deploy** to roll back instantly.
+3. Revert the problematic commit in `main`.
+4. Push the revert and confirm `CI` is green and Netlify redeploys cleanly.
+5. Document the incident cause and fix in project notes.

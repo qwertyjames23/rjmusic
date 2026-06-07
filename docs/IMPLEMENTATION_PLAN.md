@@ -258,6 +258,12 @@ If solo ka, ikaw tanan owner by default.
 - Added branch setup and verification commands:
   - `DEVELOP_BRANCH_SETUP.md`
 - Updated CI triggers so `develop` pushes run CI (required for staging deploy via `workflow_run`).
+
+> **Update (June 7, 2026):** The Vercel `Deploy` workflow and the
+> `develop`/`staging` deploy mapping above were **removed** (never wired up — no
+> `VERCEL_*` secrets). rjmusic deploys on **Netlify** via its GitHub integration.
+> See `DEPLOYMENT.md`.
+
 - Added Supabase migration CI guard in `.github/workflows/ci.yml`:
   - Only allows new migration files in `supabase/migrations`.
   - Rejects edits/deletes of historical migrations.
