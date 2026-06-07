@@ -1,5 +1,7 @@
 # rjmusic.shop — Production E-Commerce Platform
 
+[![CI](https://github.com/qwertyjames23/rjmusic/actions/workflows/ci.yml/badge.svg)](https://github.com/qwertyjames23/rjmusic/actions/workflows/ci.yml)
+
 A fully operational music accessories e-commerce store built from scratch and deployed to production. Not a tutorial project — real inventory, real orders, real customers.
 
 **Live:** [rjmusic.shop](https://rjmusic.shop)

@@ -1,6 +1,17 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazily instantiate the Resend client so the API key is only needed at
+// request time — not at module load. Constructing it at module scope made
+// `next build` throw "Missing API key" whenever RESEND_API_KEY is absent
+// from the environment (e.g. in CI).
+let resendClient: Resend | null = null;
+
+export function getResend(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 export const FROM_EMAIL = "RJ Music <orders@rjmusic.shop>";
 
