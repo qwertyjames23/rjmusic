@@ -5,7 +5,11 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
 
-const connectionString = `postgres://postgres.ytgwjbmmnkhcvrmaxrvs:8246578Rja!@aws-1-ap-south-1.pooler.supabase.com:5432/postgres`;
+const connectionString = process.env.SUPABASE_DB_URL;
+if (!connectionString) {
+  console.error('❌ Missing SUPABASE_DB_URL in .env.local');
+  process.exit(1);
+}
 
 async function inspectSchema() {
   const client = new Client({

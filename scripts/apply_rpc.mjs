@@ -7,9 +7,13 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
 
-// Connection string for Supabase
+// Connection string for Supabase — read from .env.local, never hardcode credentials.
 // Format: postgres://postgres.[PROJECT_REF]:[PASSWORD]@[HOST]:5432/postgres
-const connectionString = `postgres://postgres.ytgwjbmmnkhcvrmaxrvs:8246578Rja!@aws-1-ap-south-1.pooler.supabase.com:5432/postgres`;
+const connectionString = process.env.SUPABASE_DB_URL;
+if (!connectionString) {
+  console.error('❌ Missing SUPABASE_DB_URL in .env.local');
+  process.exit(1);
+}
 
 const sqlPath = path.join(process.cwd(), 'supabase', 'migrations', '20260215000002_checkout_standardization.sql');
 const sql = fs.readFileSync(sqlPath, 'utf8');
