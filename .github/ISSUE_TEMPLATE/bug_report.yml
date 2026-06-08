@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a problem with the app
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. **Do not** report security
+        vulnerabilities here — see
+        [SECURITY.md](https://github.com/qwertyjames23/rjmusic/blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '…'
+        2. Click on '…'
+        3. See error
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Storefront
+        - Checkout / Orders
+        - Admin dashboard
+        - Messenger bot
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Device, browser, and screen size (if relevant).
+      placeholder: "e.g. iPhone 13, Safari; or Desktop, Chrome 120"
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / logs
+      description: Drag-and-drop screenshots or paste console output if available.

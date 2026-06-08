@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Store support / order questions
+    url: https://rjmusic.shop
+    about: For help with an order or a product on the live store, please use the storefront — this tracker is for code issues only.
+  - name: Report a security vulnerability
+    url: https://github.com/qwertyjames23/rjmusic/security/advisories/new
+    about: Please report security issues privately, not as public issues.
