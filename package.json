@@ -13,7 +13,7 @@
   "dependencies": {
     "@ai-sdk/google": "^3.0.80",
     "@ai-sdk/react": "^3.0.199",
-    "@google/genai": "^1.40.0",
+    "@google/genai": "^2.8.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.4.0",
     "@next/third-parties": "^16.2.7",
